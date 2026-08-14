@@ -1,1 +1,109 @@
 @import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ---------------------------------------------------------------------------
+ * 디자인 토큰
+ *
+ * 시맨틱 토큰을 CSS 변수로 두고 @theme inline으로 매핑한다.
+ * 이렇게 해야 .dark 클래스 토글만으로 전체 테마가 바뀐다.
+ * 색 값을 컴포넌트에서 직접 쓰지 말고 항상 시맨틱 이름을 쓸 것.
+ * ------------------------------------------------------------------------- */
+
+:root {
+  /* 표면 — 실·섬유의 질감을 연상시키는 따뜻한 뉴트럴 */
+  --bg: #faf7f4;
+  --surface: #ffffff;
+  --surface-muted: #f2ede8;
+  --border: #e4dbd2;
+
+  /* 텍스트 */
+  --text: #2a2320;
+  --text-muted: #7a6d64;
+
+  /* 포인트 */
+  --accent: #b0603c;
+  --accent-hover: #98512f;
+  --accent-fg: #ffffff;
+
+  /* 프로젝트 상태 — 잠시멈춤은 의도적으로 경고색을 쓰지 않는다.
+     중단은 실패가 아니라 정상 상태이므로 차분한 파랑으로 둔다. */
+  --status-planning: #7a6d64;
+  --status-active: #4f7d5a;
+  --status-hibernating: #5b7b9a;
+  --status-finished: #6b5ca8;
+  --status-frogged: #9a5b5b;
+}
+
+.dark {
+  --bg: #1a1614;
+  --surface: #24201d;
+  --surface-muted: #2e2925;
+  --border: #3d3630;
+
+  --text: #f0eae5;
+  --text-muted: #a1948a;
+
+  --accent: #d98a5f;
+  --accent-hover: #e69c74;
+  --accent-fg: #1a1614;
+
+  --status-planning: #a1948a;
+  --status-active: #7bab88;
+  --status-hibernating: #8bb0d1;
+  --status-finished: #a294dd;
+  --status-frogged: #cf8d8d;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-muted: var(--surface-muted);
+  --color-border: var(--border);
+
+  --color-text: var(--text);
+  --color-text-muted: var(--text-muted);
+
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-fg: var(--accent-fg);
+
+  --color-planning: var(--status-planning);
+  --color-active: var(--status-active);
+  --color-hibernating: var(--status-hibernating);
+  --color-finished: var(--status-finished);
+  --color-frogged: var(--status-frogged);
+}
+
+@layer base {
+  html {
+    color-scheme: light dark;
+    /* iOS에서 뜨기 모드 연타 시 확대·선택되는 것 방지 */
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    @apply bg-bg text-text antialiased;
+    /* 단수·코수가 핵심 정보라 숫자 폭을 고정한다 */
+    font-variant-numeric: tabular-nums;
+    overscroll-behavior-y: none;
+  }
+
+  /* 뜨기 모드의 큰 버튼은 길게 눌러도 선택되면 안 된다 */
+  button {
+    -webkit-user-select: none;
+    user-select: none;
+    touch-action: manipulation;
+  }
+}
+
+@layer utilities {
+  /* 노치·홈 인디케이터 대응 — 뜨기 모드가 풀스크린이라 필요 */
+  .pt-safe {
+    padding-top: env(safe-area-inset-top);
+  }
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
