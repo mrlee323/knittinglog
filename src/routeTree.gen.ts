@@ -14,6 +14,9 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as YarnIndexRouteImport } from './routes/yarn.index'
 import { Route as ProjectsIndexRouteImport } from './routes/projects.index'
 import { Route as GaugeIndexRouteImport } from './routes/gauge.index'
+import { Route as ProjectsNewRouteImport } from './routes/projects.new'
+import { Route as ProjectsProjectIdIndexRouteImport } from './routes/projects.$projectId.index'
+import { Route as ProjectsProjectIdEditRouteImport } from './routes/projects.$projectId.edit'
 
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
@@ -40,43 +43,95 @@ const GaugeIndexRoute = GaugeIndexRouteImport.update({
   path: '/gauge/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProjectsNewRoute = ProjectsNewRouteImport.update({
+  id: '/projects/new',
+  path: '/projects/new',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProjectsProjectIdIndexRoute = ProjectsProjectIdIndexRouteImport.update({
+  id: '/projects/$projectId/',
+  path: '/projects/$projectId/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProjectsProjectIdEditRoute = ProjectsProjectIdEditRouteImport.update({
+  id: '/projects/$projectId/edit',
+  path: '/projects/$projectId/edit',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/settings': typeof SettingsRoute
+  '/projects/new': typeof ProjectsNewRoute
   '/gauge/': typeof GaugeIndexRoute
   '/projects/': typeof ProjectsIndexRoute
   '/yarn/': typeof YarnIndexRoute
+  '/projects/$projectId/edit': typeof ProjectsProjectIdEditRoute
+  '/projects/$projectId/': typeof ProjectsProjectIdIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/settings': typeof SettingsRoute
+  '/projects/new': typeof ProjectsNewRoute
   '/gauge': typeof GaugeIndexRoute
   '/projects': typeof ProjectsIndexRoute
   '/yarn': typeof YarnIndexRoute
+  '/projects/$projectId/edit': typeof ProjectsProjectIdEditRoute
+  '/projects/$projectId': typeof ProjectsProjectIdIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/settings': typeof SettingsRoute
+  '/projects/new': typeof ProjectsNewRoute
   '/gauge/': typeof GaugeIndexRoute
   '/projects/': typeof ProjectsIndexRoute
   '/yarn/': typeof YarnIndexRoute
+  '/projects/$projectId/edit': typeof ProjectsProjectIdEditRoute
+  '/projects/$projectId/': typeof ProjectsProjectIdIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/settings' | '/gauge/' | '/projects/' | '/yarn/'
+  fullPaths:
+    | '/'
+    | '/settings'
+    | '/projects/new'
+    | '/gauge/'
+    | '/projects/'
+    | '/yarn/'
+    | '/projects/$projectId/edit'
+    | '/projects/$projectId/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/settings' | '/gauge' | '/projects' | '/yarn'
-  id: '__root__' | '/' | '/settings' | '/gauge/' | '/projects/' | '/yarn/'
+  to:
+    | '/'
+    | '/settings'
+    | '/projects/new'
+    | '/gauge'
+    | '/projects'
+    | '/yarn'
+    | '/projects/$projectId/edit'
+    | '/projects/$projectId'
+  id:
+    | '__root__'
+    | '/'
+    | '/settings'
+    | '/projects/new'
+    | '/gauge/'
+    | '/projects/'
+    | '/yarn/'
+    | '/projects/$projectId/edit'
+    | '/projects/$projectId/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   SettingsRoute: typeof SettingsRoute
+  ProjectsNewRoute: typeof ProjectsNewRoute
   GaugeIndexRoute: typeof GaugeIndexRoute
   ProjectsIndexRoute: typeof ProjectsIndexRoute
   YarnIndexRoute: typeof YarnIndexRoute
+  ProjectsProjectIdEditRoute: typeof ProjectsProjectIdEditRoute
+  ProjectsProjectIdIndexRoute: typeof ProjectsProjectIdIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -116,15 +171,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof GaugeIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/projects/new': {
+      id: '/projects/new'
+      path: '/projects/new'
+      fullPath: '/projects/new'
+      preLoaderRoute: typeof ProjectsNewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/projects/$projectId/': {
+      id: '/projects/$projectId/'
+      path: '/projects/$projectId'
+      fullPath: '/projects/$projectId/'
+      preLoaderRoute: typeof ProjectsProjectIdIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/projects/$projectId/edit': {
+      id: '/projects/$projectId/edit'
+      path: '/projects/$projectId/edit'
+      fullPath: '/projects/$projectId/edit'
+      preLoaderRoute: typeof ProjectsProjectIdEditRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   SettingsRoute: SettingsRoute,
+  ProjectsNewRoute: ProjectsNewRoute,
   GaugeIndexRoute: GaugeIndexRoute,
   ProjectsIndexRoute: ProjectsIndexRoute,
   YarnIndexRoute: YarnIndexRoute,
+  ProjectsProjectIdEditRoute: ProjectsProjectIdEditRoute,
+  ProjectsProjectIdIndexRoute: ProjectsProjectIdIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
