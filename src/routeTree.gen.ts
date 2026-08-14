@@ -13,14 +13,20 @@ import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as YarnIndexRouteImport } from './routes/yarn.index'
 import { Route as ProjectsIndexRouteImport } from './routes/projects.index'
+import { Route as ProfilesIndexRouteImport } from './routes/profiles.index'
 import { Route as GaugeIndexRouteImport } from './routes/gauge.index'
 import { Route as YarnNewRouteImport } from './routes/yarn.new'
 import { Route as ProjectsNewRouteImport } from './routes/projects.new'
+import { Route as ProfilesNewRouteImport } from './routes/profiles.new'
+import { Route as GaugeNewRouteImport } from './routes/gauge.new'
+import { Route as GaugeCalcRouteImport } from './routes/gauge.calc'
 import { Route as YarnYarnIdIndexRouteImport } from './routes/yarn.$yarnId.index'
 import { Route as ProjectsProjectIdIndexRouteImport } from './routes/projects.$projectId.index'
 import { Route as YarnYarnIdEditRouteImport } from './routes/yarn.$yarnId.edit'
 import { Route as ProjectsProjectIdKnitRouteImport } from './routes/projects.$projectId.knit'
 import { Route as ProjectsProjectIdEditRouteImport } from './routes/projects.$projectId.edit'
+import { Route as ProfilesProfileIdEditRouteImport } from './routes/profiles.$profileId.edit'
+import { Route as GaugeGaugeIdEditRouteImport } from './routes/gauge.$gaugeId.edit'
 
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
@@ -42,6 +48,11 @@ const ProjectsIndexRoute = ProjectsIndexRouteImport.update({
   path: '/projects/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProfilesIndexRoute = ProfilesIndexRouteImport.update({
+  id: '/profiles/',
+  path: '/profiles/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const GaugeIndexRoute = GaugeIndexRouteImport.update({
   id: '/gauge/',
   path: '/gauge/',
@@ -55,6 +66,21 @@ const YarnNewRoute = YarnNewRouteImport.update({
 const ProjectsNewRoute = ProjectsNewRouteImport.update({
   id: '/projects/new',
   path: '/projects/new',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProfilesNewRoute = ProfilesNewRouteImport.update({
+  id: '/profiles/new',
+  path: '/profiles/new',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GaugeNewRoute = GaugeNewRouteImport.update({
+  id: '/gauge/new',
+  path: '/gauge/new',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GaugeCalcRoute = GaugeCalcRouteImport.update({
+  id: '/gauge/calc',
+  path: '/gauge/calc',
   getParentRoute: () => rootRouteImport,
 } as any)
 const YarnYarnIdIndexRoute = YarnYarnIdIndexRouteImport.update({
@@ -82,15 +108,31 @@ const ProjectsProjectIdEditRoute = ProjectsProjectIdEditRouteImport.update({
   path: '/projects/$projectId/edit',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProfilesProfileIdEditRoute = ProfilesProfileIdEditRouteImport.update({
+  id: '/profiles/$profileId/edit',
+  path: '/profiles/$profileId/edit',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GaugeGaugeIdEditRoute = GaugeGaugeIdEditRouteImport.update({
+  id: '/gauge/$gaugeId/edit',
+  path: '/gauge/$gaugeId/edit',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/settings': typeof SettingsRoute
+  '/gauge/calc': typeof GaugeCalcRoute
+  '/gauge/new': typeof GaugeNewRoute
+  '/profiles/new': typeof ProfilesNewRoute
   '/projects/new': typeof ProjectsNewRoute
   '/yarn/new': typeof YarnNewRoute
   '/gauge/': typeof GaugeIndexRoute
+  '/profiles/': typeof ProfilesIndexRoute
   '/projects/': typeof ProjectsIndexRoute
   '/yarn/': typeof YarnIndexRoute
+  '/gauge/$gaugeId/edit': typeof GaugeGaugeIdEditRoute
+  '/profiles/$profileId/edit': typeof ProfilesProfileIdEditRoute
   '/projects/$projectId/edit': typeof ProjectsProjectIdEditRoute
   '/projects/$projectId/knit': typeof ProjectsProjectIdKnitRoute
   '/yarn/$yarnId/edit': typeof YarnYarnIdEditRoute
@@ -100,11 +142,17 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/settings': typeof SettingsRoute
+  '/gauge/calc': typeof GaugeCalcRoute
+  '/gauge/new': typeof GaugeNewRoute
+  '/profiles/new': typeof ProfilesNewRoute
   '/projects/new': typeof ProjectsNewRoute
   '/yarn/new': typeof YarnNewRoute
   '/gauge': typeof GaugeIndexRoute
+  '/profiles': typeof ProfilesIndexRoute
   '/projects': typeof ProjectsIndexRoute
   '/yarn': typeof YarnIndexRoute
+  '/gauge/$gaugeId/edit': typeof GaugeGaugeIdEditRoute
+  '/profiles/$profileId/edit': typeof ProfilesProfileIdEditRoute
   '/projects/$projectId/edit': typeof ProjectsProjectIdEditRoute
   '/projects/$projectId/knit': typeof ProjectsProjectIdKnitRoute
   '/yarn/$yarnId/edit': typeof YarnYarnIdEditRoute
@@ -115,11 +163,17 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/settings': typeof SettingsRoute
+  '/gauge/calc': typeof GaugeCalcRoute
+  '/gauge/new': typeof GaugeNewRoute
+  '/profiles/new': typeof ProfilesNewRoute
   '/projects/new': typeof ProjectsNewRoute
   '/yarn/new': typeof YarnNewRoute
   '/gauge/': typeof GaugeIndexRoute
+  '/profiles/': typeof ProfilesIndexRoute
   '/projects/': typeof ProjectsIndexRoute
   '/yarn/': typeof YarnIndexRoute
+  '/gauge/$gaugeId/edit': typeof GaugeGaugeIdEditRoute
+  '/profiles/$profileId/edit': typeof ProfilesProfileIdEditRoute
   '/projects/$projectId/edit': typeof ProjectsProjectIdEditRoute
   '/projects/$projectId/knit': typeof ProjectsProjectIdKnitRoute
   '/yarn/$yarnId/edit': typeof YarnYarnIdEditRoute
@@ -131,11 +185,17 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/settings'
+    | '/gauge/calc'
+    | '/gauge/new'
+    | '/profiles/new'
     | '/projects/new'
     | '/yarn/new'
     | '/gauge/'
+    | '/profiles/'
     | '/projects/'
     | '/yarn/'
+    | '/gauge/$gaugeId/edit'
+    | '/profiles/$profileId/edit'
     | '/projects/$projectId/edit'
     | '/projects/$projectId/knit'
     | '/yarn/$yarnId/edit'
@@ -145,11 +205,17 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/settings'
+    | '/gauge/calc'
+    | '/gauge/new'
+    | '/profiles/new'
     | '/projects/new'
     | '/yarn/new'
     | '/gauge'
+    | '/profiles'
     | '/projects'
     | '/yarn'
+    | '/gauge/$gaugeId/edit'
+    | '/profiles/$profileId/edit'
     | '/projects/$projectId/edit'
     | '/projects/$projectId/knit'
     | '/yarn/$yarnId/edit'
@@ -159,11 +225,17 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/settings'
+    | '/gauge/calc'
+    | '/gauge/new'
+    | '/profiles/new'
     | '/projects/new'
     | '/yarn/new'
     | '/gauge/'
+    | '/profiles/'
     | '/projects/'
     | '/yarn/'
+    | '/gauge/$gaugeId/edit'
+    | '/profiles/$profileId/edit'
     | '/projects/$projectId/edit'
     | '/projects/$projectId/knit'
     | '/yarn/$yarnId/edit'
@@ -174,11 +246,17 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   SettingsRoute: typeof SettingsRoute
+  GaugeCalcRoute: typeof GaugeCalcRoute
+  GaugeNewRoute: typeof GaugeNewRoute
+  ProfilesNewRoute: typeof ProfilesNewRoute
   ProjectsNewRoute: typeof ProjectsNewRoute
   YarnNewRoute: typeof YarnNewRoute
   GaugeIndexRoute: typeof GaugeIndexRoute
+  ProfilesIndexRoute: typeof ProfilesIndexRoute
   ProjectsIndexRoute: typeof ProjectsIndexRoute
   YarnIndexRoute: typeof YarnIndexRoute
+  GaugeGaugeIdEditRoute: typeof GaugeGaugeIdEditRoute
+  ProfilesProfileIdEditRoute: typeof ProfilesProfileIdEditRoute
   ProjectsProjectIdEditRoute: typeof ProjectsProjectIdEditRoute
   ProjectsProjectIdKnitRoute: typeof ProjectsProjectIdKnitRoute
   YarnYarnIdEditRoute: typeof YarnYarnIdEditRoute
@@ -216,6 +294,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProjectsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/profiles/': {
+      id: '/profiles/'
+      path: '/profiles'
+      fullPath: '/profiles/'
+      preLoaderRoute: typeof ProfilesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/gauge/': {
       id: '/gauge/'
       path: '/gauge'
@@ -235,6 +320,27 @@ declare module '@tanstack/react-router' {
       path: '/projects/new'
       fullPath: '/projects/new'
       preLoaderRoute: typeof ProjectsNewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/profiles/new': {
+      id: '/profiles/new'
+      path: '/profiles/new'
+      fullPath: '/profiles/new'
+      preLoaderRoute: typeof ProfilesNewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/gauge/new': {
+      id: '/gauge/new'
+      path: '/gauge/new'
+      fullPath: '/gauge/new'
+      preLoaderRoute: typeof GaugeNewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/gauge/calc': {
+      id: '/gauge/calc'
+      path: '/gauge/calc'
+      fullPath: '/gauge/calc'
+      preLoaderRoute: typeof GaugeCalcRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/yarn/$yarnId/': {
@@ -272,17 +378,37 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProjectsProjectIdEditRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/profiles/$profileId/edit': {
+      id: '/profiles/$profileId/edit'
+      path: '/profiles/$profileId/edit'
+      fullPath: '/profiles/$profileId/edit'
+      preLoaderRoute: typeof ProfilesProfileIdEditRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/gauge/$gaugeId/edit': {
+      id: '/gauge/$gaugeId/edit'
+      path: '/gauge/$gaugeId/edit'
+      fullPath: '/gauge/$gaugeId/edit'
+      preLoaderRoute: typeof GaugeGaugeIdEditRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   SettingsRoute: SettingsRoute,
+  GaugeCalcRoute: GaugeCalcRoute,
+  GaugeNewRoute: GaugeNewRoute,
+  ProfilesNewRoute: ProfilesNewRoute,
   ProjectsNewRoute: ProjectsNewRoute,
   YarnNewRoute: YarnNewRoute,
   GaugeIndexRoute: GaugeIndexRoute,
+  ProfilesIndexRoute: ProfilesIndexRoute,
   ProjectsIndexRoute: ProjectsIndexRoute,
   YarnIndexRoute: YarnIndexRoute,
+  GaugeGaugeIdEditRoute: GaugeGaugeIdEditRoute,
+  ProfilesProfileIdEditRoute: ProfilesProfileIdEditRoute,
   ProjectsProjectIdEditRoute: ProjectsProjectIdEditRoute,
   ProjectsProjectIdKnitRoute: ProjectsProjectIdKnitRoute,
   YarnYarnIdEditRoute: YarnYarnIdEditRoute,

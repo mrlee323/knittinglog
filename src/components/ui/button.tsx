@@ -14,11 +14,20 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: Variant;
   /** 폭을 꽉 채운다 — 모바일 하단 액션에 쓴다 */
   block?: boolean;
+  /**
+   * 아이콘 하나만 담는 정사각 버튼.
+   *
+   * 좌우 패딩을 줄이는 대신 정사각으로 만든다. 패딩만 줄이면 44px 아래로
+   * 내려가는데, 뜨개는 손에 실을 쥔 채 조작하는 앱이라 타깃을 줄일 수 없다.
+   * `aria-label`을 반드시 함께 준다.
+   */
+  icon?: boolean;
 }
 
 export function Button({
   variant = "primary",
   block,
+  icon,
   className,
   type = "button",
   ...props
@@ -29,7 +38,8 @@ export function Button({
       className={cn(
         // 모바일 터치 타깃 최소 44px.
         // shrink-0 + nowrap이 없으면 flex 안에서 짧은 라벨이 세로로 쪼개진다.
-        "text-small inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-md px-4 font-medium whitespace-nowrap transition disabled:opacity-40",
+        "text-small inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-md font-medium whitespace-nowrap transition disabled:opacity-40",
+        icon ? "w-11 px-0" : "px-4",
         VARIANTS[variant],
         block && "w-full",
         className

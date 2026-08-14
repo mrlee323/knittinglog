@@ -26,8 +26,8 @@ function YarnIndex() {
       title={t.yarn.title}
       action={
         <Button
+          icon
           aria-label={t.yarn.add}
-          className="!min-h-10 !px-3"
           onClick={() => navigate({ to: "/yarn/new" })}
         >
           <Plus size={18} />
@@ -37,7 +37,16 @@ function YarnIndex() {
       {yarns === undefined ? null : yarns.length === 0 ? (
         <div className="border-line rounded-md border border-dashed px-6 py-12 text-center">
           <p className="text-text-2">{t.yarn.empty}</p>
-          <p className="text-text-3 text-small mt-1">{t.yarn.emptyHint}</p>
+          <p className="text-text-3 text-small mx-auto mt-1 max-w-xs text-balance">
+            {t.yarn.emptyHint}
+          </p>
+          <Button
+            variant="secondary"
+            className="mt-4"
+            onClick={() => navigate({ to: "/yarn/new" })}
+          >
+            {t.yarn.add}
+          </Button>
         </div>
       ) : (
         <ul className="space-y-2">

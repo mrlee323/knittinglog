@@ -41,8 +41,8 @@ export function AllocationSection({ projectId }: { projectId: Id }) {
       <div className="mb-3 flex items-center justify-between">
         <h2 className="font-medium">{t.allocation.title}</h2>
         <Button
+          icon
           variant="ghost"
-          className="!min-h-9 !px-2"
           aria-label={t.allocation.add}
           disabled={yarns.length === 0}
           onClick={() => setAdding(true)}
@@ -81,10 +81,12 @@ export function AllocationSection({ projectId }: { projectId: Id }) {
                   String(allocation.skeinsAllocated)
                 )}
               </span>
+              {/* 아이콘은 작아도 타깃은 44px여야 한다. 음수 마진으로 카드
+                  패딩 안쪽까지 눌리는 면적을 되찾는다. */}
               <button
                 type="button"
                 aria-label={t.allocation.remove}
-                className="text-text-3 rounded-md p-1.5"
+                className="text-text-3 hover:text-text -my-3 -mr-3 flex size-11 shrink-0 items-center justify-center rounded-md transition"
                 onClick={() => void deallocateYarn(yarn!.id, projectId)}
               >
                 <X size={15} />
