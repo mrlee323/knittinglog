@@ -14,8 +14,11 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as YarnIndexRouteImport } from './routes/yarn.index'
 import { Route as ProjectsIndexRouteImport } from './routes/projects.index'
 import { Route as GaugeIndexRouteImport } from './routes/gauge.index'
+import { Route as YarnNewRouteImport } from './routes/yarn.new'
 import { Route as ProjectsNewRouteImport } from './routes/projects.new'
+import { Route as YarnYarnIdIndexRouteImport } from './routes/yarn.$yarnId.index'
 import { Route as ProjectsProjectIdIndexRouteImport } from './routes/projects.$projectId.index'
+import { Route as YarnYarnIdEditRouteImport } from './routes/yarn.$yarnId.edit'
 import { Route as ProjectsProjectIdKnitRouteImport } from './routes/projects.$projectId.knit'
 import { Route as ProjectsProjectIdEditRouteImport } from './routes/projects.$projectId.edit'
 
@@ -44,14 +47,29 @@ const GaugeIndexRoute = GaugeIndexRouteImport.update({
   path: '/gauge/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const YarnNewRoute = YarnNewRouteImport.update({
+  id: '/yarn/new',
+  path: '/yarn/new',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProjectsNewRoute = ProjectsNewRouteImport.update({
   id: '/projects/new',
   path: '/projects/new',
   getParentRoute: () => rootRouteImport,
 } as any)
+const YarnYarnIdIndexRoute = YarnYarnIdIndexRouteImport.update({
+  id: '/yarn/$yarnId/',
+  path: '/yarn/$yarnId/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProjectsProjectIdIndexRoute = ProjectsProjectIdIndexRouteImport.update({
   id: '/projects/$projectId/',
   path: '/projects/$projectId/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const YarnYarnIdEditRoute = YarnYarnIdEditRouteImport.update({
+  id: '/yarn/$yarnId/edit',
+  path: '/yarn/$yarnId/edit',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProjectsProjectIdKnitRoute = ProjectsProjectIdKnitRouteImport.update({
@@ -69,35 +87,44 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/settings': typeof SettingsRoute
   '/projects/new': typeof ProjectsNewRoute
+  '/yarn/new': typeof YarnNewRoute
   '/gauge/': typeof GaugeIndexRoute
   '/projects/': typeof ProjectsIndexRoute
   '/yarn/': typeof YarnIndexRoute
   '/projects/$projectId/edit': typeof ProjectsProjectIdEditRoute
   '/projects/$projectId/knit': typeof ProjectsProjectIdKnitRoute
+  '/yarn/$yarnId/edit': typeof YarnYarnIdEditRoute
   '/projects/$projectId/': typeof ProjectsProjectIdIndexRoute
+  '/yarn/$yarnId/': typeof YarnYarnIdIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/settings': typeof SettingsRoute
   '/projects/new': typeof ProjectsNewRoute
+  '/yarn/new': typeof YarnNewRoute
   '/gauge': typeof GaugeIndexRoute
   '/projects': typeof ProjectsIndexRoute
   '/yarn': typeof YarnIndexRoute
   '/projects/$projectId/edit': typeof ProjectsProjectIdEditRoute
   '/projects/$projectId/knit': typeof ProjectsProjectIdKnitRoute
+  '/yarn/$yarnId/edit': typeof YarnYarnIdEditRoute
   '/projects/$projectId': typeof ProjectsProjectIdIndexRoute
+  '/yarn/$yarnId': typeof YarnYarnIdIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/settings': typeof SettingsRoute
   '/projects/new': typeof ProjectsNewRoute
+  '/yarn/new': typeof YarnNewRoute
   '/gauge/': typeof GaugeIndexRoute
   '/projects/': typeof ProjectsIndexRoute
   '/yarn/': typeof YarnIndexRoute
   '/projects/$projectId/edit': typeof ProjectsProjectIdEditRoute
   '/projects/$projectId/knit': typeof ProjectsProjectIdKnitRoute
+  '/yarn/$yarnId/edit': typeof YarnYarnIdEditRoute
   '/projects/$projectId/': typeof ProjectsProjectIdIndexRoute
+  '/yarn/$yarnId/': typeof YarnYarnIdIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -105,46 +132,58 @@ export interface FileRouteTypes {
     | '/'
     | '/settings'
     | '/projects/new'
+    | '/yarn/new'
     | '/gauge/'
     | '/projects/'
     | '/yarn/'
     | '/projects/$projectId/edit'
     | '/projects/$projectId/knit'
+    | '/yarn/$yarnId/edit'
     | '/projects/$projectId/'
+    | '/yarn/$yarnId/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/settings'
     | '/projects/new'
+    | '/yarn/new'
     | '/gauge'
     | '/projects'
     | '/yarn'
     | '/projects/$projectId/edit'
     | '/projects/$projectId/knit'
+    | '/yarn/$yarnId/edit'
     | '/projects/$projectId'
+    | '/yarn/$yarnId'
   id:
     | '__root__'
     | '/'
     | '/settings'
     | '/projects/new'
+    | '/yarn/new'
     | '/gauge/'
     | '/projects/'
     | '/yarn/'
     | '/projects/$projectId/edit'
     | '/projects/$projectId/knit'
+    | '/yarn/$yarnId/edit'
     | '/projects/$projectId/'
+    | '/yarn/$yarnId/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   SettingsRoute: typeof SettingsRoute
   ProjectsNewRoute: typeof ProjectsNewRoute
+  YarnNewRoute: typeof YarnNewRoute
   GaugeIndexRoute: typeof GaugeIndexRoute
   ProjectsIndexRoute: typeof ProjectsIndexRoute
   YarnIndexRoute: typeof YarnIndexRoute
   ProjectsProjectIdEditRoute: typeof ProjectsProjectIdEditRoute
   ProjectsProjectIdKnitRoute: typeof ProjectsProjectIdKnitRoute
+  YarnYarnIdEditRoute: typeof YarnYarnIdEditRoute
   ProjectsProjectIdIndexRoute: typeof ProjectsProjectIdIndexRoute
+  YarnYarnIdIndexRoute: typeof YarnYarnIdIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -184,6 +223,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof GaugeIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/yarn/new': {
+      id: '/yarn/new'
+      path: '/yarn/new'
+      fullPath: '/yarn/new'
+      preLoaderRoute: typeof YarnNewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/projects/new': {
       id: '/projects/new'
       path: '/projects/new'
@@ -191,11 +237,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProjectsNewRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/yarn/$yarnId/': {
+      id: '/yarn/$yarnId/'
+      path: '/yarn/$yarnId'
+      fullPath: '/yarn/$yarnId/'
+      preLoaderRoute: typeof YarnYarnIdIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/projects/$projectId/': {
       id: '/projects/$projectId/'
       path: '/projects/$projectId'
       fullPath: '/projects/$projectId/'
       preLoaderRoute: typeof ProjectsProjectIdIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/yarn/$yarnId/edit': {
+      id: '/yarn/$yarnId/edit'
+      path: '/yarn/$yarnId/edit'
+      fullPath: '/yarn/$yarnId/edit'
+      preLoaderRoute: typeof YarnYarnIdEditRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/projects/$projectId/knit': {
@@ -219,12 +279,15 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   SettingsRoute: SettingsRoute,
   ProjectsNewRoute: ProjectsNewRoute,
+  YarnNewRoute: YarnNewRoute,
   GaugeIndexRoute: GaugeIndexRoute,
   ProjectsIndexRoute: ProjectsIndexRoute,
   YarnIndexRoute: YarnIndexRoute,
   ProjectsProjectIdEditRoute: ProjectsProjectIdEditRoute,
   ProjectsProjectIdKnitRoute: ProjectsProjectIdKnitRoute,
+  YarnYarnIdEditRoute: YarnYarnIdEditRoute,
   ProjectsProjectIdIndexRoute: ProjectsProjectIdIndexRoute,
+  YarnYarnIdIndexRoute: YarnYarnIdIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

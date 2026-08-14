@@ -174,7 +174,17 @@ export interface Yarn extends Base {
   brand?: string;
   name: string;
   colorName?: string;
+  /** 제조사 색번(예: "1042"). 재구매할 때 쓴다 — 화면에 칠할 수 있는 값이 아니다. */
   colorCode?: string;
+  /**
+   * 실제로 화면에 칠하는 색. `#rrggbb`.
+   *
+   * 디자인 방향이 "UI는 무채색, 실만 색을 갖는다"이므로(docs/DESIGN.md)
+   * 이 값이 앱에서 자유로운 채도를 갖는 유일한 색이다.
+   * 사용자가 직접 고르며, 없으면 색을 칠하지 않는다 — UI가 임의의 색을
+   * 만들어내면 그 순간 원칙이 깨진다.
+   */
+  colorHex?: string;
   /** 로트번호. 중간에 실이 모자랄 때 같은 로트를 못 구하는 게 중단 사유가 된다. */
   dyeLot?: string;
   fiber?: string;

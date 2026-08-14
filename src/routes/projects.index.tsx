@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/features/project/components/status-badge";
 import { listProjects } from "@/features/project/repository";
 import { pausedLabel } from "@/features/project/format";
+import { projectColors } from "@/features/yarn/repository";
+import { YarnStripe } from "@/features/yarn/components/yarn-swatch";
 import { daysSincePaused } from "@/domain/projectStatus";
 import { useStrings } from "@/i18n";
 import { cn } from "@/lib/utils";
@@ -43,6 +45,8 @@ function Projects() {
   const { status } = Route.useSearch();
 
   const projects = useLiveQuery(() => listProjects(status), [status]);
+  // 프로젝트마다 실을 따로 조회하면 N+1이 된다. 한 번에 색만 받아온다.
+  const colors = useLiveQuery(() => projectColors(), []);
 
   return (
     <Page
@@ -87,7 +91,7 @@ function Projects() {
         <ul className="space-y-2">
           {projects.map((project) => (
             <li key={project.id}>
-              <ProjectCard project={project} />
+              <ProjectCard project={project} color={colors?.get(project.id)} />
             </li>
           ))}
         </ul>
@@ -96,7 +100,7 @@ function Projects() {
   );
 }
 
-function ProjectCard({ project }: { project: Project }) {
+function ProjectCard({ project, color }: { project: Project; color?: string }) {
   const t = useStrings();
   const pausedDays = daysSincePaused(project);
 
@@ -104,21 +108,25 @@ function ProjectCard({ project }: { project: Project }) {
     <Link
       to="/projects/$projectId"
       params={{ projectId: project.id }}
-      className="border-line bg-surface hover:border-line-strong block rounded-md border p-4 transition"
+      className="border-line bg-surface hover:border-line-strong flex gap-3 rounded-md border p-4 transition"
     >
-      <div className="flex items-start justify-between gap-3">
-        <h2 className="text-subhead font-semibold">{project.name}</h2>
-        <StatusBadge status={project.status} />
-      </div>
-      <p className="text-text-2 text-small mt-0.5">
-        {t.craft[project.craft]} · {t.category[project.category]}
-      </p>
-      {pausedDays !== null && (
-        // 방치 기간을 목록에서 바로 보여준다. 가시성 없음이 중단의 원인이었다.
-        <p className="text-hibernating text-caption mt-1.5">
-          {pausedLabel(t, pausedDays)}
+      {/* 이 카드에서 채도를 가진 유일한 요소. 실이 없으면 그리지 않는다. */}
+      <YarnStripe color={color} />
+      <div className="min-w-0 flex-1">
+        <div className="flex items-start justify-between gap-3">
+          <h2 className="text-subhead font-semibold">{project.name}</h2>
+          <StatusBadge status={project.status} />
+        </div>
+        <p className="text-text-2 text-small mt-0.5">
+          {t.craft[project.craft]} · {t.category[project.category]}
         </p>
-      )}
+        {pausedDays !== null && (
+          // 방치 기간을 목록에서 바로 보여준다. 가시성 없음이 중단의 원인이었다.
+          <p className="text-hibernating text-caption mt-1.5">
+            {pausedLabel(t, pausedDays)}
+          </p>
+        )}
+      </div>
     </Link>
   );
 }

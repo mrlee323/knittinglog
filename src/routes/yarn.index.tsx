@@ -1,14 +1,113 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { Page, Placeholder } from "@/components/ui/page";
-import { useStrings } from "@/i18n";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useLiveQuery } from "dexie-react-hooks";
+import { Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Page } from "@/components/ui/page";
+import { YarnTile } from "@/features/yarn/components/yarn-swatch";
+import { listYarns } from "@/features/yarn/repository";
+import { freeSkeins, stashTotal } from "@/domain/yarn";
+import { yarnWeight } from "@/domain/units";
+import { db } from "@/lib/db";
+import { useLocale, useStrings } from "@/i18n";
+import type { Yarn, YarnAllocation } from "@/types/entities";
 
 export const Route = createFileRoute("/yarn/")({ component: YarnIndex });
 
 function YarnIndex() {
   const t = useStrings();
+  const navigate = useNavigate();
+
+  const yarns = useLiveQuery(() => listYarns(), []);
+  // 실마다 따로 조회하면 N+1이 된다. 한 번 읽어서 나눠 쓴다.
+  const allocations = useLiveQuery(() => db.yarnAllocations.toArray(), []);
+
   return (
-    <Page title={t.nav.yarn}>
-      <Placeholder note="실 스태시 목록이 들어갈 자리입니다." />
+    <Page
+      title={t.yarn.title}
+      action={
+        <Button
+          aria-label={t.yarn.add}
+          className="!min-h-10 !px-3"
+          onClick={() => navigate({ to: "/yarn/new" })}
+        >
+          <Plus size={18} />
+        </Button>
+      }
+    >
+      {yarns === undefined ? null : yarns.length === 0 ? (
+        <div className="border-line rounded-md border border-dashed px-6 py-12 text-center">
+          <p className="text-text-2">{t.yarn.empty}</p>
+          <p className="text-text-3 text-small mt-1">{t.yarn.emptyHint}</p>
+        </div>
+      ) : (
+        <ul className="space-y-2">
+          {yarns.map((yarn) => (
+            <li key={yarn.id}>
+              <YarnRow
+                yarn={yarn}
+                allocations={(allocations ?? []).filter(
+                  (a) => a.yarnId === yarn.id
+                )}
+              />
+            </li>
+          ))}
+        </ul>
+      )}
     </Page>
+  );
+}
+
+function YarnRow({
+  yarn,
+  allocations,
+}: {
+  yarn: Yarn;
+  allocations: YarnAllocation[];
+}) {
+  const t = useStrings();
+  const locale = useLocale();
+  const total = stashTotal(yarn);
+  const free = freeSkeins(yarn, allocations);
+  const weight =
+    yarn.weightClass !== undefined ? yarnWeight(yarn.weightClass) : null;
+
+  return (
+    <Link
+      to="/yarn/$yarnId"
+      params={{ yarnId: yarn.id }}
+      className="border-line bg-surface hover:border-line-strong flex items-center gap-3 rounded-md border p-3 transition"
+    >
+      <YarnTile color={yarn.colorHex} />
+      <div className="min-w-0 flex-1">
+        <p className="text-subhead truncate font-semibold">{yarn.name}</p>
+        <p className="text-text-2 text-small truncate">
+          {[
+            yarn.brand,
+            yarn.colorName,
+            weight?.names[locale === "ko" ? "ko" : "en"],
+          ]
+            .filter(Boolean)
+            .join(" · ")}
+        </p>
+      </div>
+      <div className="shrink-0 text-right">
+        <p className="text-small font-medium">
+          {t.yarn.skeins.replace("{n}", String(total.skeins))}
+        </p>
+        {allocations.length > 0 && (
+          <p
+            className={
+              free < 0
+                ? "text-frogged text-caption"
+                : "text-text-3 text-caption"
+            }
+          >
+            {free < 0
+              ? t.yarn.overAllocated.replace("{n}", String(-free))
+              : t.yarn.free.replace("{n}", String(free))}
+          </p>
+        )}
+      </div>
+    </Link>
   );
 }

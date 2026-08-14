@@ -71,6 +71,13 @@ export class KnittinglogDB extends Dexie {
 
       patterns: "id, craft, name",
     });
+
+    // v2 — 스태시 목록을 최근 수정순으로 정렬한다.
+    // orderBy()는 sortBy()와 달리 인덱스를 요구한다.
+    // 바뀐 스토어만 적으면 나머지는 이전 버전에서 이어받는다.
+    this.version(2).stores({
+      yarns: "id, brand, weightClass, dyeLot, updatedAt",
+    });
   }
 }
 

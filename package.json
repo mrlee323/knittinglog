@@ -11,7 +11,7 @@
     "test:watch": "vitest",
     "lint": "eslint .",
     "format": "prettier --write \"src/**/*.{ts,tsx,css,json}\"",
-    "type-check": "tsc --noEmit",
+    "type-check": "tsc -b --noEmit",
     "prepare": "husky"
   },
   "lint-staged": {
