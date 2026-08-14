@@ -1,73 +1,77 @@
-# React + TypeScript + Vite
+# knittinglog
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+> 언제 멈췄든 그 자리에서 정확히 이어 뜰 수 있게 하는 뜨개 기록장
 
-Currently, two official plugins are available:
+하다 만 뜨개 프로젝트가 쌓여가는 사람들을 위한 기록 중심 워크스페이스입니다.
+**중단은 실패가 아니라 뜨개의 정상 상태**라는 전제 위에서, 중단을 없애려 하지 않고
+중단해도 안전하게 돌아올 수 있게 만드는 것을 목표로 합니다.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+대바늘·코바늘을 동등하게 지원하고, 도안을 언어 중립 구조로 저장해
+한국어 ↔ 영어 도안 상호 변환을 지원하는 것을 지향합니다.
 
-## React Compiler
+전체 기획은 [docs/PLAN.md](docs/PLAN.md)를 참고하세요.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## 시작하기
 
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(["dist"]),
-  {
-    files: ["**/*.{ts,tsx}"],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ["./tsconfig.node.json", "./tsconfig.app.json"],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-]);
+```bash
+npm install
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+| 스크립트             | 설명                      |
+| -------------------- | ------------------------- |
+| `npm run dev`        | 개발 서버                 |
+| `npm run build`      | 타입 체크 + 프로덕션 빌드 |
+| `npm run test`       | 도메인 계산 테스트        |
+| `npm run test:watch` | 테스트 watch 모드         |
+| `npm run lint`       | ESLint                    |
+| `npm run type-check` | 타입 체크만               |
 
-```js
-// eslint.config.js
-import reactX from "eslint-plugin-react-x";
-import reactDom from "eslint-plugin-react-dom";
+## 기술 스택
 
-export default defineConfig([
-  globalIgnores(["dist"]),
-  {
-    files: ["**/*.{ts,tsx}"],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs["recommended-typescript"],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ["./tsconfig.node.json", "./tsconfig.app.json"],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-]);
+Vite 7 · React 19 · TypeScript · Tailwind CSS 4 · TanStack Router ·
+TanStack Query · Jotai · XState · Zod · Dexie(IndexedDB) · Vitest
+
+MVP는 **계정 없이 로컬에서만** 동작합니다. 서버 동기화(Supabase)는 2차입니다.
+
+## 구조
+
 ```
+src/
+  app/            프로바이더, 테마, 전역 설정
+  routes/         TanStack Router 파일 기반 라우트 (얇게 유지)
+  features/       기능별 도메인 로직 + UI + 상태머신
+  components/ui/  공용 프리미티브
+  domain/         ★ 순수 계산 함수 — UI 무관, 테스트 대상
+  i18n/
+    ui/           UI 문자열
+    stitches/     도안 용어 사전 (언어 중립 IR의 렌더링 계층)
+  lib/            db(Dexie), 유틸
+  types/          저장 엔티티 타입
+```
+
+### 두 가지 설계 원칙
+
+**1. `domain/`은 UI를 모른다.**
+뜨개 계산(게이지 환산, 코수 증감 배분, 단위·호수 변환)은 전부 순수 함수입니다.
+계산이 틀리면 사용자는 몇 시간의 작업을 잃기 때문에 **정확도가 곧 신뢰도**이고,
+그래서 UI에서 분리해 단위 테스트로 검증합니다.
+
+**2. 도안은 텍스트가 아니라 구조로 저장한다.**
+`"k2, yo, k2tog"`나 `"겉2, 바늘비우기, 오른코모아"`가 아니라
+`[{op:"knit",n:2}, {op:"yo"}, {op:"k2tog"}]`로 저장하고, 표시할 때만
+로케일 사전을 거칩니다. 도안 번역이 기계번역이 아니라 결정적 기호 변환이 되고,
+차트 ↔ 서술형 변환·코수 자동 검산·평면 ↔ 원형 변환이 같은 모델에서 파생됩니다.
+자세한 내용은 기획 문서 §4를 참고하세요.
+
+## 진행 상황
+
+- [x] 기획 문서
+- [x] 프로젝트 스캐폴딩 (라우팅 · DB 스키마 · 디자인 토큰 · i18n 골격 · PWA)
+- [x] 도메인 계산 — 게이지 · 단위/호수/실굵기 환산
+- [ ] 프로젝트 CRUD + 상태 머신
+- [ ] 카운터 (오프라인 · Lifeline)
+- [ ] 게이지 화면 · 계산기
+- [ ] 실 스태시
+- [ ] 신체 치수 프로필
+- [ ] 대시보드

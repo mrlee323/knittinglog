@@ -1,0 +1,4 @@
+dist
+dev-dist
+# TanStack Router가 생성한다. 라우트가 바뀔 때마다 다시 써지므로 포맷 대상에서 뺀다.
+src/routeTree.gen.ts
