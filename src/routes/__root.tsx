@@ -1,4 +1,9 @@
-import { createRootRoute, Link, Outlet } from "@tanstack/react-router";
+import {
+  createRootRoute,
+  Link,
+  Outlet,
+  useRouterState,
+} from "@tanstack/react-router";
 import { Home, Layers, Ruler, Settings, Spool } from "lucide-react";
 import { useApplyTheme } from "@/app/theme";
 import { useStrings } from "@/i18n";
@@ -15,6 +20,11 @@ export const Route = createRootRoute({ component: RootLayout });
 function RootLayout() {
   useApplyTheme();
   const t = useStrings();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+
+  // 뜨기 모드는 화면을 통째로 쓴다. 손이 실에 묶인 채로 쓰는 화면이라
+  // 탭바가 차지하는 높이와 오탭 위험을 감당할 이유가 없다.
+  if (pathname.endsWith("/knit")) return <Outlet />;
 
   const tabs = [
     { to: "/", icon: Home, label: t.nav.dashboard },
