@@ -21,7 +21,7 @@ export function CounterSection({ projectId }: { projectId: Id }) {
   if (!counters) return null;
 
   return (
-    <section className="border-border mb-6 border-t pt-5">
+    <section className="border-line mb-6 border-t pt-5">
       <div className="mb-3 flex items-center justify-between">
         <h2 className="font-medium">{t.counter.title}</h2>
         <Button
@@ -35,7 +35,7 @@ export function CounterSection({ projectId }: { projectId: Id }) {
       </div>
 
       {counters.length === 0 ? (
-        <p className="text-text-muted mb-3 text-sm">{t.counter.emptyHint}</p>
+        <p className="text-text-2 text-small mb-3">{t.counter.emptyHint}</p>
       ) : (
         <ul className="mb-3 space-y-2">
           {counters.map((counter) => (
@@ -84,10 +84,10 @@ function CounterRow({
   const main = siblings.find((c) => c.id === counter.linkedCounterId);
 
   return (
-    <li className="border-border bg-surface flex items-center gap-3 rounded-xl border p-3">
+    <li className="border-line bg-surface flex items-center gap-3 rounded-md border p-3">
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-medium">{counter.label}</p>
-        <p className="text-text-muted text-xs">
+        <p className="text-small truncate font-medium">{counter.label}</p>
+        <p className="text-text-2 text-caption">
           {view.value}
           {view.target ? ` / ${view.target}` : ` ${t.counter.rows}`}
           {view.repeat &&
@@ -97,7 +97,7 @@ function CounterRow({
               .replace("{len}", String(view.repeat.length))}`}
         </p>
         {main && counter.linkRatio && (
-          <p className="text-text-muted/70 mt-0.5 text-xs">
+          <p className="text-text-3 text-caption mt-0.5">
             {t.counter.linkedHint
               .replace("{main}", main.label)
               .replace("{ratio}", String(counter.linkRatio))}
@@ -107,7 +107,7 @@ function CounterRow({
       <button
         type="button"
         aria-label={t.action.delete}
-        className="text-text-muted rounded-lg p-2"
+        className="text-text-2 rounded-md p-2"
         onClick={() => {
           if (window.confirm(t.counter.deleteConfirm)) onDelete();
         }}

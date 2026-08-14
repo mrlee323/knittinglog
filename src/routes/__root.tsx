@@ -40,13 +40,13 @@ function RootLayout() {
         <Outlet />
       </main>
 
-      <nav className="pb-safe bg-surface/90 border-border fixed inset-x-0 bottom-0 border-t backdrop-blur">
+      <nav className="pb-safe bg-surface/90 border-line fixed inset-x-0 bottom-0 border-t backdrop-blur">
         <ul className="mx-auto flex max-w-lg">
           {tabs.map(({ to, icon: Icon, label }) => (
             <li key={to} className="flex-1">
               <Link
                 to={to}
-                className="text-text-muted flex flex-col items-center gap-1 py-2 transition-colors"
+                className="text-text-2 flex flex-col items-center gap-1 py-2 transition-colors"
                 activeProps={{ className: "!text-accent" }}
                 activeOptions={{ exact: to === "/" }}
               >
@@ -54,7 +54,7 @@ function RootLayout() {
                   <>
                     <Icon size={22} strokeWidth={isActive ? 2.4 : 1.8} />
                     <span
-                      className={cn("text-[11px]", isActive && "font-semibold")}
+                      className={cn("text-micro", isActive && "font-semibold")}
                     >
                       {label}
                     </span>

@@ -66,10 +66,10 @@ export function CounterFormSheet({
       onClick={onCancel}
     >
       <div
-        className="pb-safe bg-surface max-h-[85dvh] w-full max-w-lg overflow-y-auto rounded-t-2xl p-5"
+        className="shadow-overlay pb-safe bg-surface max-h-[85dvh] w-full max-w-lg overflow-y-auto rounded-t-lg p-5"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="mb-4 text-lg font-semibold">{t.counter.add}</h2>
+        <h2 className="text-heading mb-4 font-semibold">{t.counter.add}</h2>
 
         <TextField
           label={t.counter.label}
@@ -126,7 +126,7 @@ export function CounterFormSheet({
                   onChange={(e) => setLinkRatio(e.target.value)}
                 />
                 {num(linkRatio) && linkedCounter && (
-                  <p className="text-text-muted -mt-2 mb-4 text-xs">
+                  <p className="text-text-2 text-caption -mt-2 mb-4">
                     {t.counter.linkedHint
                       .replace("{main}", linkedCounter.label)
                       .replace("{ratio}", String(num(linkRatio)))}
