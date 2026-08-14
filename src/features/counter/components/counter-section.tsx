@@ -3,6 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { useLiveQuery } from "dexie-react-hooks";
 import { Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ConfirmSheet } from "@/components/ui/confirm-sheet";
 import { counterView } from "@/domain/counter";
 import { CounterFormSheet } from "./counter-form-sheet";
 import {
@@ -17,6 +18,9 @@ export function CounterSection({ projectId }: { projectId: Id }) {
   const t = useStrings();
   const counters = useLiveQuery(() => listCounters(projectId), [projectId]);
   const [adding, setAdding] = useState(false);
+  // 확인 시트는 행마다 두지 않고 섹션이 하나만 들고 있는다. 행에 두면
+  // 열려 있는 동안 목록이 갱신되면 시트가 행과 함께 사라진다.
+  const [pendingDelete, setPendingDelete] = useState<Counter | null>(null);
 
   if (!counters) return null;
 
@@ -43,7 +47,7 @@ export function CounterSection({ projectId }: { projectId: Id }) {
               key={counter.id}
               counter={counter}
               siblings={counters}
-              onDelete={() => void deleteCounter(counter.id)}
+              onRequestDelete={() => setPendingDelete(counter)}
             />
           ))}
         </ul>
@@ -66,6 +70,19 @@ export function CounterSection({ projectId }: { projectId: Id }) {
           }}
         />
       )}
+
+      {pendingDelete && (
+        <ConfirmSheet
+          title={t.counter.deleteConfirm}
+          description={pendingDelete.label}
+          confirmLabel={t.action.delete}
+          onCancel={() => setPendingDelete(null)}
+          onConfirm={() => {
+            void deleteCounter(pendingDelete.id);
+            setPendingDelete(null);
+          }}
+        />
+      )}
     </section>
   );
 }
@@ -73,11 +90,11 @@ export function CounterSection({ projectId }: { projectId: Id }) {
 function CounterRow({
   counter,
   siblings,
-  onDelete,
+  onRequestDelete,
 }: {
   counter: Counter;
   siblings: Counter[];
-  onDelete: () => void;
+  onRequestDelete: () => void;
 }) {
   const t = useStrings();
   const view = counterView(counter);
@@ -108,9 +125,7 @@ function CounterRow({
         type="button"
         aria-label={t.action.delete}
         className="text-text-2 rounded-md p-2"
-        onClick={() => {
-          if (window.confirm(t.counter.deleteConfirm)) onDelete();
-        }}
+        onClick={onRequestDelete}
       >
         <Trash2 size={16} />
       </button>

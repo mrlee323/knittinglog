@@ -1,12 +1,15 @@
+import { useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useLiveQuery } from "dexie-react-hooks";
 import { ChevronLeft, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ConfirmSheet } from "@/components/ui/confirm-sheet";
 import { Page } from "@/components/ui/page";
 import { useUnits } from "@/app/units";
 import { filledCount, nearestEasePreset } from "@/domain/body";
 import { deleteProfile, listProfiles } from "@/features/profile/repository";
 import { useStrings } from "@/i18n";
+import type { Id } from "@/types/entities";
 
 export const Route = createFileRoute("/profiles/")({ component: Profiles });
 
@@ -15,6 +18,9 @@ function Profiles() {
   const units = useUnits();
   const navigate = useNavigate();
   const profiles = useLiveQuery(() => listProfiles(), []);
+  const [pendingDelete, setPendingDelete] = useState<Id | null>(null);
+
+  const pending = profiles?.find((p) => p.id === pendingDelete);
 
   return (
     <Page
@@ -69,11 +75,7 @@ function Profiles() {
                 <Button
                   variant="danger"
                   className="!text-caption !min-h-9 !px-2"
-                  onClick={() => {
-                    if (window.confirm(t.profile.deleteConfirm)) {
-                      void deleteProfile(profile.id);
-                    }
-                  }}
+                  onClick={() => setPendingDelete(profile.id)}
                 >
                   {t.action.delete}
                 </Button>
@@ -81,6 +83,19 @@ function Profiles() {
             );
           })}
         </ul>
+      )}
+
+      {pending && (
+        <ConfirmSheet
+          title={t.profile.deleteConfirm}
+          description={pending.name}
+          confirmLabel={t.action.delete}
+          onCancel={() => setPendingDelete(null)}
+          onConfirm={() => {
+            void deleteProfile(pending.id);
+            setPendingDelete(null);
+          }}
+        />
       )}
     </Page>
   );

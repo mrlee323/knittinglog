@@ -3,6 +3,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useLiveQuery } from "dexie-react-hooks";
 import { ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ConfirmSheet } from "@/components/ui/confirm-sheet";
 import { Page } from "@/components/ui/page";
 import { PauseSheet } from "@/features/project/components/pause-sheet";
 import { StatusBadge } from "@/features/project/components/status-badge";
@@ -32,6 +33,7 @@ function ProjectDetail() {
   const { projectId } = Route.useParams();
   const project = useLiveQuery(() => getProject(projectId), [projectId]);
   const [pausing, setPausing] = useState(false);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
 
   if (!project) return null;
 
@@ -50,7 +52,6 @@ function ProjectDetail() {
   }
 
   async function handleDelete() {
-    if (!window.confirm(t.project.deleteConfirm)) return;
     await deleteProject(projectId);
     await navigate({ to: "/projects" });
   }
@@ -130,10 +131,20 @@ function ProjectDetail() {
         <Link to="/projects/$projectId/edit" params={{ projectId }}>
           <Button variant="ghost">{t.action.edit}</Button>
         </Link>
-        <Button variant="danger" onClick={handleDelete}>
+        <Button variant="danger" onClick={() => setConfirmingDelete(true)}>
           {t.action.delete}
         </Button>
       </div>
+
+      {confirmingDelete && (
+        <ConfirmSheet
+          title={t.project.deleteConfirm}
+          description={project.name}
+          confirmLabel={t.action.delete}
+          onCancel={() => setConfirmingDelete(false)}
+          onConfirm={() => void handleDelete()}
+        />
+      )}
 
       {pausing && (
         <PauseSheet

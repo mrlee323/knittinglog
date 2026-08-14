@@ -76,14 +76,15 @@ export function YarnForm({
       />
 
       {/* 화면 색 — 이 앱에서 사용자가 색을 고르는 유일한 자리.
-          그래서 색 견본과 색상명을 한 줄에 붙여 "이 색이 이 이름"으로 읽히게 한다. */}
-      <div className="mb-4">
-        <span className="text-text-2 text-caption mb-1.5 block">
-          {t.yarn.colorHex}
-        </span>
-        {/* 색상명에 라벨이 붙어 있어 위로 밀린다. 아래를 맞춰야 견본·입력·버튼이
-            같은 줄로 읽힌다. */}
-        <div className="flex items-end gap-2">
+          견본과 색상명을 한 줄에 붙여 "이 색이 이 이름"으로 읽히게 한다.
+          견본에 별도 라벨을 달지 않는 것은 한 줄에 라벨이 둘이면 무엇을
+          입력하는 칸인지 오히려 흐려지기 때문이다. 힌트가 그 역할을 한다. */}
+      <TextField
+        label={t.yarn.colorName}
+        hint={t.yarn.colorHint}
+        value={values.colorName ?? ""}
+        onChange={(e) => set("colorName", str(e.target.value))}
+        before={
           <input
             type="color"
             aria-label={t.yarn.colorHex}
@@ -91,15 +92,9 @@ export function YarnForm({
             onChange={(e) => set("colorHex", e.target.value)}
             className="border-line-strong size-11 shrink-0 cursor-pointer rounded-md border bg-transparent p-1"
           />
-          <div className="min-w-0 flex-1">
-            <TextField
-              label={t.yarn.colorName}
-              className="mb-0"
-              value={values.colorName ?? ""}
-              onChange={(e) => set("colorName", str(e.target.value))}
-            />
-          </div>
-          {values.colorHex && (
+        }
+        after={
+          values.colorHex && (
             <Button
               icon
               variant="ghost"
@@ -108,10 +103,9 @@ export function YarnForm({
             >
               <X size={16} />
             </Button>
-          )}
-        </div>
-        <p className="text-text-3 text-caption mt-1.5">{t.yarn.colorHint}</p>
-      </div>
+          )
+        }
+      />
 
       <div className="flex gap-3">
         <div className="flex-1">

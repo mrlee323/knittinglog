@@ -37,11 +37,14 @@ export function Button({
       type={type}
       className={cn(
         // 모바일 터치 타깃 최소 44px.
-        // shrink-0 + nowrap이 없으면 flex 안에서 짧은 라벨이 세로로 쪼개진다.
-        "text-small inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-md font-medium whitespace-nowrap transition disabled:opacity-40",
+        // nowrap이 없으면 flex 안에서 짧은 라벨이 세로로 쪼개진다.
+        "text-small inline-flex min-h-11 items-center justify-center gap-2 rounded-md font-medium whitespace-nowrap transition disabled:opacity-40",
         icon ? "w-11 px-0" : "px-4",
         VARIANTS[variant],
-        block && "w-full",
+        // block은 "칸을 채운다"는 뜻이므로 줄어들 수도 있어야 한다.
+        // w-full과 shrink-0을 함께 주면 한 줄에 둘을 놓는 순간 합이 200%가
+        // 되어 뒤 버튼이 컨테이너 밖으로 밀린다.
+        block ? "w-full shrink" : "shrink-0",
         className
       )}
       {...props}

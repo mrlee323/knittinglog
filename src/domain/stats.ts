@@ -1,0 +1,180 @@
+/**
+ * 통계 집계.
+ *
+ * 대시보드의 첫 번째 임무는 자랑이 아니라 **가시성**이다. 몇 개가 멈춰 있는지
+ * 조차 파악이 안 되는 게 중단의 원인 중 하나였다(기획 §1). 그래서 여기 계산은
+ * "얼마나 많이 떴나"보다 "지금 무엇이 어디에 있나"에 무게를 둔다.
+ *
+ * 시각은 전부 인자로 받는다. 도메인이 현재 시각을 직접 읽으면 테스트가
+ * 시계에 의존하게 된다.
+ */
+
+import type { ProjectStatus } from "@/types/entities";
+
+/* --- 날짜 키 -------------------------------------------------------------- */
+
+/**
+ * 로컬 기준 날짜 키(`YYYY-MM-DD`).
+ *
+ * `toISOString()`을 쓰면 UTC 기준으로 잘려서 한국 시간 오전 9시 이전에 뜬 것이
+ * 전날로 밀린다. 밤에 뜨는 사람이 많은 앱에서 이건 흔하게 틀리는 자리다.
+ */
+export function localDateKey(date: Date): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
+/** 로컬 자정 기준으로 n일 전 */
+export function daysAgo(now: Date, n: number): Date {
+  const date = new Date(now);
+  date.setHours(0, 0, 0, 0);
+  date.setDate(date.getDate() - n);
+  return date;
+}
+
+/* --- 세션 집계 ------------------------------------------------------------ */
+
+export interface SessionLike {
+  startedAt: Date;
+  endedAt?: Date;
+  rowsAdded: number;
+}
+
+export interface SessionTotals {
+  rows: number;
+  /** 밀리초 */
+  durationMs: number;
+  /** 실제로 뜬 날의 수 */
+  days: number;
+}
+
+/** 끝나지 않은 세션은 시간을 셀 수 없다 — 단수만 센다. */
+const durationOf = (session: SessionLike) =>
+  session.endedAt ? session.endedAt.getTime() - session.startedAt.getTime() : 0;
+
+export function aggregateSessions(sessions: SessionLike[]): SessionTotals {
+  const days = new Set<string>();
+  let rows = 0;
+  let durationMs = 0;
+
+  for (const session of sessions) {
+    rows += Math.max(0, session.rowsAdded);
+    durationMs += Math.max(0, durationOf(session));
+    days.add(localDateKey(session.startedAt));
+  }
+
+  return { rows, durationMs, days: days.size };
+}
+
+/** 날짜별 단수. 잔디 히트맵(P1)과 "이번 주" 집계가 같은 값을 쓴다. */
+export function rowsByDate(sessions: SessionLike[]): Map<string, number> {
+  const map = new Map<string, number>();
+  for (const session of sessions) {
+    const key = localDateKey(session.startedAt);
+    map.set(key, (map.get(key) ?? 0) + Math.max(0, session.rowsAdded));
+  }
+  return map;
+}
+
+export const sessionsSince = (sessions: SessionLike[], from: Date) =>
+  sessions.filter((s) => s.startedAt.getTime() >= from.getTime());
+
+/**
+ * 연속으로 뜬 일수.
+ *
+ * 오늘 아직 안 떴어도 어제까지 이어졌으면 끊긴 게 아니다 — 하루는 아직 남았다.
+ * 오늘을 기준으로 끊어버리면 아침에 앱을 열 때마다 기록이 0으로 보인다.
+ */
+export function currentStreak(sessions: SessionLike[], now: Date): number {
+  const days = new Set([...rowsByDate(sessions).keys()]);
+  if (days.size === 0) return 0;
+
+  const todayKey = localDateKey(now);
+  const yesterdayKey = localDateKey(daysAgo(now, 1));
+  if (!days.has(todayKey) && !days.has(yesterdayKey)) return 0;
+
+  let streak = 0;
+  let offset = days.has(todayKey) ? 0 : 1;
+  while (days.has(localDateKey(daysAgo(now, offset)))) {
+    streak += 1;
+    offset += 1;
+  }
+  return streak;
+}
+
+/* --- 프로젝트 현황 -------------------------------------------------------- */
+
+export interface ProjectLike {
+  id: string;
+  status: ProjectStatus;
+  updatedAt: Date;
+  pausedAt?: Date;
+  finishedAt?: Date;
+}
+
+export type StatusCounts = Record<ProjectStatus, number>;
+
+export function countByStatus(projects: ProjectLike[]): StatusCounts {
+  const counts: StatusCounts = {
+    planning: 0,
+    active: 0,
+    hibernating: 0,
+    finished: 0,
+    frogged: 0,
+  };
+  for (const project of projects) counts[project.status] += 1;
+  return counts;
+}
+
+/** 올해 완성한 개수. 연간 결산(P2)의 씨앗이기도 하다. */
+export function finishedInYear(projects: ProjectLike[], now: Date): number {
+  return projects.filter(
+    (p) => p.finishedAt && p.finishedAt.getFullYear() === now.getFullYear()
+  ).length;
+}
+
+/**
+ * 이어서 뜰 프로젝트.
+ *
+ * 가장 최근에 손댄 진행중 프로젝트. 대시보드에서 뜨기 모드까지 한 번에
+ * 가기 위한 것이고, 없으면 null을 돌려준다(억지로 뭔가 보여주지 않는다).
+ */
+export function resumeCandidate<T extends ProjectLike>(
+  projects: T[]
+): T | null {
+  const active = projects.filter((p) => p.status === "active");
+  if (active.length === 0) return null;
+  return active.reduce((latest, p) =>
+    p.updatedAt.getTime() > latest.updatedAt.getTime() ? p : latest
+  );
+}
+
+/**
+ * 오래 멈춘 것부터.
+ *
+ * 죄책감을 주려는 목록이 아니다. 멈춘 게 보이지 않아서 잊히는 걸 막는 목록이다.
+ * pausedAt이 없는 잠시멈춤은 순서를 정할 근거가 없으므로 뒤로 보낸다.
+ */
+export function longestPaused<T extends ProjectLike>(
+  projects: T[],
+  limit = 3
+): T[] {
+  return projects
+    .filter((p) => p.status === "hibernating")
+    .sort((a, b) => {
+      const aTime = a.pausedAt?.getTime() ?? Infinity;
+      const bTime = b.pausedAt?.getTime() ?? Infinity;
+      return aTime - bTime;
+    })
+    .slice(0, limit);
+}
+
+/* --- 표시 보조 ------------------------------------------------------------ */
+
+/** 시간을 시·분으로 쪼갠다. 초는 뜨개에서 의미가 없다. */
+export function splitDuration(ms: number): { hours: number; minutes: number } {
+  const totalMinutes = Math.max(0, Math.floor(ms / 60_000));
+  return { hours: Math.floor(totalMinutes / 60), minutes: totalMinutes % 60 };
+}

@@ -51,6 +51,9 @@ export default defineConfig({
       },
     }),
   ],
+  // Vite는 PORT 환경변수를 스스로 읽지 않는다. 여기서 받아줘야 여러 세션이
+  // 각자 다른 포트로 dev 서버를 띄울 수 있다.
+  server: { port: Number(process.env.PORT) || 5173 },
   resolve: {
     alias: {
       "@": fileURLToPath(new URL("./src", import.meta.url)),
