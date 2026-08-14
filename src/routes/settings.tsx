@@ -54,7 +54,7 @@ function SettingsPage() {
   return (
     <Page title={t.nav.settings}>
       <SegmentedControl<Locale>
-        label="언어 / Language"
+        label={t.settings.language}
         value={locale}
         onChange={setLocale}
         options={[
@@ -64,18 +64,18 @@ function SettingsPage() {
       />
 
       <SegmentedControl<ThemeMode>
-        label="테마"
+        label={t.settings.theme}
         value={theme}
         onChange={setTheme}
         options={[
-          { value: "system", label: "시스템" },
-          { value: "light", label: "라이트" },
-          { value: "dark", label: "다크" },
+          { value: "system", label: t.settings.themeSystem },
+          { value: "light", label: t.settings.themeLight },
+          { value: "dark", label: t.settings.themeDark },
         ]}
       />
 
       <SegmentedControl<UnitSystem>
-        label="단위계"
+        label={t.settings.units}
         value={units}
         onChange={setUnits}
         options={[

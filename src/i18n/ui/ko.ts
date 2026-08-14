@@ -30,6 +30,14 @@ export const ko = {
     other: "기타",
   },
   craft: { knit: "대바늘", crochet: "코바늘" },
+  settings: {
+    language: "언어 / Language",
+    theme: "테마",
+    themeSystem: "시스템",
+    themeLight: "라이트",
+    themeDark: "다크",
+    units: "단위계",
+  },
   common: { empty: "아직 없어요", loading: "불러오는 중" },
 };
 
