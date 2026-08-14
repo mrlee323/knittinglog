@@ -97,9 +97,14 @@ export interface Counter extends Base {
   label: string;
   value: number;
   target?: number;
-  /** 메인 카운터가 linkRatio단 올라갈 때마다 이 카운터가 1 오른다 */
+  /**
+   * 메인 카운터가 linkRatio단 올라갈 때마다 이 카운터가 1 오른다.
+   * 값은 증감이 아니라 메인에서 파생된다 — 어긋남을 원천 차단한다.
+   */
   linkedCounterId?: Id;
   linkRatio?: number;
+  /** 뜨던 도중에 연동을 붙였을 때의 시작값 보정 */
+  linkOffset?: number;
   /** 무늬 반복 길이와 목표 반복 횟수 */
   repeatLength?: number;
   repeatTarget?: number;

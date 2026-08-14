@@ -12,6 +12,7 @@ import {
   getProject,
 } from "@/features/project/repository";
 import { pausedLabel } from "@/features/project/format";
+import { CounterSection } from "@/features/counter/components/counter-section";
 import { allowedEvents, daysSincePaused } from "@/domain/projectStatus";
 import { useLocale, useStrings } from "@/i18n";
 import type { ProjectEvent, ProjectEventType } from "@/domain/projectStatus";
@@ -122,6 +123,8 @@ function ProjectDetail() {
           </Button>
         ))}
       </div>
+
+      <CounterSection projectId={projectId} />
 
       <div className="border-border flex gap-2 border-t pt-4">
         <Link to="/projects/$projectId/edit" params={{ projectId }}>
