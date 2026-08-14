@@ -140,18 +140,13 @@ function AllocateSheet({
       >
         <h2 className="text-heading mb-4 font-semibold">{t.allocation.pick}</h2>
 
-        <div className="mb-4 flex items-center gap-3">
-          <YarnTile color={selected?.colorHex} />
-          <div className="flex-1">
-            <SelectField
-              label={t.yarn.title}
-              className="mb-0"
-              value={yarnId}
-              onChange={(e) => setYarnId(e.target.value)}
-              options={yarns.map((y) => ({ value: y.id, label: y.name }))}
-            />
-          </div>
-        </div>
+        <SelectField
+          label={t.yarn.title}
+          value={yarnId}
+          onChange={(e) => setYarnId(e.target.value)}
+          options={yarns.map((y) => ({ value: y.id, label: y.name }))}
+          before={<YarnTile color={selected?.colorHex} />}
+        />
 
         <TextField
           label={t.allocation.skeins}

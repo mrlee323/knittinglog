@@ -52,26 +52,58 @@ function Wrapper({
   );
 }
 
+/**
+ * 컨트롤 좌우에 붙는 것(색 견본, 지우기 버튼 등)을 한 줄로 묶는다.
+ *
+ * 이걸 두는 이유는 정렬이다. 바깥에서 flex로 감싸면 라벨이 붙은 필드와
+ * 안 붙은 요소의 높이가 달라 줄이 어긋나는데, 여기서 묶으면 라벨·힌트는
+ * 줄 바깥에 남고 컨트롤끼리만 정렬된다.
+ */
+function ControlRow({
+  before,
+  after,
+  children,
+}: {
+  before?: ReactNode;
+  after?: ReactNode;
+  children: ReactNode;
+}) {
+  if (!before && !after) return children;
+  return (
+    <div className="flex items-center gap-2">
+      {before}
+      <div className="min-w-0 flex-1">{children}</div>
+      {after}
+    </div>
+  );
+}
+
 export function TextField({
   label,
   hint,
   error,
+  before,
+  after,
   className,
   ...props
 }: InputHTMLAttributes<HTMLInputElement> & {
   label: string;
   hint?: string;
   error?: string;
+  before?: ReactNode;
+  after?: ReactNode;
 }) {
   const id = useId();
   return (
     <Wrapper label={label} hint={hint} error={error} htmlFor={id}>
-      <input
-        id={id}
-        aria-invalid={error ? true : undefined}
-        className={cn(CONTROL, error && "border-frogged", className)}
-        {...props}
-      />
+      <ControlRow before={before} after={after}>
+        <input
+          id={id}
+          aria-invalid={error ? true : undefined}
+          className={cn(CONTROL, error && "border-frogged", className)}
+          {...props}
+        />
+      </ControlRow>
     </Wrapper>
   );
 }
@@ -105,6 +137,8 @@ export function SelectField({
   hint,
   error,
   options,
+  before,
+  after,
   className,
   ...props
 }: SelectHTMLAttributes<HTMLSelectElement> & {
@@ -112,17 +146,21 @@ export function SelectField({
   hint?: string;
   error?: string;
   options: { value: string; label: string }[];
+  before?: ReactNode;
+  after?: ReactNode;
 }) {
   const id = useId();
   return (
     <Wrapper label={label} hint={hint} error={error} htmlFor={id}>
-      <select id={id} className={cn(CONTROL, className)} {...props}>
-        {options.map((o) => (
-          <option key={o.value} value={o.value}>
-            {o.label}
-          </option>
-        ))}
-      </select>
+      <ControlRow before={before} after={after}>
+        <select id={id} className={cn(CONTROL, className)} {...props}>
+          {options.map((o) => (
+            <option key={o.value} value={o.value}>
+              {o.label}
+            </option>
+          ))}
+        </select>
+      </ControlRow>
     </Wrapper>
   );
 }

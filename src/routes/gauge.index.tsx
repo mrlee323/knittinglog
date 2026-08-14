@@ -1,11 +1,14 @@
+import { useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useLiveQuery } from "dexie-react-hooks";
 import { Calculator, Plus, Ruler } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ConfirmSheet } from "@/components/ui/confirm-sheet";
 import { Page } from "@/components/ui/page";
 import { deleteGauge, listGauges } from "@/features/gauge/repository";
 import { findNeedle } from "@/domain/units";
 import { useStrings } from "@/i18n";
+import type { Id } from "@/types/entities";
 
 export const Route = createFileRoute("/gauge/")({ component: GaugeIndex });
 
@@ -13,6 +16,13 @@ function GaugeIndex() {
   const t = useStrings();
   const navigate = useNavigate();
   const gauges = useLiveQuery(() => listGauges(), []);
+  const [pendingDelete, setPendingDelete] = useState<Id | null>(null);
+
+  const pending = gauges?.find((g) => g.id === pendingDelete);
+  const summary = (sts: number, rows: number) =>
+    t.gauge.summary
+      .replace("{sts}", String(sts))
+      .replace("{rows}", String(rows));
 
   return (
     <Page
@@ -56,9 +66,7 @@ function GaugeIndex() {
                   className="min-w-0 flex-1"
                 >
                   <p className="text-subhead font-semibold">
-                    {t.gauge.summary
-                      .replace("{sts}", String(gauge.stitchesPer10cm))
-                      .replace("{rows}", String(gauge.rowsPer10cm))}
+                    {summary(gauge.stitchesPer10cm, gauge.rowsPer10cm)}
                   </p>
                   <p className="text-text-2 text-small truncate">
                     {[
@@ -74,11 +82,7 @@ function GaugeIndex() {
                 <Button
                   variant="danger"
                   className="!text-caption !min-h-9 !px-2"
-                  onClick={() => {
-                    if (window.confirm(t.gauge.deleteConfirm)) {
-                      void deleteGauge(gauge.id);
-                    }
-                  }}
+                  onClick={() => setPendingDelete(gauge.id)}
                 >
                   {t.action.delete}
                 </Button>
@@ -86,6 +90,25 @@ function GaugeIndex() {
             );
           })}
         </ul>
+      )}
+
+      {pending && (
+        <ConfirmSheet
+          title={t.gauge.deleteConfirm}
+          // 목록에서 삭제하는 거라 어느 스와치인지 시트가 다시 말해줘야 한다
+          description={[
+            summary(pending.stitchesPer10cm, pending.rowsPer10cm),
+            pending.label,
+          ]
+            .filter(Boolean)
+            .join(" · ")}
+          confirmLabel={t.action.delete}
+          onCancel={() => setPendingDelete(null)}
+          onConfirm={() => {
+            void deleteGauge(pending.id);
+            setPendingDelete(null);
+          }}
+        />
       )}
     </Page>
   );

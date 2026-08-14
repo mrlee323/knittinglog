@@ -238,6 +238,28 @@ export const ko = {
       oversized: "오버핏",
     },
   },
+  dashboard: {
+    resume: "이어서 뜨기",
+    resumeEmpty: "지금 뜨고 있는 게 없어요",
+    resumeEmptyHint: "멈춰둔 걸 다시 꺼내거나 새로 시작해봐요",
+    counterOf: "{label} {value}단",
+    /** 상태 요약 — 누르면 그 상태로 필터된 목록으로 간다 */
+    summary: "지금 상태",
+    finishedThisYear: "올해 완성",
+    /** 죄책감이 아니라 가시성을 위한 목록이다 */
+    waiting: "기다리는 중",
+    waitingHint: "잊혀서 멈춘 거라면 여기서 다시 만나요",
+    thisWeek: "이번 주",
+    allTime: "누적",
+    rows: "{n}단",
+    hours: "{h}시간 {m}분",
+    minutes: "{m}분",
+    days: "{n}일",
+    streak: "{n}일째 연속",
+    noActivity: "아직 뜬 기록이 없어요",
+    emptyTitle: "첫 프로젝트를 등록해볼까요",
+    emptyHint: "하다 만 것부터 넣어도 괜찮아요. 그게 이 앱의 목적이에요.",
+  },
   action: {
     create: "만들기",
     save: "저장",
