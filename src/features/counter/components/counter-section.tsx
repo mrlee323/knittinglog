@@ -25,8 +25,8 @@ export function CounterSection({ projectId }: { projectId: Id }) {
       <div className="mb-3 flex items-center justify-between">
         <h2 className="font-medium">{t.counter.title}</h2>
         <Button
+          icon
           variant="ghost"
-          className="!min-h-9 !px-2"
           aria-label={t.counter.add}
           onClick={() => setAdding(true)}
         >

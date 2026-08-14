@@ -1,0 +1,161 @@
+import { useState, type FormEvent } from "react";
+import { useLiveQuery } from "dexie-react-hooks";
+import { Button } from "@/components/ui/button";
+import { SelectField, TextField } from "@/components/ui/field";
+import {
+  gaugeFormSchema,
+  type GaugeFormValues,
+} from "@/features/gauge/repository";
+import { listYarns } from "@/features/yarn/repository";
+import { useStrings } from "@/i18n";
+
+const EMPTY: GaugeFormValues = { stitchesPer10cm: 22, rowsPer10cm: 30 };
+
+const num = (raw: string) => (raw.trim() === "" ? undefined : Number(raw));
+
+export function GaugeForm({
+  initial,
+  submitLabel,
+  onSubmit,
+  onCancel,
+}: {
+  initial?: GaugeFormValues;
+  submitLabel: string;
+  onSubmit: (values: GaugeFormValues) => Promise<void>;
+  onCancel: () => void;
+}) {
+  const t = useStrings();
+  const yarns = useLiveQuery(() => listYarns(), []);
+  const [values, setValues] = useState<GaugeFormValues>(initial ?? EMPTY);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [saving, setSaving] = useState(false);
+
+  const set = <K extends keyof GaugeFormValues>(
+    key: K,
+    value: GaugeFormValues[K]
+  ) => setValues((prev) => ({ ...prev, [key]: value }));
+
+  async function handleSubmit(event: FormEvent) {
+    event.preventDefault();
+    const result = gaugeFormSchema.safeParse(values);
+    if (!result.success) {
+      setErrors(
+        Object.fromEntries(
+          result.error.issues.map((i) => [String(i.path[0]), i.message])
+        )
+      );
+      return;
+    }
+    setErrors({});
+    setSaving(true);
+    try {
+      await onSubmit(result.data);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit} noValidate>
+      <TextField
+        label={t.gauge.label}
+        placeholder={t.gauge.labelPlaceholder}
+        value={values.label ?? ""}
+        autoFocus
+        onChange={(e) => set("label", e.target.value.trim() || undefined)}
+      />
+
+      {/* 게이지는 10cm 기준으로만 받는다. 인치권 4인치 기준과 섞으면
+          값이 미묘하게 틀어지므로 단위계 토글을 여기 적용하지 않는다. */}
+      <div className="flex gap-3">
+        <div className="flex-1">
+          <TextField
+            label={t.gauge.stitches}
+            inputMode="decimal"
+            value={values.stitchesPer10cm}
+            error={errors.stitchesPer10cm}
+            onChange={(e) => set("stitchesPer10cm", num(e.target.value) ?? 0)}
+          />
+        </div>
+        <div className="flex-1">
+          <TextField
+            label={t.gauge.rows}
+            inputMode="decimal"
+            value={values.rowsPer10cm}
+            error={errors.rowsPer10cm}
+            onChange={(e) => set("rowsPer10cm", num(e.target.value) ?? 0)}
+          />
+        </div>
+      </div>
+
+      <div className="flex gap-3">
+        <div className="flex-1">
+          <TextField
+            label={t.gauge.needleMm}
+            inputMode="decimal"
+            value={values.needleMm ?? ""}
+            onChange={(e) => set("needleMm", num(e.target.value))}
+          />
+        </div>
+        <div className="flex-1">
+          <TextField
+            label={t.gauge.pattern}
+            placeholder={t.gauge.patternPlaceholder}
+            value={values.pattern ?? ""}
+            onChange={(e) => set("pattern", e.target.value.trim() || undefined)}
+          />
+        </div>
+      </div>
+
+      {yarns && yarns.length > 0 && (
+        <SelectField
+          label={t.yarn.title}
+          value={values.yarnId ?? ""}
+          onChange={(e) => set("yarnId", e.target.value || undefined)}
+          options={[
+            { value: "", label: t.yarn.weightUnset },
+            ...yarns.map((y) => ({ value: y.id, label: y.name })),
+          ]}
+        />
+      )}
+
+      <fieldset className="border-line mb-4 rounded-md border p-3">
+        <legend className="text-text-2 text-caption px-1">
+          {t.gauge.blocked}
+        </legend>
+        <div className="flex gap-3">
+          <div className="flex-1">
+            <TextField
+              label={t.gauge.stitches}
+              className="mb-0"
+              inputMode="decimal"
+              value={values.blockedStitchesPer10cm ?? ""}
+              onChange={(e) =>
+                set("blockedStitchesPer10cm", num(e.target.value))
+              }
+            />
+          </div>
+          <div className="flex-1">
+            <TextField
+              label={t.gauge.rows}
+              className="mb-0"
+              inputMode="decimal"
+              value={values.blockedRowsPer10cm ?? ""}
+              onChange={(e) => set("blockedRowsPer10cm", num(e.target.value))}
+            />
+          </div>
+        </div>
+        <p className="text-text-3 text-caption mt-2">{t.gauge.blockedHint}</p>
+      </fieldset>
+
+      <div className="flex gap-2">
+        <Button type="submit" block disabled={saving}>
+          {submitLabel}
+        </Button>
+        <Button variant="secondary" onClick={onCancel}>
+          {t.action.cancel}
+        </Button>
+      </div>
+    </form>
+  );
+}

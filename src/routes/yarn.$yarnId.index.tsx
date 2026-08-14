@@ -1,8 +1,10 @@
+import { useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useLiveQuery } from "dexie-react-hooks";
 import { ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Page } from "@/components/ui/page";
+import { ConfirmSheet } from "@/components/ui/confirm-sheet";
+import { BackLink, Page } from "@/components/ui/page";
 import { YarnTile } from "@/features/yarn/components/yarn-swatch";
 import {
   deleteYarn,
@@ -19,6 +21,12 @@ export const Route = createFileRoute("/yarn/$yarnId/")({
   component: YarnDetail,
 });
 
+/** 이 화면의 정보 블록은 전부 같은 카드다. 그림자 없이 선으로만 나눈다. */
+const CARD = "border-line bg-surface mb-5 rounded-md border p-4";
+
+/** 카드 안쪽 라벨. 대문자 라벨 자리라 micro + 넓은 자간을 쓴다. */
+const SECTION_LABEL = "text-micro text-text-3 mb-2";
+
 function YarnDetail() {
   const t = useStrings();
   const navigate = useNavigate();
@@ -30,6 +38,7 @@ function YarnDetail() {
     [yarnId]
   );
   const projects = useLiveQuery(() => db.projects.toArray(), []);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
 
   if (!yarn) return null;
 
@@ -39,21 +48,23 @@ function YarnDetail() {
     yarn.weightClass !== undefined ? yarnWeight(yarn.weightClass) : null;
 
   async function handleDelete() {
-    if (!window.confirm(t.yarn.deleteConfirm)) return;
     await deleteYarn(yarnId);
     await navigate({ to: "/yarn" });
   }
 
   return (
-    <Page title={yarn.name} action={<YarnTile color={yarn.colorHex} />}>
-      <Link
-        to="/yarn"
-        className="text-text-2 text-small -mt-2 mb-4 inline-flex items-center gap-1"
-      >
-        <ChevronLeft size={16} />
-        {t.yarn.title}
-      </Link>
-
+    <Page
+      title={yarn.name}
+      back={
+        <Link to="/yarn">
+          <BackLink>
+            <ChevronLeft size={16} />
+            {t.yarn.title}
+          </BackLink>
+        </Link>
+      }
+      action={<YarnTile color={yarn.colorHex} />}
+    >
       <dl className="mb-5 space-y-2">
         {yarn.brand && <Row label={t.yarn.brand}>{yarn.brand}</Row>}
         {yarn.colorName && <Row label={t.yarn.colorName}>{yarn.colorName}</Row>}
@@ -63,8 +74,9 @@ function YarnDetail() {
         {yarn.shop && <Row label={t.yarn.shop}>{yarn.shop}</Row>}
       </dl>
 
-      {/* 보유량 */}
-      <section className="border-line bg-surface mb-5 rounded-md border p-4">
+      {/* 보유량 — 이 화면에서 가장 또렷해야 하는 숫자 */}
+      <section className={CARD}>
+        <p className={SECTION_LABEL}>{t.yarn.stash}</p>
         <p className="text-title font-semibold">
           {t.yarn.skeins.replace("{n}", String(total.skeins))}
         </p>
@@ -95,8 +107,8 @@ function YarnDetail() {
 
       {/* 굵기 — 국가별 대조가 핵심이다. 이게 없으면 해외 도안을 국내 실로 못 뜬다. */}
       {weight && (
-        <section className="border-line mb-5 rounded-md border p-4">
-          <p className="text-micro text-text-3 mb-2">
+        <section className={CARD}>
+          <p className={SECTION_LABEL}>
             {t.yarn.weightClass} · CYC {weight.cyc}
           </p>
           <p className="text-subhead font-semibold">{weight.names.ko}</p>
@@ -149,14 +161,25 @@ function YarnDetail() {
         </section>
       )}
 
-      <div className="border-line flex gap-2 border-t pt-4">
+      {/* 삭제는 수정과 붙여두지 않는다. 되돌릴 수 없는 행동이 주 행동 옆에
+          있으면 손이 미끄러진다. */}
+      <div className="border-line flex items-center justify-between gap-2 border-t pt-4">
         <Link to="/yarn/$yarnId/edit" params={{ yarnId }}>
-          <Button variant="ghost">{t.action.edit}</Button>
+          <Button variant="secondary">{t.action.edit}</Button>
         </Link>
-        <Button variant="danger" onClick={handleDelete}>
+        <Button variant="danger" onClick={() => setConfirmingDelete(true)}>
           {t.action.delete}
         </Button>
       </div>
+
+      {confirmingDelete && (
+        <ConfirmSheet
+          title={t.yarn.deleteConfirm}
+          confirmLabel={t.action.delete}
+          onConfirm={() => void handleDelete()}
+          onCancel={() => setConfirmingDelete(false)}
+        />
+      )}
     </Page>
   );
 }

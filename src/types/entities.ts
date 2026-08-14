@@ -7,6 +7,7 @@
  */
 
 import type { Craft, YarnWeightClass } from "@/domain/units";
+import type { Measurements } from "@/domain/body";
 
 export type Id = string;
 
@@ -138,6 +139,13 @@ export interface GaugeRecord extends Base {
   projectId?: Id;
   yarnId?: Id;
   needleId?: Id;
+  /**
+   * 스와치를 뜬 바늘 굵기(mm).
+   *
+   * 바늘 인벤토리(needleId)는 P1이지만 호수 기록은 스와치의 핵심이다.
+   * 게이지가 안 맞을 때 "몇 호로 바꿔라"를 말하려면 지금 몇 호인지 알아야 한다.
+   */
+  needleMm?: number;
   label?: string;
   pattern?: string;
   stitchesPer10cm: number;
@@ -147,23 +155,18 @@ export interface GaugeRecord extends Base {
   photoBlob?: Blob;
 }
 
-export interface BodyMeasurements {
-  bust?: number;
-  waist?: number;
-  hip?: number;
-  shoulder?: number;
-  armLength?: number;
-  upperArm?: number;
-  backLength?: number;
-  headCirc?: number;
-  footLength?: number;
-  footCirc?: number;
-}
+/**
+ * 치수 항목은 domain/body.ts가 소유한다.
+ *
+ * 여기에 따로 선언하면 항목을 하나 추가할 때 두 곳을 고쳐야 하고,
+ * 한쪽만 고치면 계산기가 조용히 그 항목을 무시하게 된다.
+ */
+export type { Measurements as BodyMeasurements } from "@/domain/body";
 
 /** 선물용 프로젝트가 많아 여러 프로필을 관리한다 */
 export interface BodyProfile extends Base {
   name: string;
-  measurements: BodyMeasurements;
+  measurements: Measurements;
   /** 실측 + 여유분 = 완성 치수. 핏 취향(cm). */
   preferredEaseCm?: number;
 }

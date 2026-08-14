@@ -1,5 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useAtom } from "jotai";
+import { ChevronRight, Ruler } from "lucide-react";
 import { Page } from "@/components/ui/page";
 import { themeAtom, type ThemeMode } from "@/app/theme";
 import { unitSystemAtom } from "@/app/preferences";
@@ -53,6 +54,19 @@ function SettingsPage() {
 
   return (
     <Page title={t.nav.settings}>
+      {/* 치수 프로필은 설정보다 데이터에 가깝지만 하단 탭을 늘리기엔 애매하다.
+          계산기 안에서도 바로 고를 수 있으므로 입구는 여기 하나면 된다. */}
+      <Link
+        to="/profiles"
+        className="border-line bg-surface mb-5 flex items-center justify-between gap-3 rounded-md border p-3"
+      >
+        <span className="flex items-center gap-2">
+          <Ruler size={16} className="text-text-2" />
+          <span className="text-small font-medium">{t.profile.title}</span>
+        </span>
+        <ChevronRight size={16} className="text-text-3" />
+      </Link>
+
       <SegmentedControl<Locale>
         label={t.settings.language}
         value={locale}

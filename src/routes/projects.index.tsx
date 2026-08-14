@@ -53,8 +53,8 @@ function Projects() {
       title={t.nav.projects}
       action={
         <Button
+          icon
           aria-label={t.project.new}
-          className="!min-h-10 !px-3"
           onClick={() => navigate({ to: "/projects/new" })}
         >
           <Plus size={18} />
