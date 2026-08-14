@@ -19,7 +19,8 @@ export function Providers({ children }: { children: ReactNode }) {
     <JotaiProvider>
       <QueryClientProvider client={queryClient}>
         {children}
-        <ReactQueryDevtools initialIsOpen={false} />
+        {/* 기본 위치(좌하단)가 하단 탭바의 마지막 탭을 가린다 */}
+        <ReactQueryDevtools initialIsOpen={false} buttonPosition="top-right" />
       </QueryClientProvider>
     </JotaiProvider>
   );
