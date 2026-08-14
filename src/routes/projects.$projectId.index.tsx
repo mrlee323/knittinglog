@@ -58,23 +58,23 @@ function ProjectDetail() {
     <Page title={project.name} action={<StatusBadge status={project.status} />}>
       <Link
         to="/projects"
-        className="text-text-muted -mt-2 mb-4 inline-flex items-center gap-1 text-sm"
+        className="text-text-2 text-small -mt-2 mb-4 inline-flex items-center gap-1"
       >
         <ChevronLeft size={16} />
         {t.nav.projects}
       </Link>
 
-      <dl className="mb-5 space-y-1.5 text-sm">
+      <dl className="text-small mb-5 space-y-1.5">
         <div className="flex gap-2">
-          <dt className="text-text-muted">{t.project.craft}</dt>
+          <dt className="text-text-2">{t.project.craft}</dt>
           <dd>{t.craft[project.craft]}</dd>
         </div>
         <div className="flex gap-2">
-          <dt className="text-text-muted">{t.project.category}</dt>
+          <dt className="text-text-2">{t.project.category}</dt>
           <dd>{t.category[project.category]}</dd>
         </div>
         {project.startedAt && (
-          <div className="text-text-muted">
+          <div className="text-text-2">
             {t.project.startedOn.replace(
               "{date}",
               formatDate(project.startedAt)
@@ -82,7 +82,7 @@ function ProjectDetail() {
           </div>
         )}
         {project.finishedAt && (
-          <div className="text-text-muted">
+          <div className="text-text-2">
             {t.project.finishedOn.replace(
               "{date}",
               formatDate(project.finishedAt)
@@ -93,21 +93,19 @@ function ProjectDetail() {
 
       {/* 잠시멈춤 상태의 복귀 단서. 나중에 복귀 브리핑으로 확장된다. */}
       {pausedDays !== null && (
-        <div className="border-hibernating/30 bg-hibernating/8 mb-5 rounded-xl border p-4">
-          <p className="text-hibernating text-sm font-medium">
+        <div className="border-line bg-sunken mb-5 rounded-md border p-4">
+          <p className="text-hibernating text-small font-medium">
             {pausedLabel(t, pausedDays)}
             {project.pauseReason && ` · ${t.pauseReason[project.pauseReason]}`}
           </p>
           {project.pauseNote && (
-            <p className="text-text-muted mt-1.5 text-sm">
-              {project.pauseNote}
-            </p>
+            <p className="text-text-2 text-small mt-1.5">{project.pauseNote}</p>
           )}
         </div>
       )}
 
       {project.notes && (
-        <p className="bg-surface-muted mb-5 rounded-xl p-4 text-sm whitespace-pre-wrap">
+        <p className="bg-sunken text-small mb-5 rounded-md p-4 whitespace-pre-wrap">
           {project.notes}
         </p>
       )}
@@ -126,7 +124,7 @@ function ProjectDetail() {
 
       <CounterSection projectId={projectId} />
 
-      <div className="border-border flex gap-2 border-t pt-4">
+      <div className="border-line flex gap-2 border-t pt-4">
         <Link to="/projects/$projectId/edit" params={{ projectId }}>
           <Button variant="ghost">{t.action.edit}</Button>
         </Link>

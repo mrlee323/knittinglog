@@ -8,7 +8,7 @@ import { useId } from "react";
 import { cn } from "@/lib/utils";
 
 const CONTROL =
-  "w-full min-h-11 rounded-xl border border-border bg-surface px-3 py-2 text-sm outline-none transition focus:border-accent";
+  "w-full min-h-11 rounded-md border border-line bg-surface px-3 py-2 text-small outline-none transition focus:border-focus";
 
 function Wrapper({
   label,
@@ -23,12 +23,12 @@ function Wrapper({
 }) {
   return (
     <div className="mb-4">
-      <label htmlFor={htmlFor} className="text-text-muted mb-1.5 block text-sm">
+      <label htmlFor={htmlFor} className="text-text-2 text-small mb-1.5 block">
         {label}
       </label>
       {children}
       {error && (
-        <p role="alert" className="text-frogged mt-1.5 text-xs">
+        <p role="alert" className="text-frogged text-caption mt-1.5">
           {error}
         </p>
       )}

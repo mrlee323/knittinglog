@@ -9,7 +9,8 @@
 대바늘·코바늘을 동등하게 지원하고, 도안을 언어 중립 구조로 저장해
 한국어 ↔ 영어 도안 상호 변환을 지원하는 것을 지향합니다.
 
-전체 기획은 [docs/PLAN.md](docs/PLAN.md)를 참고하세요.
+전체 기획은 [docs/PLAN.md](docs/PLAN.md),
+디자인 시스템은 [docs/DESIGN.md](docs/DESIGN.md)를 참고하세요.
 
 ## 시작하기
 

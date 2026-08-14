@@ -147,7 +147,7 @@ function KnitMode() {
   const mainCounter = counters.find((c) => c.id === selected?.linkedCounterId);
 
   return (
-    <div className="pt-safe pb-safe bg-bg flex h-dvh flex-col">
+    <div className="pt-safe pb-safe bg-canvas flex h-dvh flex-col">
       {/* --- 상단 --- */}
       <header className="flex items-center gap-2 px-3 py-2">
         <button
@@ -156,11 +156,11 @@ function KnitMode() {
           onClick={() =>
             navigate({ to: "/projects/$projectId", params: { projectId } })
           }
-          className="text-text-muted rounded-lg p-2"
+          className="text-text-2 rounded-md p-2"
         >
           <X size={22} />
         </button>
-        <p className="text-text-muted min-w-0 flex-1 truncate text-sm">
+        <p className="text-text-2 text-small min-w-0 flex-1 truncate">
           {project.name}
         </p>
         {screenOn && (
@@ -183,10 +183,10 @@ function KnitMode() {
               onClick={() => setSelectedId(counter.id)}
               aria-pressed={counter.id === activeId}
               className={cn(
-                "shrink-0 rounded-full px-3 py-1.5 text-sm transition",
+                "text-small shrink-0 rounded-sm px-2.5 py-1.5 transition",
                 counter.id === activeId
-                  ? "bg-accent text-accent-fg font-medium"
-                  : "bg-surface-muted text-text-muted"
+                  ? "bg-accent text-on-accent font-medium"
+                  : "bg-sunken text-text-2"
               )}
             >
               {counter.label} {counter.value}
@@ -197,15 +197,15 @@ function KnitMode() {
 
       {/* --- 숫자 --- */}
       <section className="px-5 pt-2 pb-4 text-center">
-        <p className="text-text-muted text-sm">{selected?.label}</p>
+        <p className="text-text-2 text-small">{selected?.label}</p>
         <p className="text-7xl leading-none font-semibold tracking-tight tabular-nums">
           {view?.value ?? 0}
         </p>
 
         {view?.target && (
           <>
-            <p className="text-text-muted mt-1 text-sm">/ {view.target}</p>
-            <div className="bg-surface-muted mx-auto mt-3 h-1.5 max-w-xs overflow-hidden rounded-full">
+            <p className="text-text-2 text-small mt-1">/ {view.target}</p>
+            <div className="bg-sunken mx-auto mt-3 h-1.5 max-w-xs overflow-hidden rounded-full">
               <div
                 className="bg-accent h-full rounded-full transition-[width]"
                 style={{ width: `${(view.progress ?? 0) * 100}%` }}
@@ -214,12 +214,12 @@ function KnitMode() {
           </>
         )}
 
-        <div className="text-text-muted mt-3 space-y-0.5 text-sm">
+        <div className="text-text-2 text-small mt-3 space-y-0.5">
           {view?.remaining !== undefined && !view.done && (
             <p>{t.counter.remaining.replace("{n}", String(view.remaining))}</p>
           )}
           {view?.done && (
-            <p className="text-active font-medium">{t.counter.done}</p>
+            <p className="text-accent font-medium">{t.counter.done}</p>
           )}
           {view?.repeat && (
             <p>
@@ -240,7 +240,7 @@ function KnitMode() {
         </div>
 
         {/* 생명줄 — 실수해도 여기까지만 풀면 된다는 안전선 */}
-        <p className="text-hibernating mt-3 text-xs">
+        <p className="text-hibernating text-caption mt-3">
           {lifeline === null
             ? t.counter.lifelineNone
             : `${t.counter.lifelineLast.replace("{row}", String(lifeline))} · ${t.counter.lifelineUnravel.replace(
@@ -251,10 +251,14 @@ function KnitMode() {
       </section>
 
       {/* --- 큰 +1 영역 ---
+          "강조 = 먹색" 규칙을 여기엔 적용하지 않는다. 화면 절반을 먹색으로
+          채우면 다크 모드에서 거의 흰 판이 되어, 밤에 뜨는 사람 눈에 조명을
+          비추는 꼴이 된다. 대신 낮은 대비의 면 + 테두리로 영역만 알린다.
+
           연동 카운터는 메인에서 파생되므로 직접 세지 않는다. 버튼을 비활성으로
           두는 대신 왜 못 누르는지를 그 자리에 적는다. */}
       {linked ? (
-        <div className="border-border text-text-muted mx-3 flex flex-1 items-center justify-center rounded-3xl border border-dashed px-8 text-center text-sm">
+        <div className="border-line text-text-2 text-small mx-3 flex flex-1 items-center justify-center rounded-lg border border-dashed px-8 text-center">
           {t.counter.linkedReadOnly
             .replace("{main}", mainCounter?.label ?? "")
             .replace("{ratio}", String(selected?.linkRatio ?? 0))}
@@ -264,9 +268,9 @@ function KnitMode() {
           type="button"
           aria-label="+1"
           onClick={() => void doStep(1)}
-          className="bg-accent text-accent-fg mx-3 flex flex-1 items-center justify-center rounded-3xl active:brightness-95"
+          className="bg-sunken border-line-strong text-text active:bg-line mx-3 flex flex-1 items-center justify-center rounded-lg border transition-colors"
         >
-          <Plus size={72} strokeWidth={2.5} />
+          <Plus size={72} strokeWidth={2} />
         </button>
       )}
 
@@ -296,7 +300,7 @@ function KnitMode() {
       </nav>
 
       {sessionRows > 0 && (
-        <p className="text-text-muted pb-2 text-center text-xs">
+        <p className="text-text-2 text-caption pb-2 text-center">
           {t.counter.sessionRows.replace("{n}", String(sessionRows))}
         </p>
       )}
@@ -320,10 +324,10 @@ function SmallAction({
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className="bg-surface-muted text-text-muted flex min-h-14 flex-1 flex-col items-center justify-center gap-1 rounded-xl disabled:opacity-30"
+      className="bg-sunken text-text-2 flex min-h-14 flex-1 flex-col items-center justify-center gap-1 rounded-md disabled:opacity-30"
     >
       {icon}
-      <span className="text-[11px]">{label}</span>
+      <span className="text-micro">{label}</span>
     </button>
   );
 }
@@ -332,12 +336,12 @@ function EmptyKnit({ onLeave }: { onLeave: () => void }) {
   const t = useStrings();
   return (
     <div className="pt-safe flex h-dvh flex-col items-center justify-center gap-3 px-8 text-center">
-      <p className="text-text-muted">{t.counter.empty}</p>
-      <p className="text-text-muted/70 text-sm">{t.counter.emptyHint}</p>
+      <p className="text-text-2">{t.counter.empty}</p>
+      <p className="text-text-3 text-small">{t.counter.emptyHint}</p>
       <button
         type="button"
         onClick={onLeave}
-        className="bg-surface-muted mt-2 rounded-xl px-4 py-2.5 text-sm"
+        className="bg-sunken text-small mt-2 rounded-md px-4 py-2.5"
       >
         {t.action.back}
       </button>

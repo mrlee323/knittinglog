@@ -22,8 +22,8 @@ function SegmentedControl<T extends string>({
 }) {
   return (
     <section className="mb-5">
-      <h2 className="text-text-muted mb-2 text-sm font-medium">{label}</h2>
-      <div className="bg-surface-muted flex gap-1 rounded-xl p-1">
+      <h2 className="text-text-2 text-small mb-2 font-medium">{label}</h2>
+      <div className="bg-sunken flex gap-1 rounded-md p-1">
         {options.map((option) => (
           <button
             key={option.value}
@@ -31,10 +31,10 @@ function SegmentedControl<T extends string>({
             onClick={() => onChange(option.value)}
             aria-pressed={value === option.value}
             className={cn(
-              "flex-1 rounded-lg py-2 text-sm transition-colors",
+              "text-small flex-1 rounded-md py-2 transition-colors",
               value === option.value
-                ? "bg-accent text-accent-fg font-semibold"
-                : "text-text-muted"
+                ? "bg-accent text-on-accent font-semibold"
+                : "text-text-2"
             )}
           >
             {option.label}

@@ -13,6 +13,23 @@ export default defineConfig({
     VitePWA({
       registerType: "autoUpdate",
       includeAssets: ["icon.svg"],
+      workbox: {
+        // Pretendard 동적 서브셋은 32KB짜리 92조각이라 전부 프리캐시하면
+        // 첫 로딩이 3MB가 된다. 대신 한 번 받은 조각은 캐시에 남겨서
+        // 오프라인에서도 같은 글자가 같은 서체로 나오게 한다.
+        // 못 받은 조각은 시스템 한글 서체로 떨어질 뿐 앱은 그대로 동작한다.
+        runtimeCaching: [
+          {
+            urlPattern: /\.woff2$/,
+            handler: "CacheFirst",
+            options: {
+              cacheName: "knittinglog-fonts",
+              expiration: { maxEntries: 96, maxAgeSeconds: 60 * 60 * 24 * 365 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+        ],
+      },
       manifest: {
         name: "knittinglog",
         short_name: "knittinglog",

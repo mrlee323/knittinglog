@@ -1,91 +1,135 @@
+@import "pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css";
 @import "tailwindcss";
 
 @custom-variant dark (&:where(.dark, .dark *));
 
 /* ---------------------------------------------------------------------------
- * 디자인 토큰
+ * 디자인 토큰 — docs/DESIGN.md 참고
+ *
+ * 방향: 스와치(Swatch). UI에서 색을 빼고 사진과 실이 화면의 유일한 색이 된다.
+ * 그래서 강조색을 별도 색상으로 두지 않고 먹색(ink) 자체를 쓴다.
  *
  * 시맨틱 토큰을 CSS 변수로 두고 @theme inline으로 매핑한다.
- * 이렇게 해야 .dark 클래스 토글만으로 전체 테마가 바뀐다.
- * 색 값을 컴포넌트에서 직접 쓰지 말고 항상 시맨틱 이름을 쓸 것.
+ * 컴포넌트에서 색 값을 직접 쓰지 말고 항상 시맨틱 이름을 쓸 것.
  * ------------------------------------------------------------------------- */
 
 :root {
-  /* 표면 — 실·섬유의 질감을 연상시키는 따뜻한 뉴트럴 */
-  --bg: #faf7f4;
+  /* 무채색이 아니라 아주 약하게 따뜻한 회색(채도 4~8%).
+     순수 회색은 선택하지 않은 것처럼 보이고, 크림으로 가면 흔한 공예 톤이 된다. */
+  --canvas: #fbfaf9;
   --surface: #ffffff;
-  --surface-muted: #f2ede8;
-  --border: #e4dbd2;
+  --sunken: #f5f4f2;
+  --line: #e9e7e4;
+  --line-strong: #d8d5d0;
 
-  /* 텍스트 */
-  --text: #2a2320;
-  --text-muted: #7a6d64;
+  --text: #1b1a18;
+  --text-2: #6a6761;
+  --text-3: #9b978f;
 
-  /* 포인트 */
-  --accent: #b0603c;
-  --accent-hover: #98512f;
-  --accent-fg: #ffffff;
+  /* 강조 = 먹색. 브랜드 색이 따로 없다. */
+  --accent: #1b1a18;
+  --on-accent: #fbfaf9;
 
-  /* 프로젝트 상태 — 잠시멈춤은 의도적으로 경고색을 쓰지 않는다.
-     중단은 실패가 아니라 정상 상태이므로 차분한 파랑으로 둔다. */
-  --status-planning: #7a6d64;
-  --status-active: #4f7d5a;
-  --status-hibernating: #5b7b9a;
-  --status-finished: #6b5ca8;
-  --status-frogged: #9a5b5b;
+  /* 접근성상 보여야 하므로 유일하게 채도를 허용한다.
+     브랜드가 아니라 시스템 신호로 읽히도록 채도를 낮췄다. */
+  --focus: #4a6fa5;
+
+  /* 상태 — 작품 사진·실 색과 경쟁하지 않도록 전부 저채도.
+     잠시멈춤에 경고색을 쓰지 않는 것은 이 서비스의 전제다. */
+  --status-planning: #9b978f;
+  --status-hibernating: #5a7691;
+  --status-finished: #6b6a94;
+  --status-frogged: #96635c;
 }
 
 .dark {
-  --bg: #1a1614;
-  --surface: #24201d;
-  --surface-muted: #2e2925;
-  --border: #3d3630;
+  --canvas: #171615;
+  --surface: #1e1d1c;
+  --sunken: #262523;
+  --line: #302e2c;
+  --line-strong: #403d3a;
 
-  --text: #f0eae5;
-  --text-muted: #a1948a;
+  --text: #eeebe7;
+  --text-2: #a5a09a;
+  --text-3: #78736d;
 
-  --accent: #d98a5f;
-  --accent-hover: #e69c74;
-  --accent-fg: #1a1614;
+  --accent: #eeebe7;
+  --on-accent: #171615;
 
-  --status-planning: #a1948a;
-  --status-active: #7bab88;
-  --status-hibernating: #8bb0d1;
-  --status-finished: #a294dd;
-  --status-frogged: #cf8d8d;
+  --focus: #7ba3d9;
+
+  --status-planning: #78736d;
+  --status-hibernating: #8fabc4;
+  --status-finished: #a09fc9;
+  --status-frogged: #c99a93;
 }
 
 @theme inline {
-  --color-bg: var(--bg);
+  --color-canvas: var(--canvas);
   --color-surface: var(--surface);
-  --color-surface-muted: var(--surface-muted);
-  --color-border: var(--border);
+  --color-sunken: var(--sunken);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
 
   --color-text: var(--text);
-  --color-text-muted: var(--text-muted);
+  --color-text-2: var(--text-2);
+  --color-text-3: var(--text-3);
 
   --color-accent: var(--accent);
-  --color-accent-hover: var(--accent-hover);
-  --color-accent-fg: var(--accent-fg);
+  --color-on-accent: var(--on-accent);
+  --color-focus: var(--focus);
 
   --color-planning: var(--status-planning);
-  --color-active: var(--status-active);
   --color-hibernating: var(--status-hibernating);
   --color-finished: var(--status-finished);
   --color-frogged: var(--status-frogged);
+
+  /* 노션에 가까운 작은 반경. 크게 둥근 모서리가 "AI 기본값" 인상의 큰 부분이었다. */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 12px;
+
+  --font-sans:
+    "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont,
+    "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+
+  /* 한국어는 라틴보다 행간이 더 필요하다. 본문 1.7은 velog에서 가져온 값. */
+  --text-micro: 0.6875rem;
+  --text-micro--line-height: 1.4;
+  --text-micro--letter-spacing: 0.06em;
+  --text-caption: 0.75rem;
+  --text-caption--line-height: 1.5;
+  --text-small: 0.8125rem;
+  --text-small--line-height: 1.6;
+  --text-body: 0.9375rem;
+  --text-body--line-height: 1.7;
+  --text-subhead: 1.0625rem;
+  --text-subhead--line-height: 1.5;
+  --text-heading: 1.25rem;
+  --text-heading--line-height: 1.4;
+  --text-heading--letter-spacing: -0.01em;
+  --text-title: 1.625rem;
+  --text-title--line-height: 1.3;
+  --text-title--letter-spacing: -0.015em;
+  --text-display: 2.125rem;
+  --text-display--line-height: 1.2;
+  --text-display--letter-spacing: -0.02em;
+
+  --shadow-overlay:
+    0 1px 3px rgb(0 0 0 / 0.08), 0 12px 32px -12px rgb(0 0 0 / 0.25);
 }
 
 @layer base {
   html {
     color-scheme: light dark;
-    /* iOS에서 뜨기 모드 연타 시 확대·선택되는 것 방지 */
+    /* 뜨기 모드에서 연타 시 확대·선택되는 것 방지 */
     -webkit-text-size-adjust: 100%;
     -webkit-tap-highlight-color: transparent;
   }
 
   body {
-    @apply bg-bg text-text antialiased;
-    /* 단수·코수가 핵심 정보라 숫자 폭을 고정한다 */
+    @apply bg-canvas text-text text-body antialiased;
+    /* 단수·코수가 핵심 정보다. 정렬되는 자리에서 자릿수가 흔들리면 안 된다. */
     font-variant-numeric: tabular-nums;
     overscroll-behavior-y: none;
   }
@@ -96,6 +140,18 @@
     user-select: none;
     touch-action: manipulation;
   }
+
+  :focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 2px;
+  }
+
+  /* 한글은 글자 폭이 균일해서 조이면 뭉친다. 큰 크기에서만 최소한으로. */
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
 }
 
 @layer utilities {
@@ -105,5 +161,14 @@
   }
   .pb-safe {
     padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  /* 가로 스크롤되는 칩 줄에서 스크롤바가 보이면 크롬이 늘어난다.
+     모바일에는 원래 안 보이고, 데스크톱에서만 거슬린다. */
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
   }
 }

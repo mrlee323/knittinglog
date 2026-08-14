@@ -42,11 +42,11 @@ export function PauseSheet({
       onClick={onCancel}
     >
       <div
-        className="pb-safe bg-surface w-full max-w-lg rounded-t-2xl p-5"
+        className="shadow-overlay pb-safe bg-surface w-full max-w-lg rounded-t-lg p-5"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="text-lg font-semibold">{t.project.pauseTitle}</h2>
-        <p className="text-text-muted mt-1 mb-4 text-sm">
+        <h2 className="text-heading font-semibold">{t.project.pauseTitle}</h2>
+        <p className="text-text-2 text-small mt-1 mb-4">
           {t.project.pauseHint}
         </p>
 
@@ -58,10 +58,10 @@ export function PauseSheet({
               onClick={() => setReason(value)}
               aria-pressed={reason === value}
               className={cn(
-                "rounded-full px-3 py-2 text-sm transition",
+                "text-small rounded-sm px-3 py-2 transition",
                 reason === value
-                  ? "bg-hibernating text-surface font-medium"
-                  : "bg-surface-muted text-text-muted"
+                  ? "bg-accent text-on-accent font-medium"
+                  : "bg-sunken text-text-2"
               )}
             >
               {t.pauseReason[value]}

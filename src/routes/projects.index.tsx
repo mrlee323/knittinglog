@@ -57,7 +57,7 @@ function Projects() {
         </Button>
       }
     >
-      <div className="-mx-4 mb-4 flex gap-2 overflow-x-auto px-4 pb-1">
+      <div className="no-scrollbar -mx-4 mb-5 flex gap-1.5 overflow-x-auto px-4">
         {FILTERS.map((value) => (
           <button
             key={value ?? "all"}
@@ -67,10 +67,10 @@ function Projects() {
             }
             aria-pressed={status === value}
             className={cn(
-              "shrink-0 rounded-full px-3 py-1.5 text-sm transition",
+              "text-caption shrink-0 rounded-sm px-2 py-1.5 transition",
               status === value
-                ? "bg-accent text-accent-fg font-medium"
-                : "bg-surface-muted text-text-muted"
+                ? "bg-accent text-on-accent font-semibold"
+                : "bg-sunken text-text-2"
             )}
           >
             {value ? t.status[value] : t.project.all}
@@ -79,11 +79,9 @@ function Projects() {
       </div>
 
       {projects === undefined ? null : projects.length === 0 ? (
-        <div className="border-border rounded-xl border border-dashed px-6 py-12 text-center">
-          <p className="text-text-muted">{t.project.empty}</p>
-          <p className="text-text-muted/70 mt-1 text-sm">
-            {t.project.emptyHint}
-          </p>
+        <div className="border-line rounded-md border border-dashed px-6 py-12 text-center">
+          <p className="text-text-2">{t.project.empty}</p>
+          <p className="text-text-3 text-small mt-1">{t.project.emptyHint}</p>
         </div>
       ) : (
         <ul className="space-y-2">
@@ -106,18 +104,18 @@ function ProjectCard({ project }: { project: Project }) {
     <Link
       to="/projects/$projectId"
       params={{ projectId: project.id }}
-      className="border-border bg-surface hover:border-accent block rounded-xl border p-4 transition"
+      className="border-line bg-surface hover:border-line-strong block rounded-md border p-4 transition"
     >
       <div className="flex items-start justify-between gap-3">
-        <h2 className="font-medium">{project.name}</h2>
+        <h2 className="text-subhead font-semibold">{project.name}</h2>
         <StatusBadge status={project.status} />
       </div>
-      <p className="text-text-muted mt-1 text-sm">
+      <p className="text-text-2 text-small mt-0.5">
         {t.craft[project.craft]} · {t.category[project.category]}
       </p>
       {pausedDays !== null && (
         // 방치 기간을 목록에서 바로 보여준다. 가시성 없음이 중단의 원인이었다.
-        <p className="text-hibernating mt-2 text-xs">
+        <p className="text-hibernating text-caption mt-1.5">
           {pausedLabel(t, pausedDays)}
         </p>
       )}
