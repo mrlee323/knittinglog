@@ -1,0 +1,57 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  # 코드 변경 없이 다시 배포하고 싶을 때
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# 배포는 한 번에 하나만. 앞선 배포를 취소하지 않고 기다린다 —
+# 취소하면 중간 상태가 올라갈 수 있다.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # 배포 전에 막는다. 게이지 계산이 틀린 채로 올라가면
+      # 사용자는 몇 시간 뜬 것을 푼다.
+      - run: npm run type-check
+      - run: npm run lint
+      - run: npm run test
+
+      - run: npm run build
+
+      # GitHub Pages는 SPA 폴백이 없다. 딥링크로 처음 들어오면 404를 주므로
+      # 404.html을 index.html 사본으로 둬서 라우터가 받게 한다.
+      - run: cp dist/index.html dist/404.html
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

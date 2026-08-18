@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
-  <rect width="512" height="512" rx="112" fill="#b0603c" />
-  <g fill="none" stroke="#faf7f4" stroke-width="26" stroke-linecap="round">
+  <rect width="512" height="512" rx="112" fill="#1b1a18" />
+  <g fill="none" stroke="#fbfaf9" stroke-width="26" stroke-linecap="round">
     <!-- 실타래 -->
     <circle cx="216" cy="288" r="112" />
     <path d="M136 210c60 34 106 80 140 140" />
