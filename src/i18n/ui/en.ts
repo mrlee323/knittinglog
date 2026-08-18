@@ -245,6 +245,18 @@ export const en: UIStrings = {
       footLength: "Foot length",
       footCirc: "Foot circumference",
     },
+    measureHint: {
+      bust: "Around the fullest part of the chest, level all the way round.",
+      waist: "Around the narrowest part of the waist. Breathe normally.",
+      hip: "Around the fullest part of the hips.",
+      shoulder: "From one shoulder point to the other, across the back.",
+      armLength: "Shoulder point to wrist bone, with the elbow slightly bent.",
+      upperArm: "Around the widest part of the arm, just below the armpit.",
+      backLength: "From the bone at the nape straight down to the waistline.",
+      headCirc: "Around the head, over the forehead and the back of the skull.",
+      footLength: "Heel to the tip of the longest toe. Measure standing up.",
+      footCirc: "Around the widest part of the ball of the foot.",
+    },
     easePreset: {
       negative: "Close-fitting",
       close: "No ease",
