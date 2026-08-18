@@ -330,6 +330,7 @@ export const ko = {
     notePlaceholder: "8분 30초부터 진동 줄임",
     video: "참고 영상",
     play: "영상 재생",
+    stop: "영상 닫기",
     openExternal: "유튜브에서 열기",
     offline: "영상을 보려면 인터넷이 필요해요",
     empty: "참고 자료가 없어요",

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ExternalLink, Play } from "lucide-react";
+import { ExternalLink, Play, X } from "lucide-react";
 import { embedUrl, thumbnailUrl, watchUrl } from "@/domain/youtube";
 import { useStrings } from "@/i18n";
 import type { YouTubeRef } from "@/domain/youtube";
@@ -26,14 +26,34 @@ export function VideoEmbed({
 
   if (playing) {
     return (
-      <iframe
-        src={embedUrl(video, true)}
-        title={title ?? t.reference.video}
-        // 전체화면은 태블릿에서 도안 영상을 볼 때 실제로 쓰인다.
-        allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
-        allowFullScreen
-        className="border-line aspect-video w-full rounded-md border"
-      />
+      <div className="relative">
+        <iframe
+          src={embedUrl(video, true)}
+          title={title ?? t.reference.video}
+          // 전체화면은 태블릿에서 도안 영상을 볼 때 실제로 쓰인다.
+          allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+          allowFullScreen
+          className="border-line aspect-video w-full rounded-md border"
+        />
+
+        {/*
+          멈추는 방법을 우리 화면에 둔다.
+          
+          iframe 안의 유튜브 컨트롤로도 멈출 수 있지만, 그걸 찾아 누르는 건
+          우리가 만든 화면에서 벗어나는 일이다. 게다가 일시정지는 소리만 멈추고
+          플레이어는 그대로 남아, 도안 자리를 계속 영상이 차지한다.
+          여기서는 iframe을 걷어내 썸네일로 되돌린다 — 재생이 확실히 끝난다.
+        */}
+        <button
+          type="button"
+          onClick={() => setPlaying(false)}
+          aria-label={t.reference.stop}
+          title={t.reference.stop}
+          className="absolute top-2 right-2 rounded-full bg-black/60 p-2 text-white transition hover:bg-black/80"
+        >
+          <X size={16} />
+        </button>
+      </div>
     );
   }
 

@@ -317,6 +317,7 @@ export const en: UIStrings = {
     notePlaceholder: "Armhole shaping starts at 8:30",
     video: "Reference video",
     play: "Play video",
+    stop: "Close video",
     openExternal: "Open on YouTube",
     offline: "Playing this needs an internet connection",
     empty: "No references yet",
