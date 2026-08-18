@@ -327,7 +327,14 @@ function Slot({
     <div
       onPointerDown={onFocus}
       className={cn(
-        "bg-sunken overflow-hidden rounded-md border transition",
+        "bg-sunken rounded-md border transition",
+        // 영상일 때는 잘라내지 않는다.
+        //
+        // iframe을 overflow:hidden + 둥근 모서리로 자르면 iOS Safari가 잘린
+        // 영역의 히트테스트를 잘못 잡아, 플레이어 안 버튼이 눌리지 않는
+        // 경우가 있다. 영상은 iframe 자체가 이미 테두리와 모서리를 갖고 있어서
+        // 여기서 자를 이유가 없다.
+        item?.kind !== "video" && "overflow-hidden",
         // 어느 자리에 들어갈지 알 수 있어야 트레이 선택이 예측된다
         split && focused ? "border-accent" : "border-line"
       )}
