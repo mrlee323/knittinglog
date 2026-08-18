@@ -102,14 +102,18 @@ export interface ProjectPhoto extends Base {
   atRow?: number;
   atCounterLabel?: string;
   /**
-   * 진행 사진인지 참고 사진인지.
+   * 사진의 용도.
    *
-   * 둘은 저장·압축·보기가 완전히 같아서 테이블을 나누지 않았다. 다른 건
+   * 셋 다 저장·압축·보기가 완전히 같아서 테이블을 나누지 않았다. 다른 건
    * 읽는 방식이다 — 진행 사진은 시간순으로 쌓여 "어디까지 떴는지"를 말하고,
-   * 참고 사진은 뜨기 전에 모아두는 무드보드다. 값이 없으면 진행 사진으로
-   * 본다(이 필드가 생기기 전에 저장된 사진).
+   * 참고 사진은 무드보드이고, 도안은 뜨는 동안 확대해서 읽는 것이다.
+   * 값이 없으면 진행 사진으로 본다(이 필드가 생기기 전에 저장된 사진).
+   *
+   * 도안을 여기 담는 것은 "이미지 도안 먼저"라는 결정에 따른 것이다.
+   * 도안을 구조로 다루는 모델(Pattern·sizeLabels·IR)은 그대로 남겨두고,
+   * 사진으로 찍거나 캡처한 도안은 사진 경로를 그대로 쓴다.
    */
-  kind?: "progress" | "reference";
+  kind?: "progress" | "reference" | "pattern";
 }
 
 export interface ProjectLog extends Base {

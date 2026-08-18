@@ -77,6 +77,15 @@ export const ko = {
     derivedHint:
       "실이 바뀌면 스와치를 다시 떠보세요. 게이지가 달라지면 코수도 달라져요.",
     viewSource: "지난 작품 보기",
+    /* 프로젝트 안의 화면 전환 */
+    tabOverview: "개요",
+    tabWorkbench: "작업대",
+    tabLog: "기록",
+    recentLog: "최근 기록",
+    viewAllLog: "기록 전체 보기",
+    references: "참고 자료",
+    viewWorkbench: "작업대에서 보기",
+    resources: "구성",
   },
   counter: {
     title: "카운터",
@@ -312,6 +321,23 @@ export const ko = {
     empty: "참고 자료가 없어요",
     emptyHint:
       "뜨고 싶은 모양, 배색 견본, 도안 영상을 모아두면 뜨는 동안 계속 꺼내 볼 수 있어요",
+  },
+  workbench: {
+    all: "전체",
+    pattern: "도안",
+    reference: "참고",
+    video: "영상",
+    addPattern: "도안 이미지",
+    addReference: "참고 이미지",
+    split: "분할",
+    zoom: "확대",
+    resize: "칸 너비 조절",
+    pickItem: "아래에서 볼 항목을 골라주세요",
+    empty: "아직 올려둔 자료가 없어요",
+    emptyHint:
+      "도안 이미지와 참고 사진, 영상 링크를 올려두면 여기서 나란히 놓고 볼 수 있어요. 넓은 화면에서는 도안과 영상을 좌우로 나눠 볼 수 있어요.",
+    deleteImageConfirm: "이 이미지를 지울까요?",
+    deleteVideoConfirm: "이 영상 링크를 지울까요?",
   },
   action: {
     create: "만들기",

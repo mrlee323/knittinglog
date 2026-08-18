@@ -1,14 +1,13 @@
-import { useRef, useState } from "react";
-import { Camera } from "lucide-react";
+import { useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
 import {
   PhotoImage,
   PhotoStamp,
 } from "@/features/photo/components/photo-image";
 import { PhotoViewer } from "@/features/photo/components/photo-viewer";
-import { addPhoto, listPhotos } from "@/features/photo/repository";
+import { AddPhotoButton } from "@/features/photo/components/add-photo-button";
+import { listPhotos } from "@/features/photo/repository";
 import { useLocale, useStrings } from "@/i18n";
-import { cn } from "@/lib/utils";
 import type { Id } from "@/types/entities";
 
 /**
@@ -44,8 +43,11 @@ export function PhotoTimeline({ projectId }: { projectId: Id }) {
             </span>
           )}
         </h2>
-        <AddButton
+        <AddPhotoButton
           projectId={projectId}
+          kind="progress"
+          icon="camera"
+          label={t.photo.add}
           // 사진을 올리면 바로 전체보기를 열어 설명을 적을 수 있게 한다.
           // "이 단에서 뭘 했는지"는 찍은 직후가 아니면 다시 안 쓴다.
           onAdded={() => setOpenAt(0)}
@@ -110,67 +112,5 @@ export function PhotoTimeline({ projectId }: { projectId: Id }) {
         />
       )}
     </section>
-  );
-}
-
-/**
- * 기록 추가.
- *
- * capture 속성을 주지 않는다. 카메라를 강제하면 이미 찍어둔 사진을 고를 수
- * 없어지는데, 뜨다가 찍어놓고 나중에 등록하는 쪽이 훨씬 흔하다.
- */
-function AddButton({
-  projectId,
-  onAdded,
-}: {
-  projectId: Id;
-  onAdded?: () => void;
-}) {
-  const t = useStrings();
-  const input = useRef<HTMLInputElement>(null);
-  const [saving, setSaving] = useState(false);
-
-  async function handleFiles(files: FileList) {
-    setSaving(true);
-    try {
-      // 한 장씩 처리한다. 여러 장을 동시에 디코딩하면 저사양 폰에서
-      // 메모리가 튀어 탭이 죽는다.
-      for (const file of Array.from(files)) {
-        await addPhoto(projectId, file);
-      }
-      // 여러 장을 한꺼번에 올렸으면 설명 창을 열지 않는다 — 어느 장에
-      // 쓰라는 건지 알 수 없고, 그 상태에서 뜨는 창은 방해다.
-      if (files.length === 1) onAdded?.();
-    } finally {
-      setSaving(false);
-      // 같은 파일을 다시 고를 수 있게 비운다. 안 비우면 두 번째 선택에서
-      // change 이벤트가 아예 발생하지 않는다.
-      if (input.current) input.current.value = "";
-    }
-  }
-
-  return (
-    <label
-      className={cn(
-        "text-small bg-sunken text-text inline-flex min-h-11 shrink-0 cursor-pointer items-center justify-center gap-2 rounded-md px-4 font-medium whitespace-nowrap transition",
-        saving && "opacity-40"
-      )}
-      aria-busy={saving}
-    >
-      <Camera size={16} aria-hidden />
-      {saving ? t.photo.saving : t.photo.add}
-      <input
-        ref={input}
-        type="file"
-        accept="image/*"
-        multiple
-        disabled={saving}
-        className="sr-only"
-        aria-label={t.photo.add}
-        onChange={(e) => {
-          if (e.target.files?.length) void handleFiles(e.target.files);
-        }}
-      />
-    </label>
   );
 }

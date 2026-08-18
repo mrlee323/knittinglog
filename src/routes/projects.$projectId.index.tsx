@@ -1,13 +1,15 @@
 import { useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useLiveQuery } from "dexie-react-hooks";
-import { ChevronLeft, Copy } from "lucide-react";
+import { ChevronLeft, ChevronRight, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ConfirmSheet } from "@/components/ui/confirm-sheet";
 import { Columns, Page } from "@/components/ui/page";
 import { PauseSheet } from "@/features/project/components/pause-sheet";
 import { StatusBadge } from "@/features/project/components/status-badge";
 import { DerivedFrom } from "@/features/project/components/derived-from";
+import { ProgressCard } from "@/features/project/components/progress-card";
+import { ProjectTabs } from "@/features/project/components/project-tabs";
 import {
   applyEvent,
   deleteProject,
@@ -16,26 +18,48 @@ import {
 } from "@/features/project/repository";
 import { pausedLabel } from "@/features/project/format";
 import { CounterSection } from "@/features/counter/components/counter-section";
-import { PhotoTimeline } from "@/features/photo/components/photo-timeline";
-import { ReferenceSection } from "@/features/reference/components/reference-section";
+import { PhotoStrip } from "@/features/photo/components/photo-strip";
+import {
+  listPatternPhotos,
+  listPhotos,
+  listReferencePhotos,
+} from "@/features/photo/repository";
 import { AllocationSection } from "@/features/yarn/components/allocation-section";
 import { allowedEvents, daysSincePaused } from "@/domain/projectStatus";
 import { useLocale, useStrings } from "@/i18n";
 import type { ProjectEvent, ProjectEventType } from "@/domain/projectStatus";
 
 export const Route = createFileRoute("/projects/$projectId/")({
-  component: ProjectDetail,
+  component: ProjectOverview,
 });
 
 /** 상태를 앞으로 미는 행동은 주요 버튼, 되돌리는 행동은 보조 버튼 */
 const PRIMARY_EVENTS: ProjectEventType[] = ["START", "RESUME", "FINISH"];
 
-function ProjectDetail() {
+/**
+ * 프로젝트 개요.
+ *
+ * 열었을 때 답해야 하는 건 두 가지다 — **어디까지 왔는지**(진행도)와 **무엇으로
+ * 뜨는지**(구성). 사진·도안·기록을 여기 다 쌓으면 그 두 답이 스크롤 아래로
+ * 밀려난다. 그래서 기록과 자료는 전용 화면으로 보내고 여기서는 입구만 둔다.
+ */
+function ProjectOverview() {
   const t = useStrings();
   const locale = useLocale();
   const navigate = useNavigate();
   const { projectId } = Route.useParams();
+
   const project = useLiveQuery(() => getProject(projectId), [projectId]);
+  const photos = useLiveQuery(() => listPhotos(projectId), [projectId]);
+  const references = useLiveQuery(
+    () => listReferencePhotos(projectId),
+    [projectId]
+  );
+  const patterns = useLiveQuery(
+    () => listPatternPhotos(projectId),
+    [projectId]
+  );
+
   const [pausing, setPausing] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
 
@@ -45,6 +69,9 @@ function ProjectDetail() {
   const pausedDays = daysSincePaused(project);
   const formatDate = (date: Date) =>
     new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(date);
+
+  // 도안과 참고 이미지는 작업대에서 나란히 놓고 보는 한 묶음이다
+  const material = [...(patterns ?? []), ...(references ?? [])];
 
   async function handleEvent(type: ProjectEventType) {
     if (type === "PAUSE") {
@@ -82,14 +109,32 @@ function ProjectDetail() {
         {t.nav.projects}
       </Link>
 
-      {/* 왼쪽은 보는 것(사진·기록), 오른쪽은 조작하는 것(카운터·상태·실).
-          큰 화면에서 카운터가 스크롤과 함께 사라지지 않도록 side는 붙는다. */}
+      <ProjectTabs projectId={projectId} />
+
       <Columns
         main={
           <>
-            <PhotoTimeline projectId={projectId} />
+            <ProgressCard projectId={projectId} />
 
-            <ReferenceSection projectId={projectId} />
+            <SectionLink
+              title={t.project.recentLog}
+              action={t.project.viewAllLog}
+              to="/projects/$projectId/log"
+              projectId={projectId}
+              empty={photos?.length === 0 ? t.photo.empty : undefined}
+            >
+              {photos && <PhotoStrip photos={photos} limit={4} />}
+            </SectionLink>
+
+            <SectionLink
+              title={t.project.references}
+              action={t.project.viewWorkbench}
+              to="/projects/$projectId/refs"
+              projectId={projectId}
+              empty={material.length === 0 ? t.workbench.empty : undefined}
+            >
+              <PhotoStrip photos={material} limit={4} />
+            </SectionLink>
 
             {project.derivedFromProjectId && (
               <DerivedFrom sourceId={project.derivedFromProjectId} />
@@ -161,12 +206,11 @@ function ProjectDetail() {
               ))}
             </div>
 
+            {/* 카운터 관리(추가·연동·삭제)와 실 배정은 조작이므로 옆 단에 둔다.
+                읽기용 진행도는 본문 위쪽 ProgressCard가 맡는다. */}
             <CounterSection projectId={projectId} />
             <AllocationSection projectId={projectId} />
 
-            {/* 같은 작품을 다른 실로 다시 뜨기. 상태와 무관하게 열어둔다 —
-                완성한 걸 또 뜨기도 하고, 뜨는 중에 선물용을 하나 더
-                시작하기도 한다. */}
             <section className="border-line mb-6 rounded-md border p-4">
               <p className="text-text-2 text-caption">
                 {t.project.restartHint}
@@ -216,5 +260,50 @@ function ProjectDetail() {
         />
       )}
     </Page>
+  );
+}
+
+/**
+ * 개요의 미리보기 묶음.
+ *
+ * 제목 옆에 목적지를 붙인다. 썸네일만 두면 "여기를 누르면 어디로 가는지"가
+ * 드러나지 않고, 비어 있을 때도 들어가는 길은 남아야 한다.
+ */
+function SectionLink({
+  title,
+  action,
+  to,
+  projectId,
+  empty,
+  children,
+}: {
+  title: string;
+  action: string;
+  to: "/projects/$projectId/log" | "/projects/$projectId/refs";
+  projectId: string;
+  empty?: string;
+  children?: React.ReactNode;
+}) {
+  return (
+    <section className="mb-6">
+      <div className="mb-2 flex items-baseline justify-between gap-3">
+        <h2 className="text-micro text-text-3">{title}</h2>
+        <Link
+          to={to}
+          params={{ projectId }}
+          className="text-text-2 text-caption hover:text-text inline-flex items-center gap-0.5"
+        >
+          {action}
+          <ChevronRight size={13} />
+        </Link>
+      </div>
+      {empty ? (
+        <p className="border-line text-text-3 text-caption rounded-md border border-dashed px-4 py-5 text-center">
+          {empty}
+        </p>
+      ) : (
+        children
+      )}
+    </section>
   );
 }

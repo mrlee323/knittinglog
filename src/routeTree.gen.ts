@@ -23,6 +23,8 @@ import { Route as GaugeCalcRouteImport } from './routes/gauge.calc'
 import { Route as YarnYarnIdIndexRouteImport } from './routes/yarn.$yarnId.index'
 import { Route as ProjectsProjectIdIndexRouteImport } from './routes/projects.$projectId.index'
 import { Route as YarnYarnIdEditRouteImport } from './routes/yarn.$yarnId.edit'
+import { Route as ProjectsProjectIdRefsRouteImport } from './routes/projects.$projectId.refs'
+import { Route as ProjectsProjectIdLogRouteImport } from './routes/projects.$projectId.log'
 import { Route as ProjectsProjectIdKnitRouteImport } from './routes/projects.$projectId.knit'
 import { Route as ProjectsProjectIdEditRouteImport } from './routes/projects.$projectId.edit'
 import { Route as ProfilesProfileIdEditRouteImport } from './routes/profiles.$profileId.edit'
@@ -98,6 +100,16 @@ const YarnYarnIdEditRoute = YarnYarnIdEditRouteImport.update({
   path: '/yarn/$yarnId/edit',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProjectsProjectIdRefsRoute = ProjectsProjectIdRefsRouteImport.update({
+  id: '/projects/$projectId/refs',
+  path: '/projects/$projectId/refs',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProjectsProjectIdLogRoute = ProjectsProjectIdLogRouteImport.update({
+  id: '/projects/$projectId/log',
+  path: '/projects/$projectId/log',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProjectsProjectIdKnitRoute = ProjectsProjectIdKnitRouteImport.update({
   id: '/projects/$projectId/knit',
   path: '/projects/$projectId/knit',
@@ -135,6 +147,8 @@ export interface FileRoutesByFullPath {
   '/profiles/$profileId/edit': typeof ProfilesProfileIdEditRoute
   '/projects/$projectId/edit': typeof ProjectsProjectIdEditRoute
   '/projects/$projectId/knit': typeof ProjectsProjectIdKnitRoute
+  '/projects/$projectId/log': typeof ProjectsProjectIdLogRoute
+  '/projects/$projectId/refs': typeof ProjectsProjectIdRefsRoute
   '/yarn/$yarnId/edit': typeof YarnYarnIdEditRoute
   '/projects/$projectId/': typeof ProjectsProjectIdIndexRoute
   '/yarn/$yarnId/': typeof YarnYarnIdIndexRoute
@@ -155,6 +169,8 @@ export interface FileRoutesByTo {
   '/profiles/$profileId/edit': typeof ProfilesProfileIdEditRoute
   '/projects/$projectId/edit': typeof ProjectsProjectIdEditRoute
   '/projects/$projectId/knit': typeof ProjectsProjectIdKnitRoute
+  '/projects/$projectId/log': typeof ProjectsProjectIdLogRoute
+  '/projects/$projectId/refs': typeof ProjectsProjectIdRefsRoute
   '/yarn/$yarnId/edit': typeof YarnYarnIdEditRoute
   '/projects/$projectId': typeof ProjectsProjectIdIndexRoute
   '/yarn/$yarnId': typeof YarnYarnIdIndexRoute
@@ -176,6 +192,8 @@ export interface FileRoutesById {
   '/profiles/$profileId/edit': typeof ProfilesProfileIdEditRoute
   '/projects/$projectId/edit': typeof ProjectsProjectIdEditRoute
   '/projects/$projectId/knit': typeof ProjectsProjectIdKnitRoute
+  '/projects/$projectId/log': typeof ProjectsProjectIdLogRoute
+  '/projects/$projectId/refs': typeof ProjectsProjectIdRefsRoute
   '/yarn/$yarnId/edit': typeof YarnYarnIdEditRoute
   '/projects/$projectId/': typeof ProjectsProjectIdIndexRoute
   '/yarn/$yarnId/': typeof YarnYarnIdIndexRoute
@@ -198,6 +216,8 @@ export interface FileRouteTypes {
     | '/profiles/$profileId/edit'
     | '/projects/$projectId/edit'
     | '/projects/$projectId/knit'
+    | '/projects/$projectId/log'
+    | '/projects/$projectId/refs'
     | '/yarn/$yarnId/edit'
     | '/projects/$projectId/'
     | '/yarn/$yarnId/'
@@ -218,6 +238,8 @@ export interface FileRouteTypes {
     | '/profiles/$profileId/edit'
     | '/projects/$projectId/edit'
     | '/projects/$projectId/knit'
+    | '/projects/$projectId/log'
+    | '/projects/$projectId/refs'
     | '/yarn/$yarnId/edit'
     | '/projects/$projectId'
     | '/yarn/$yarnId'
@@ -238,6 +260,8 @@ export interface FileRouteTypes {
     | '/profiles/$profileId/edit'
     | '/projects/$projectId/edit'
     | '/projects/$projectId/knit'
+    | '/projects/$projectId/log'
+    | '/projects/$projectId/refs'
     | '/yarn/$yarnId/edit'
     | '/projects/$projectId/'
     | '/yarn/$yarnId/'
@@ -259,6 +283,8 @@ export interface RootRouteChildren {
   ProfilesProfileIdEditRoute: typeof ProfilesProfileIdEditRoute
   ProjectsProjectIdEditRoute: typeof ProjectsProjectIdEditRoute
   ProjectsProjectIdKnitRoute: typeof ProjectsProjectIdKnitRoute
+  ProjectsProjectIdLogRoute: typeof ProjectsProjectIdLogRoute
+  ProjectsProjectIdRefsRoute: typeof ProjectsProjectIdRefsRoute
   YarnYarnIdEditRoute: typeof YarnYarnIdEditRoute
   ProjectsProjectIdIndexRoute: typeof ProjectsProjectIdIndexRoute
   YarnYarnIdIndexRoute: typeof YarnYarnIdIndexRoute
@@ -364,6 +390,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof YarnYarnIdEditRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/projects/$projectId/refs': {
+      id: '/projects/$projectId/refs'
+      path: '/projects/$projectId/refs'
+      fullPath: '/projects/$projectId/refs'
+      preLoaderRoute: typeof ProjectsProjectIdRefsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/projects/$projectId/log': {
+      id: '/projects/$projectId/log'
+      path: '/projects/$projectId/log'
+      fullPath: '/projects/$projectId/log'
+      preLoaderRoute: typeof ProjectsProjectIdLogRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/projects/$projectId/knit': {
       id: '/projects/$projectId/knit'
       path: '/projects/$projectId/knit'
@@ -411,6 +451,8 @@ const rootRouteChildren: RootRouteChildren = {
   ProfilesProfileIdEditRoute: ProfilesProfileIdEditRoute,
   ProjectsProjectIdEditRoute: ProjectsProjectIdEditRoute,
   ProjectsProjectIdKnitRoute: ProjectsProjectIdKnitRoute,
+  ProjectsProjectIdLogRoute: ProjectsProjectIdLogRoute,
+  ProjectsProjectIdRefsRoute: ProjectsProjectIdRefsRoute,
   YarnYarnIdEditRoute: YarnYarnIdEditRoute,
   ProjectsProjectIdIndexRoute: ProjectsProjectIdIndexRoute,
   YarnYarnIdIndexRoute: YarnYarnIdIndexRoute,

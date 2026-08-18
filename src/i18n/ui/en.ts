@@ -73,6 +73,14 @@ export const en: UIStrings = {
     derivedHint:
       "New yarn deserves a new swatch — a different gauge means a different stitch count.",
     viewSource: "See the earlier one",
+    tabOverview: "Overview",
+    tabWorkbench: "Workbench",
+    tabLog: "Log",
+    recentLog: "Recent entries",
+    viewAllLog: "See the full log",
+    references: "References",
+    viewWorkbench: "Open the workbench",
+    resources: "Materials",
   },
   counter: {
     title: "Counters",
@@ -301,6 +309,23 @@ export const en: UIStrings = {
     empty: "No references yet",
     emptyHint:
       "Collect the shape you're after, colour swatches and tutorial videos — they stay with the project",
+  },
+  workbench: {
+    all: "All",
+    pattern: "Pattern",
+    reference: "Reference",
+    video: "Video",
+    addPattern: "Pattern image",
+    addReference: "Reference image",
+    split: "Split",
+    zoom: "Zoom",
+    resize: "Resize panes",
+    pickItem: "Pick something from below",
+    empty: "Nothing here yet",
+    emptyHint:
+      "Add pattern images, reference photos and video links to keep them side by side. On a wide screen you can split the pattern and the video.",
+    deleteImageConfirm: "Delete this image?",
+    deleteVideoConfirm: "Delete this video link?",
   },
   action: {
     create: "Create",
