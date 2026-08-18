@@ -371,11 +371,16 @@ export const ko = {
     /* 재개하면 사유가 지워지므로 평생 이력이 아니라 현재 단면이다.
        문구가 그 이상을 주장하면 안 된다. */
     reasonTitle: "왜 멈췄나",
-    reasonNote: "지금 멈춘 것들의 사유예요",
-    reasonEmpty: "사유를 남긴 프로젝트가 아직 없어요",
-    // 사유마다 받침이 달라 "이에요/예요"가 갈린다. 조사를 붙이지 않는 문장으로
-    // 두면 사유 목록이 늘어나도 문법이 깨지지 않는다.
+    /* 평생 이력을 센다. 프로젝트의 pauseReason은 재개하면 지워지므로
+       중단 이벤트(pauseEvents)를 따로 쌓아 여기서 읽는다. */
+    reasonNote: "지금까지 멈춘 이력을 모아 본 거예요",
+    reasonEmpty: "아직 멈춘 기록이 없어요",
     reasonTop: "가장 많은 사유 — {reason}",
+    reasonCount: "{n}번",
+    /* 횟수보다 "돌아왔는지"가 더 쓸모 있다 */
+    reasonReturned: "{n}번 돌아옴",
+    reasonOpen: "{n}개 멈춤 중",
+    medianPause: "보통 {n}일쯤 멈춰 있어요",
     /* 잔디 */
     activity: "뜬 날",
     activityNote: "최근 13주 · 진하기는 내 기록 안에서의 상대값이에요",

@@ -144,6 +144,26 @@ export interface ProjectLink extends Base {
   embedBlocked?: boolean;
 }
 
+/**
+ * 중단 이력.
+ *
+ * 프로젝트의 `pauseReason`은 재개하면 지워진다(domain/projectStatus.ts의
+ * statusPatch). 그래서 "주로 무엇 때문에 멈추는가"를 말하려면 멈춘 사건을
+ * 따로 쌓아야 한다 — 현재 상태만으로는 평생 패턴을 알 수 없다.
+ *
+ * 끝난 방식(endedBy)까지 남기는 게 중요하다. 사유별로 몇 번 멈췄는지보다
+ * **그중 몇 번이나 돌아왔는지**가 더 쓸모 있는 정보다.
+ */
+export interface PauseEvent extends Base {
+  projectId: Id;
+  reason: PauseReason;
+  note?: string;
+  pausedAt: Date;
+  /** 아직 멈춰 있으면 undefined */
+  endedAt?: Date;
+  endedBy?: "resumed" | "finished" | "frogged";
+}
+
 /** 푼 기록. 통계에서 "뜬 단수" 옆에 "푼 단수"로 보여준다. */
 export interface FroggingLog extends Base {
   projectId: Id;

@@ -16,6 +16,7 @@ import type {
   GaugeRecord,
   Id,
   Needle,
+  PauseEvent,
   Pattern,
   Project,
   ProjectLink,
@@ -32,6 +33,7 @@ export class KnittinglogDB extends Dexie {
   projectPhotos!: EntityTable<ProjectPhoto, "id">;
   projectLogs!: EntityTable<ProjectLog, "id">;
   froggingLogs!: EntityTable<FroggingLog, "id">;
+  pauseEvents!: EntityTable<PauseEvent, "id">;
 
   counters!: EntityTable<Counter, "id">;
   counterMarks!: EntityTable<CounterMark, "id">;
@@ -86,6 +88,12 @@ export class KnittinglogDB extends Dexie {
     // 프로젝트당 사진은 많아야 수십 장이어서 메모리에서 걸러도 된다.
     this.version(3).stores({
       projectLinks: "id, projectId",
+    });
+
+    // v4 — 중단 이력. 프로젝트의 pauseReason은 재개하면 지워지므로
+    // 평생 패턴(주로 무엇 때문에 멈추는가)은 사건을 따로 쌓아야 알 수 있다.
+    this.version(4).stores({
+      pauseEvents: "id, projectId, pausedAt, reason",
     });
   }
 }

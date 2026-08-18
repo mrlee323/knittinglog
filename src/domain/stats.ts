@@ -251,32 +251,6 @@ export function rowsHeatmap(
   });
 }
 
-/* --- 방치 리포트 ---------------------------------------------------------- */
-
-export interface ReasonCount {
-  reason: PauseReason;
-  count: number;
-}
-
-/**
- * 중단 사유 분포.
- *
- * **지금 멈춰 있는 프로젝트만 센다.** 재개하면 사유가 지워지므로(§statusPatch)
- * 여기 숫자는 평생 이력이 아니라 현재 상태의 단면이다. 화면 문구도 그렇게
- * 써야 한다 — "주로 게이지 실패로 멈춥니다"라고 말하려면 중단 이력을 따로
- * 쌓아야 하고, 그건 별도 과제다.
- */
-export function pauseReasonBreakdown(projects: ProjectLike[]): ReasonCount[] {
-  const counts = new Map<PauseReason, number>();
-  for (const project of projects) {
-    if (project.status !== "hibernating" || !project.pauseReason) continue;
-    counts.set(project.pauseReason, (counts.get(project.pauseReason) ?? 0) + 1);
-  }
-  return [...counts.entries()]
-    .map(([reason, count]) => ({ reason, count }))
-    .sort((a, b) => b.count - a.count);
-}
-
 /* --- 실 소비량 ------------------------------------------------------------ */
 
 export interface YarnUse {
@@ -305,4 +279,83 @@ export function sumYarnUse(
     if (entry.skeinMeters) meters += n * entry.skeinMeters;
   }
   return { skeins, grams, meters };
+}
+
+/* --- 중단 이력 ------------------------------------------------------------ */
+
+export interface PauseRecord {
+  reason: PauseReason;
+  pausedAt: Date;
+  endedAt?: Date;
+  endedBy?: "resumed" | "finished" | "frogged";
+}
+
+export interface ReasonOutcome {
+  reason: PauseReason;
+  /** 이 사유로 멈춘 횟수 (평생) */
+  total: number;
+  /** 그중 다시 뜨기로 돌아온 횟수 */
+  resumed: number;
+  /** 아직 멈춰 있는 횟수 */
+  open: number;
+}
+
+/**
+ * 사유별 중단 횟수와 결말.
+ *
+ * `pauseReasonBreakdown`과 다른 것은 **평생 이력을 센다**는 점이다. 프로젝트의
+ * pauseReason은 재개하면 지워지므로 현재 상태만으로는 "주로 무엇 때문에
+ * 멈추는가"를 알 수 없다.
+ *
+ * 횟수보다 `resumed`가 더 쓸모 있다. 자주 멈추지만 늘 돌아오는 사유와, 한 번
+ * 멈추면 다시 안 돌아오는 사유는 사용자가 대응해야 할 방식이 다르다.
+ */
+export function reasonOutcomes(events: PauseRecord[]): ReasonOutcome[] {
+  const map = new Map<PauseReason, ReasonOutcome>();
+
+  for (const event of events) {
+    const entry = map.get(event.reason) ?? {
+      reason: event.reason,
+      total: 0,
+      resumed: 0,
+      open: 0,
+    };
+    entry.total += 1;
+    if (event.endedBy === "resumed") entry.resumed += 1;
+    if (!event.endedAt) entry.open += 1;
+    map.set(event.reason, entry);
+  }
+
+  return [...map.values()].sort((a, b) => b.total - a.total);
+}
+
+/**
+ * 멈춰 있던 기간의 중앙값(일).
+ *
+ * 평균이 아니라 중앙값을 쓴다. 한 번 2년을 방치하면 평균이 그쪽으로 끌려가서
+ * "보통 얼마나 멈추는가"를 말하지 못한다.
+ *
+ * 아직 멈춰 있는 것은 지금까지의 기간으로 센다 — 진행 중인 방치를 빼면
+ * 가장 오래 멈춘 것들이 통계에서 사라진다.
+ */
+export function medianPauseDays(
+  events: PauseRecord[],
+  now: Date
+): number | null {
+  if (events.length === 0) return null;
+
+  const spans = events
+    .map((e) => {
+      const end = e.endedAt ?? now;
+      return Math.max(
+        0,
+        Math.floor((end.getTime() - e.pausedAt.getTime()) / 86_400_000)
+      );
+    })
+    .sort((a, b) => a - b);
+
+  const mid = Math.floor(spans.length / 2);
+  return spans.length % 2 === 1
+    ? spans[mid]
+    : Math.round((spans[mid - 1] + spans[mid]) / 2);
 }
