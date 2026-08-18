@@ -1,16 +1,18 @@
 import { useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useLiveQuery } from "dexie-react-hooks";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ConfirmSheet } from "@/components/ui/confirm-sheet";
 import { Page } from "@/components/ui/page";
 import { PauseSheet } from "@/features/project/components/pause-sheet";
 import { StatusBadge } from "@/features/project/components/status-badge";
+import { DerivedFrom } from "@/features/project/components/derived-from";
 import {
   applyEvent,
   deleteProject,
   getProject,
+  restartProject,
 } from "@/features/project/repository";
 import { pausedLabel } from "@/features/project/format";
 import { CounterSection } from "@/features/counter/components/counter-section";
@@ -52,6 +54,14 @@ function ProjectDetail() {
     await applyEvent(projectId, { type } as ProjectEvent);
   }
 
+  async function handleRestart() {
+    const copyId = await restartProject(projectId);
+    await navigate({
+      to: "/projects/$projectId",
+      params: { projectId: copyId },
+    });
+  }
+
   async function handleDelete() {
     await deleteProject(projectId);
     await navigate({ to: "/projects" });
@@ -68,6 +78,10 @@ function ProjectDetail() {
       </Link>
 
       <PhotoTimeline projectId={projectId} />
+
+      {project.derivedFromProjectId && (
+        <DerivedFrom sourceId={project.derivedFromProjectId} />
+      )}
 
       <dl className="text-small mb-5 space-y-1.5">
         <div className="flex gap-2">
@@ -129,6 +143,18 @@ function ProjectDetail() {
 
       <CounterSection projectId={projectId} />
       <AllocationSection projectId={projectId} />
+
+      {/* 같은 작품을 다른 실로 다시 뜨기. 상태와 무관하게 열어둔다 —
+          완성한 걸 또 뜨기도 하고, 뜨는 중에 선물용을 하나 더 시작하기도 한다. */}
+      <section className="border-line mb-6 flex items-center gap-3 rounded-md border p-4">
+        <p className="text-text-2 text-caption min-w-0 flex-1">
+          {t.project.restartHint}
+        </p>
+        <Button variant="secondary" onClick={() => void handleRestart()}>
+          <Copy size={16} aria-hidden />
+          {t.project.restart}
+        </Button>
+      </section>
 
       <div className="border-line flex gap-2 border-t pt-4">
         <Link to="/projects/$projectId/edit" params={{ projectId }}>

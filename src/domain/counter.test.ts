@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   applyStep,
+  counterBlueprints,
   counterView,
   derivedLinkedValue,
   hoursRemaining,
@@ -198,5 +199,73 @@ describe("뜨는 속도", () => {
   it("남은 시간을 추정한다", () => {
     expect(hoursRemaining(58, 20)).toBeCloseTo(2.9);
     expect(hoursRemaining(58, null)).toBeNull();
+  });
+});
+
+describe("counterBlueprints", () => {
+  const layout = [
+    { id: "sleeve", label: "소매", sortOrder: 1, target: 120 },
+    {
+      id: "body",
+      label: "몸판",
+      sortOrder: 0,
+      target: 180,
+      repeatLength: 12,
+      repeatTarget: 5,
+    },
+    {
+      id: "pattern",
+      label: "무늬",
+      sortOrder: 2,
+      linkedCounterId: "body",
+      linkRatio: 8,
+    },
+  ];
+
+  it("sortOrder 순서로 정렬한다", () => {
+    expect(counterBlueprints(layout).map((c) => c.label)).toEqual([
+      "몸판",
+      "소매",
+      "무늬",
+    ]);
+  });
+
+  it("목표와 무늬 반복 설정을 그대로 옮긴다", () => {
+    const [body] = counterBlueprints(layout);
+    expect(body).toMatchObject({
+      target: 180,
+      repeatLength: 12,
+      repeatTarget: 5,
+    });
+  });
+
+  it("연동 참조를 id가 아니라 순번으로 바꾼다", () => {
+    const pattern = counterBlueprints(layout)[2];
+    // 정렬 후 몸판이 0번이다 — 새 프로젝트에서 그 자리의 카운터를 따라가야 한다
+    expect(pattern.linkedIndex).toBe(0);
+    expect(pattern.linkRatio).toBe(8);
+  });
+
+  it("목록에 없는 카운터를 따라가던 연동은 버린다", () => {
+    const orphan = counterBlueprints([
+      { id: "a", label: "몸판", sortOrder: 0 },
+      {
+        id: "b",
+        label: "무늬",
+        sortOrder: 1,
+        linkedCounterId: "지워진카운터",
+        linkRatio: 4,
+      },
+    ]);
+    expect(orphan[1].linkedIndex).toBeUndefined();
+    expect(orphan[1].linkRatio).toBeUndefined();
+  });
+
+  it("값과 시작값 보정은 옮기지 않는다", () => {
+    const [copy] = counterBlueprints([
+      { id: "a", label: "몸판", sortOrder: 0, target: 100 },
+    ]);
+    expect(copy).not.toHaveProperty("value");
+    expect(copy).not.toHaveProperty("linkOffset");
   });
 });

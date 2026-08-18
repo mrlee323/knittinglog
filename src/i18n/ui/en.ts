@@ -67,6 +67,12 @@ export const en: UIStrings = {
     pausedFor: "On hold for {days} days",
     startedOn: "Started {date}",
     finishedOn: "Finished {date}",
+    restart: "Knit it again",
+    restartHint: "Copies the counters and gauge. All you pick is new yarn.",
+    derivedFrom: "Carried over from {name}",
+    derivedHint:
+      "New yarn deserves a new swatch — a different gauge means a different stitch count.",
+    viewSource: "See the earlier one",
   },
   counter: {
     title: "Counters",

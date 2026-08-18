@@ -69,6 +69,14 @@ export const ko = {
     pausedFor: "{days}일째 멈춤",
     startedOn: "시작 {date}",
     finishedOn: "완성 {date}",
+    /* 같은 작품 다시 뜨기 */
+    restart: "이대로 다시 뜨기",
+    restartHint:
+      "카운터 구성과 게이지를 그대로 가져와요. 실만 새로 고르면 돼요.",
+    derivedFrom: "{name}에서 이어받았어요",
+    derivedHint:
+      "실이 바뀌면 스와치를 다시 떠보세요. 게이지가 달라지면 코수도 달라져요.",
+    viewSource: "지난 작품 보기",
   },
   counter: {
     title: "카운터",

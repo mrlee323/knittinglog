@@ -2,6 +2,7 @@ import { db, stamp, touch } from "@/lib/db";
 import {
   applyStep,
   reconcileLinked,
+  type CounterBlueprint,
   type CounterRecord,
 } from "@/domain/counter";
 import type {
@@ -53,6 +54,51 @@ export async function createCounter(projectId: Id, input: CounterInput) {
   });
   await db.counters.add(counter as Counter);
   return counter.id;
+}
+
+/**
+ * 설계도대로 카운터를 만든다 — 같은 작품을 다시 뜰 때 쓴다.
+ *
+ * 연동은 카운터를 다 만든 뒤에 이어붙인다. 만드는 중에 붙이려면 아직 없는
+ * id를 가리켜야 하고, 설계도가 참조를 순번으로 들고 오는 이유도 그것이다.
+ */
+export async function createCountersFromBlueprints(
+  projectId: Id,
+  blueprints: CounterBlueprint[]
+): Promise<Id[]> {
+  return db.transaction("rw", db.counters, async () => {
+    const offset = await db.counters
+      .where("projectId")
+      .equals(projectId)
+      .count();
+
+    const created = blueprints.map(
+      (bp, i) =>
+        stamp({
+          projectId,
+          label: bp.label,
+          value: 0,
+          sortOrder: offset + i,
+          target: bp.target,
+          repeatLength: bp.repeatLength,
+          repeatTarget: bp.repeatTarget,
+        }) as Counter
+    );
+    await db.counters.bulkAdd(created);
+
+    for (const [i, bp] of blueprints.entries()) {
+      if (bp.linkedIndex === undefined || !bp.linkRatio) continue;
+      await db.counters.update(
+        created[i].id,
+        touch({
+          linkedCounterId: created[bp.linkedIndex].id,
+          linkRatio: bp.linkRatio,
+        })
+      );
+    }
+
+    return created.map((c) => c.id);
+  });
 }
 
 export async function updateCounter(id: Id, patch: Partial<CounterInput>) {

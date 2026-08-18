@@ -1,6 +1,11 @@
 import { z } from "zod";
 import { db, stamp, touch } from "@/lib/db";
 import { statusPatch, type ProjectEvent } from "@/domain/projectStatus";
+import { counterBlueprints } from "@/domain/counter";
+import {
+  createCountersFromBlueprints,
+  listCounters,
+} from "@/features/counter/repository";
 import type { Id, Project, ProjectStatus } from "@/types/entities";
 
 /* --- 입력 검증 ------------------------------------------------------------ */
@@ -84,6 +89,50 @@ export async function applyEvent(id: Id, event: ProjectEvent) {
 
   await db.projects.update(id, touch(patch));
   return patch.status;
+}
+
+/**
+ * 같은 작품을 다시 뜬다.
+ *
+ * 다른 색으로 한 번 더 뜨는 건 뜨개에서 흔한 일이고, 그때 매번 다시 하는 게
+ * 카운터 만들기와 치수 계산이다. 그래서 이름·기법·종류·메모와 카운터 구성
+ * (목표 단수·무늬 반복·연동)을 그대로 가져온다.
+ *
+ * 가져오지 않는 것도 의도다. **실은 물려주지 않는다** — 색을 바꾸려고 다시
+ * 뜨는 것이므로 지난 실을 배정해두면 지우는 일이 하나 더 생긴다. 사진과
+ * 기록도 옮기지 않는다. 그건 지난 작품의 것이고, 필요하면 이어받은 표시를
+ * 따라가면 된다.
+ *
+ * 게이지는 참조만 물려준다. 실이 바뀌면 게이지도 달라지니 새 스와치를 뜨는
+ * 게 맞지만, 지난번 값이 출발점으로는 가장 낫다.
+ */
+export async function restartProject(sourceId: Id): Promise<Id> {
+  const source = await db.projects.get(sourceId);
+  if (!source) throw new Error(`프로젝트를 찾을 수 없습니다: ${sourceId}`);
+
+  // 같은 원본에서 몇 번째로 이어받은 것인지 세어 이름을 붙인다.
+  // 인덱스를 걸지 않은 필드라 전체를 훑지만, 프로젝트는 많아야 수십 개다.
+  const siblings = await db.projects
+    .filter((p) => p.derivedFromProjectId === sourceId)
+    .count();
+
+  const copy = stamp({
+    name: `${source.name} (${siblings + 2})`,
+    craft: source.craft,
+    category: source.category,
+    notes: source.notes,
+    gaugeId: source.gaugeId,
+    patternId: source.patternId,
+    derivedFromProjectId: sourceId,
+    // 뜨기 시작하는 건 별도의 행동이다 — createProject와 같은 규칙
+    status: "planning" as const,
+  });
+  await db.projects.add(copy as Project);
+
+  const counters = await listCounters(sourceId);
+  await createCountersFromBlueprints(copy.id, counterBlueprints(counters));
+
+  return copy.id;
 }
 
 export async function deleteProject(id: Id) {
