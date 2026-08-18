@@ -131,6 +131,11 @@ export const ko = {
     fiberPlaceholder: "울 60% 코튼 40%",
     weightClass: "굵기",
     weightUnset: "모름",
+    weightHint:
+      "라벨에 등급이 없어도 괜찮아요. 위에 무게와 길이를 적으면 추정해드려요.",
+    weightGuess: "라벨 기준 {name}로 보여요",
+    weightApply: "이 굵기로 설정",
+    weightMismatch: "고른 굵기와 라벨 계산이 달라요 — 계산은 {name} 쪽이에요",
     skeinGrams: "타래 무게 (g)",
     skeinMeters: "타래 길이 (m)",
     skeinCount: "보유 타래",
