@@ -6,10 +6,12 @@ import { Page } from "@/components/ui/page";
 import { SelectField, TextField } from "@/components/ui/field";
 import { useUnits } from "@/app/units";
 import {
+  lengthForRows,
   resizeToMyGauge,
   rowsForLength,
   stitchesForWidth,
   suggestNeedle,
+  widthForStitches,
   type Gauge,
 } from "@/domain/gauge";
 import {
@@ -19,6 +21,7 @@ import {
   MEASUREMENT_KEYS,
   type MeasurementKey,
 } from "@/domain/body";
+import { PieceSchematic } from "@/features/gauge/components/piece-schematic";
 import { listGauges } from "@/features/gauge/repository";
 import { listProfiles } from "@/features/profile/repository";
 import { useStrings } from "@/i18n";
@@ -238,6 +241,8 @@ function SizeToStitches({
         onChange={(e) => setLength(e.target.value)}
       />
 
+      {/* 숫자와 도형을 같은 카드에 둔다. 코수만 보면 그게 어떤 조각인지
+          가늠할 수 없고, 도형만 보면 뜰 수가 없다. */}
       <Result>
         {widthCm > 0 && (
           <strong className="text-title font-semibold">
@@ -254,6 +259,19 @@ function SizeToStitches({
               String(rowsForLength(gauge, lengthCm))
             )}
           </span>
+        )}
+        {widthCm > 0 && lengthCm > 0 && (
+          <div className="border-line mt-3 border-t pt-3">
+            <PieceSchematic
+              widthCm={widthCm}
+              lengthCm={lengthCm}
+              stitches={stitchesForWidth(gauge, widthCm)}
+              rows={rowsForLength(gauge, lengthCm)}
+            />
+            <p className="text-text-3 text-caption mt-2 text-left">
+              {t.calc.gridHint}
+            </p>
+          </div>
         )}
       </Result>
     </Section>
@@ -357,6 +375,27 @@ function ResizePattern({ gauge }: { gauge: Gauge }) {
               .replace("{sts}", String(result.stitches))
               .replace("{rows}", String(result.rows))}
           </strong>
+
+          {/* 리사이징은 "완성 치수를 유지한다"가 원리다. 두 도식을 겹쳐
+              그리면 같은 사각형이 겹칠 뿐이라, 위아래로 나란히 두고
+              격자 밀도가 달라지는 것을 보여준다 — 바뀌는 건 크기가
+              아니라 코수라는 게 이 그림의 요점이다. */}
+          <div className="border-line mt-3 space-y-4 border-t pt-3">
+            <PieceSchematic
+              caption={t.calc.patternGauge}
+              widthCm={widthForStitches(patternGauge, num(castOn) ?? 0)}
+              lengthCm={lengthForRows(patternGauge, num(totalRows) ?? 0)}
+              stitches={num(castOn) ?? 0}
+              rows={num(totalRows) ?? 0}
+            />
+            <PieceSchematic
+              caption={t.calc.myGauge}
+              widthCm={widthForStitches(gauge, result.stitches)}
+              lengthCm={lengthForRows(gauge, result.rows)}
+              stitches={result.stitches}
+              rows={result.rows}
+            />
+          </div>
           {/* 배수 보정으로 생긴 오차를 숨기지 않는다. 무늬를 지키느라
               완성 치수가 조금 달라졌다는 사실을 알아야 판단할 수 있다. */}
           {Math.abs(result.widthDeltaCm) >= 0.5 && (

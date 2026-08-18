@@ -196,6 +196,8 @@ export const en: UIStrings = {
     goUp: "Try going up to {mm}mm",
     goDown: "Try going down to {mm}mm",
     needleOk: "That's within measuring error. Carry on.",
+    gridHint:
+      "Each cell is 10 stitches by 10 rows. Stitches aren't square, so cells come out wide or tall — that's the real shape.",
     fromProfile: "From a measurement profile",
     finished: "Finished size {n}",
     flatPiece: "Worked flat, {n} per piece",
