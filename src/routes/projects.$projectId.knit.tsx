@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useLiveQuery } from "dexie-react-hooks";
-import { LifeBuoy, Plus, Minus, Undo2, X, Sun } from "lucide-react";
+import { Columns2, LifeBuoy, Plus, Minus, Undo2, X, Sun } from "lucide-react";
 import {
   counterView,
   isLinked,
@@ -20,6 +20,7 @@ import {
   step,
 } from "@/features/counter/repository";
 import { getProject } from "@/features/project/repository";
+import { KnitPanel } from "@/features/reference/components/knit-panel";
 import { useStrings } from "@/i18n";
 import { cn } from "@/lib/utils";
 import type { Id } from "@/types/entities";
@@ -48,6 +49,13 @@ function KnitMode() {
   const [selectedId, setSelectedId] = useState<Id | null>(null);
   const [undoStack, setUndoStack] = useState<UndoEntry[]>([]);
   const [sessionRows, setSessionRows] = useState(0);
+  /**
+   * 도안 패널.
+   *
+   * 기본은 열어둔다 — 넓은 화면에서 뜨기 화면에 들어오는 사람은 대개 도안을
+   * 보며 뜬다. 폰에서는 CSS가 아예 감추므로 이 값이 영향을 주지 않는다.
+   */
+  const [showPattern, setShowPattern] = useState(true);
 
   const screenOn = useWakeLock(true);
 
@@ -147,163 +155,188 @@ function KnitMode() {
   const mainCounter = counters.find((c) => c.id === selected?.linkedCounterId);
 
   return (
-    <div className="pt-safe pb-safe bg-canvas flex h-dvh flex-col">
-      {/* --- 상단 --- */}
-      <header className="flex items-center gap-2 px-3 py-2">
-        <button
-          type="button"
-          aria-label={t.action.back}
-          onClick={() =>
-            navigate({ to: "/projects/$projectId", params: { projectId } })
-          }
-          className="text-text-2 rounded-md p-2"
-        >
-          <X size={22} />
-        </button>
-        <p className="text-text-2 text-small min-w-0 flex-1 truncate">
-          {project.name}
-        </p>
-        {screenOn && (
-          <span
-            title={t.counter.screenOn}
-            aria-label={t.counter.screenOn}
-            className="text-accent"
-          >
-            <Sun size={18} />
-          </span>
-        )}
-      </header>
-
-      {counters.length > 1 && (
-        <div className="flex gap-2 overflow-x-auto px-3 pb-2">
-          {counters.map((counter) => (
-            <button
-              key={counter.id}
-              type="button"
-              onClick={() => setSelectedId(counter.id)}
-              aria-pressed={counter.id === activeId}
-              className={cn(
-                "text-small shrink-0 rounded-sm px-2.5 py-1.5 transition",
-                counter.id === activeId
-                  ? "bg-accent text-on-accent font-medium"
-                  : "bg-sunken text-text-2"
-              )}
-            >
-              {counter.label} {counter.value}
-            </button>
-          ))}
-        </div>
+    <div className="bg-canvas flex h-dvh">
+      {/* 왼쪽은 도안, 오른쪽은 카운터. 태블릿 가로·PC에서만 나뉜다. */}
+      {showPattern && (
+        <aside className="border-line hidden w-[45%] max-w-3xl shrink-0 border-r lg:block">
+          <KnitPanel projectId={projectId} />
+        </aside>
       )}
 
-      {/* --- 숫자 --- */}
-      <section className="px-5 pt-2 pb-4 text-center">
-        <p className="text-text-2 text-small">{selected?.label}</p>
-        <p className="text-7xl leading-none font-semibold tracking-tight tabular-nums">
-          {view?.value ?? 0}
-        </p>
+      <div className="pt-safe pb-safe flex min-w-0 flex-1 flex-col">
+        {/* --- 상단 --- */}
+        <header className="flex items-center gap-2 px-3 py-2">
+          <button
+            type="button"
+            aria-label={t.action.back}
+            onClick={() =>
+              navigate({ to: "/projects/$projectId", params: { projectId } })
+            }
+            className="text-text-2 rounded-md p-2"
+          >
+            <X size={22} />
+          </button>
+          <p className="text-text-2 text-small min-w-0 flex-1 truncate">
+            {project.name}
+          </p>
+          {screenOn && (
+            <span
+              title={t.counter.screenOn}
+              aria-label={t.counter.screenOn}
+              className="text-accent"
+            >
+              <Sun size={18} />
+            </span>
+          )}
+          {/* 도안을 접는 버튼은 넓은 화면에만 둔다. 폰에서는 패널 자체가 없다. */}
+          <button
+            type="button"
+            aria-pressed={showPattern}
+            aria-label={t.counter.patternPanel}
+            title={t.counter.patternPanel}
+            onClick={() => setShowPattern((v) => !v)}
+            className={cn(
+              "hidden rounded-md p-2 transition lg:block",
+              showPattern ? "text-accent" : "text-text-2"
+            )}
+          >
+            <Columns2 size={18} />
+          </button>
+        </header>
 
-        {view?.target && (
-          <>
-            <p className="text-text-2 text-small mt-1">/ {view.target}</p>
-            <div className="bg-sunken mx-auto mt-3 h-1.5 max-w-xs overflow-hidden rounded-full">
-              <div
-                className="bg-accent h-full rounded-full transition-[width]"
-                style={{ width: `${(view.progress ?? 0) * 100}%` }}
-              />
-            </div>
-          </>
+        {counters.length > 1 && (
+          <div className="flex gap-2 overflow-x-auto px-3 pb-2">
+            {counters.map((counter) => (
+              <button
+                key={counter.id}
+                type="button"
+                onClick={() => setSelectedId(counter.id)}
+                aria-pressed={counter.id === activeId}
+                className={cn(
+                  "text-small shrink-0 rounded-sm px-2.5 py-1.5 transition",
+                  counter.id === activeId
+                    ? "bg-accent text-on-accent font-medium"
+                    : "bg-sunken text-text-2"
+                )}
+              >
+                {counter.label} {counter.value}
+              </button>
+            ))}
+          </div>
         )}
 
-        <div className="text-text-2 text-small mt-3 space-y-0.5">
-          {view?.remaining !== undefined && !view.done && (
-            <p>{t.counter.remaining.replace("{n}", String(view.remaining))}</p>
-          )}
-          {view?.done && (
-            <p className="text-accent font-medium">{t.counter.done}</p>
-          )}
-          {view?.repeat && (
-            <p>
-              {t.counter.repeatProgress
-                .replace("{done}", String(view.repeat.completed))
-                .replace("{row}", String(view.repeat.rowInRepeat))
-                .replace("{len}", String(view.repeat.length))}
-              {view.repeat.target && (
-                <>
-                  {" · "}
-                  {t.counter.repeatOf
-                    .replace("{done}", String(view.repeat.completed))
-                    .replace("{target}", String(view.repeat.target))}
-                </>
-              )}
-            </p>
-          )}
-        </div>
+        {/* --- 숫자 --- */}
+        <section className="px-5 pt-2 pb-4 text-center">
+          <p className="text-text-2 text-small">{selected?.label}</p>
+          <p className="text-7xl leading-none font-semibold tracking-tight tabular-nums">
+            {view?.value ?? 0}
+          </p>
 
-        {/* 생명줄 — 실수해도 여기까지만 풀면 된다는 안전선 */}
-        <p className="text-hibernating text-caption mt-3">
-          {lifeline === null
-            ? t.counter.lifelineNone
-            : `${t.counter.lifelineLast.replace("{row}", String(lifeline))} · ${t.counter.lifelineUnravel.replace(
-                "{n}",
-                String(rowsToUnravel(selected?.value ?? 0, lifeline))
-              )}`}
-        </p>
-      </section>
+          {view?.target && (
+            <>
+              <p className="text-text-2 text-small mt-1">/ {view.target}</p>
+              <div className="bg-sunken mx-auto mt-3 h-1.5 max-w-xs overflow-hidden rounded-full">
+                <div
+                  className="bg-accent h-full rounded-full transition-[width]"
+                  style={{ width: `${(view.progress ?? 0) * 100}%` }}
+                />
+              </div>
+            </>
+          )}
 
-      {/* --- 큰 +1 영역 ---
+          <div className="text-text-2 text-small mt-3 space-y-0.5">
+            {view?.remaining !== undefined && !view.done && (
+              <p>
+                {t.counter.remaining.replace("{n}", String(view.remaining))}
+              </p>
+            )}
+            {view?.done && (
+              <p className="text-accent font-medium">{t.counter.done}</p>
+            )}
+            {view?.repeat && (
+              <p>
+                {t.counter.repeatProgress
+                  .replace("{done}", String(view.repeat.completed))
+                  .replace("{row}", String(view.repeat.rowInRepeat))
+                  .replace("{len}", String(view.repeat.length))}
+                {view.repeat.target && (
+                  <>
+                    {" · "}
+                    {t.counter.repeatOf
+                      .replace("{done}", String(view.repeat.completed))
+                      .replace("{target}", String(view.repeat.target))}
+                  </>
+                )}
+              </p>
+            )}
+          </div>
+
+          {/* 생명줄 — 실수해도 여기까지만 풀면 된다는 안전선 */}
+          <p className="text-hibernating text-caption mt-3">
+            {lifeline === null
+              ? t.counter.lifelineNone
+              : `${t.counter.lifelineLast.replace("{row}", String(lifeline))} · ${t.counter.lifelineUnravel.replace(
+                  "{n}",
+                  String(rowsToUnravel(selected?.value ?? 0, lifeline))
+                )}`}
+          </p>
+        </section>
+
+        {/* --- 큰 +1 영역 ---
           "강조 = 먹색" 규칙을 여기엔 적용하지 않는다. 화면 절반을 먹색으로
           채우면 다크 모드에서 거의 흰 판이 되어, 밤에 뜨는 사람 눈에 조명을
           비추는 꼴이 된다. 대신 낮은 대비의 면 + 테두리로 영역만 알린다.
 
           연동 카운터는 메인에서 파생되므로 직접 세지 않는다. 버튼을 비활성으로
           두는 대신 왜 못 누르는지를 그 자리에 적는다. */}
-      {linked ? (
-        <div className="border-line text-text-2 text-small mx-3 flex flex-1 items-center justify-center rounded-lg border border-dashed px-8 text-center">
-          {t.counter.linkedReadOnly
-            .replace("{main}", mainCounter?.label ?? "")
-            .replace("{ratio}", String(selected?.linkRatio ?? 0))}
-        </div>
-      ) : (
-        <button
-          type="button"
-          aria-label="+1"
-          onClick={() => void doStep(1)}
-          className="bg-sunken border-line-strong text-text active:bg-line mx-3 flex flex-1 items-center justify-center rounded-lg border transition-colors"
-        >
-          <Plus size={72} strokeWidth={2} />
-        </button>
-      )}
+        {linked ? (
+          <div className="border-line text-text-2 text-small mx-3 flex flex-1 items-center justify-center rounded-lg border border-dashed px-8 text-center">
+            {t.counter.linkedReadOnly
+              .replace("{main}", mainCounter?.label ?? "")
+              .replace("{ratio}", String(selected?.linkRatio ?? 0))}
+          </div>
+        ) : (
+          <button
+            type="button"
+            aria-label="+1"
+            onClick={() => void doStep(1)}
+            className="bg-sunken border-line-strong text-text active:bg-line mx-3 flex flex-1 items-center justify-center rounded-lg border transition-colors"
+          >
+            <Plus size={72} strokeWidth={2} />
+          </button>
+        )}
 
-      {/* --- 보조 조작 --- */}
-      <nav className="flex items-center justify-around gap-2 px-3 py-3">
-        <SmallAction
-          icon={<Undo2 size={20} />}
-          label={t.counter.undo}
-          disabled={undoStack.length === 0}
-          onClick={() => void undo()}
-        />
-        <SmallAction
-          icon={<Minus size={20} />}
-          label="−1"
-          disabled={linked || (selected?.value ?? 0) === 0}
-          onClick={() => void doStep(-1)}
-        />
-        <SmallAction
-          icon={<LifeBuoy size={20} />}
-          label={t.counter.lifelineHere}
-          onClick={() => {
-            if (!activeId) return;
-            void addMark(activeId, selected?.value ?? 0, "lifeline");
-            haptic([10, 30, 10]);
-          }}
-        />
-      </nav>
+        {/* --- 보조 조작 --- */}
+        <nav className="flex items-center justify-around gap-2 px-3 py-3">
+          <SmallAction
+            icon={<Undo2 size={20} />}
+            label={t.counter.undo}
+            disabled={undoStack.length === 0}
+            onClick={() => void undo()}
+          />
+          <SmallAction
+            icon={<Minus size={20} />}
+            label="−1"
+            disabled={linked || (selected?.value ?? 0) === 0}
+            onClick={() => void doStep(-1)}
+          />
+          <SmallAction
+            icon={<LifeBuoy size={20} />}
+            label={t.counter.lifelineHere}
+            onClick={() => {
+              if (!activeId) return;
+              void addMark(activeId, selected?.value ?? 0, "lifeline");
+              haptic([10, 30, 10]);
+            }}
+          />
+        </nav>
 
-      {sessionRows > 0 && (
-        <p className="text-text-2 text-caption pb-2 text-center">
-          {t.counter.sessionRows.replace("{n}", String(sessionRows))}
-        </p>
-      )}
+        {sessionRows > 0 && (
+          <p className="text-text-2 text-caption pb-2 text-center">
+            {t.counter.sessionRows.replace("{n}", String(sessionRows))}
+          </p>
+        )}
+      </div>
     </div>
   );
 }

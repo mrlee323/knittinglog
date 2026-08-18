@@ -117,6 +117,7 @@ export const ko = {
     lifelineUnravel: "{n}단만 풀면 돼요",
     setValue: "단수 직접 입력",
     screenOn: "화면 켜둠",
+    patternPanel: "도안 나란히 보기",
     sessionRows: "이번에 {n}단",
     deleteConfirm: "이 카운터와 마크·세션 기록을 지울까요?",
   },
@@ -349,6 +350,7 @@ export const ko = {
     empty: "아직 올려둔 자료가 없어요",
     emptyHint:
       "도안 이미지와 참고 사진, 영상 링크를 올려두면 여기서 나란히 놓고 볼 수 있어요. 넓은 화면에서는 도안과 영상을 좌우로 나눠 볼 수 있어요.",
+    emptyKnit: "작업대에 도안이나 참고 자료를 올려두면 뜨면서 볼 수 있어요",
     deleteImageConfirm: "이 이미지를 지울까요?",
     deleteVideoConfirm: "이 영상 링크를 지울까요?",
   },

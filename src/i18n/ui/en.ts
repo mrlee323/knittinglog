@@ -112,6 +112,7 @@ export const en: UIStrings = {
     lifelineUnravel: "Only {n} rows to rip back",
     setValue: "Set row count",
     screenOn: "Screen stays on",
+    patternPanel: "Show the pattern alongside",
     sessionRows: "{n} rows this session",
     deleteConfirm: "Delete this counter with its marks and sessions?",
   },
@@ -336,6 +337,8 @@ export const en: UIStrings = {
     empty: "Nothing here yet",
     emptyHint:
       "Add pattern images, reference photos and video links to keep them side by side. On a wide screen you can split the pattern and the video.",
+    emptyKnit:
+      "Add a pattern or reference in the workbench and it shows up here while you knit",
     deleteImageConfirm: "Delete this image?",
     deleteVideoConfirm: "Delete this video link?",
   },
