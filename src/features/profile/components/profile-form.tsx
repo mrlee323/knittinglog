@@ -8,6 +8,7 @@ import {
   nearestEasePreset,
   type MeasurementKey,
 } from "@/domain/body";
+import { BodyDiagram } from "@/features/profile/components/body-diagram";
 import {
   profileFormSchema,
   type ProfileFormValues,
@@ -31,6 +32,14 @@ export function ProfileForm({
   const t = useStrings();
   const units = useUnits();
   const [values, setValues] = useState<ProfileFormValues>(initial ?? EMPTY);
+  /**
+   * 지금 어느 치수를 재고 있는지.
+   *
+   * 입력칸에 들어가면 그 부위가 그림에서 강조된다. 처음에는 가슴둘레를 보여준다 —
+   * 아무것도 강조하지 않으면 그림이 장식으로만 보이고, 누르면 바뀐다는 걸
+   * 알 방법이 없다.
+   */
+  const [focused, setFocused] = useState<MeasurementKey>("bust");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
 
@@ -143,16 +152,30 @@ export function ProfileForm({
         <p className="text-text-3 text-caption mt-1.5">{t.profile.easeHint}</p>
       </div>
 
-      <div className="grid grid-cols-2 gap-x-3">
-        {MEASUREMENT_KEYS.map((key) => (
-          <TextField
-            key={key}
-            label={`${t.profile.measure[key]} (${units.lengthLabel})`}
-            inputMode="numeric"
-            value={measurementValue(key)}
-            onChange={(e) => setMeasurement(key, e.target.value)}
-          />
-        ))}
+      {/* 그림과 입력칸을 나란히 둔다. 그림이 위에만 있으면 아래 칸을 채우는
+          동안 강조된 부위가 화면 밖으로 밀려나 쓸모가 없다. */}
+      <div className="md:grid md:grid-cols-[13rem_minmax(0,1fr)] md:gap-5">
+        <div className="mb-4 md:sticky md:top-8 md:mb-0 md:self-start">
+          <BodyDiagram highlight={focused} />
+        </div>
+
+        <div className="grid grid-cols-2 gap-x-3">
+          {MEASUREMENT_KEYS.map((key) => (
+            <TextField
+              key={key}
+              label={`${t.profile.measure[key]} (${units.lengthLabel})`}
+              inputMode="numeric"
+              value={measurementValue(key)}
+              // 포커스와 클릭 둘 다에 반응한다. 키보드로 탭을 넘길 때는
+              // 포커스가, 마우스로 칸을 다시 누를 때는 클릭이 신호다.
+              // 호버는 쓰지 않는다 — 마우스가 지나갈 때마다 그림이 튀면
+              // 어느 칸을 채우고 있었는지 놓친다.
+              onFocus={() => setFocused(key)}
+              onClick={() => setFocused(key)}
+              onChange={(e) => setMeasurement(key, e.target.value)}
+            />
+          ))}
+        </div>
       </div>
 
       <div className="mt-2 flex gap-2">

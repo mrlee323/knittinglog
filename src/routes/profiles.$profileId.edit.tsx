@@ -20,7 +20,7 @@ function EditProfile() {
   if (!profile) return null;
 
   return (
-    <Page title={t.profile.edit}>
+    <Page wide title={t.profile.edit}>
       <ProfileForm
         submitLabel={t.action.save}
         initial={{

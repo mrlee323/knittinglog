@@ -13,7 +13,7 @@ function NewProfile() {
   const navigate = useNavigate();
 
   return (
-    <Page title={t.profile.add}>
+    <Page wide title={t.profile.add}>
       <ProfileForm
         submitLabel={t.action.create}
         onCancel={() => navigate({ to: "/profiles" })}
