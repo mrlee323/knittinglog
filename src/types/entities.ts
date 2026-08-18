@@ -63,6 +63,14 @@ export interface Project extends Base {
   pausedAt?: Date;
   finishedAt?: Date;
   coverPhotoId?: Id;
+  /**
+   * 대표 사진을 사용자가 직접 골랐는지.
+   *
+   * 고르지 않았으면 새 사진이 들어올 때마다 대표가 최신으로 따라간다 —
+   * 목록에서 보고 싶은 건 대개 "지금 어디까지 떴는지"다. 한 번 고르면
+   * 그 뒤로 사진을 더 올려도 그 장이 유지된다.
+   */
+  coverPinned?: boolean;
   patternId?: Id;
   gaugeId?: Id;
   notes?: string;
@@ -75,6 +83,16 @@ export interface ProjectPhoto extends Base {
   remoteUrl?: string;
   takenAt: Date;
   caption?: string;
+  /**
+   * 찍은 시점의 단수 스냅샷.
+   *
+   * 이게 없으면 타임라인은 그냥 앨범이다. 단수가 박히면 "62단째의 모습"이 되어
+   * 복귀할 때 어디까지 떴는지를 글이 아니라 그림으로 확인할 수 있다.
+   * 카운터 값을 참조가 아니라 사본으로 갖는 이유는, 나중에 풀거나 되돌려서
+   * 카운터가 62 아래로 내려가도 이 사진이 찍힌 시점은 62단이었기 때문이다.
+   */
+  atRow?: number;
+  atCounterLabel?: string;
 }
 
 export interface ProjectLog extends Base {

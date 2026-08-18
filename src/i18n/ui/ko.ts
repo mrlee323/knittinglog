@@ -260,6 +260,23 @@ export const ko = {
     emptyTitle: "첫 프로젝트를 등록해볼까요",
     emptyHint: "하다 만 것부터 넣어도 괜찮아요. 그게 이 앱의 목적이에요.",
   },
+  photo: {
+    title: "사진",
+    add: "사진 추가",
+    saving: "저장 중",
+    empty: "사진이 없어요",
+    emptyHint: "지금 모습을 찍어두면 다시 꺼낼 때 어디까지 떴는지 바로 알아요",
+    /** 사진을 시각이 아니라 진행으로 읽게 하는 값 */
+    atRow: "{label} {n}단",
+    count: "{n}장",
+    caption: "사진 설명",
+    captionPlaceholder: "여기서 진동 줄임",
+    setCover: "목록 대표로",
+    isCover: "목록 대표 사진",
+    deleteConfirm: "이 사진을 지울까요?",
+    prev: "이전 사진",
+    next: "다음 사진",
+  },
   action: {
     create: "만들기",
     save: "저장",

@@ -7,6 +7,8 @@ import { StatusBadge } from "@/features/project/components/status-badge";
 import { pausedLabel } from "@/features/project/format";
 import { YarnStripe } from "@/features/yarn/components/yarn-swatch";
 import { projectColors } from "@/features/yarn/repository";
+import { coverPhotos } from "@/features/photo/repository";
+import { CoverThumb } from "@/features/photo/components/cover-thumb";
 import { daysSincePaused } from "@/domain/projectStatus";
 import { counterView } from "@/domain/counter";
 import {
@@ -34,6 +36,7 @@ function Dashboard() {
   const sessions = useLiveQuery(() => db.counterSessions.toArray(), []);
   const counters = useLiveQuery(() => db.counters.toArray(), []);
   const colors = useLiveQuery(() => projectColors(), []);
+  const covers = useLiveQuery(() => coverPhotos(), []);
 
   if (!projects || !sessions || !counters) return null;
 
@@ -73,6 +76,7 @@ function Dashboard() {
         project={resume}
         counters={counters}
         color={resume ? colors?.get(resume.id) : undefined}
+        cover={resume ? covers?.get(resume.id) : undefined}
       />
 
       {/* 상태 요약 — 누르면 그 상태로 필터된 목록으로 간다 */}
@@ -106,7 +110,11 @@ function Dashboard() {
           <ul className="space-y-2">
             {waiting.map((project) => (
               <li key={project.id}>
-                <WaitingRow project={project} color={colors?.get(project.id)} />
+                <WaitingRow
+                  project={project}
+                  color={colors?.get(project.id)}
+                  cover={covers?.get(project.id)}
+                />
               </li>
             ))}
           </ul>
@@ -151,10 +159,12 @@ function ResumeCard({
   project,
   counters,
   color,
+  cover,
 }: {
   project: Project | null;
   counters: Counter[];
   color?: string;
+  cover?: Blob;
 }) {
   const t = useStrings();
 
@@ -207,6 +217,8 @@ function ResumeCard({
             </div>
           )}
         </div>
+        {/* 마지막으로 뜬 모습. 이름보다 사진이 먼저 읽힌다. */}
+        <CoverThumb blob={cover} />
       </Link>
 
       {projectCounters.length > 0 && (
@@ -248,7 +260,15 @@ function StatTile({
   );
 }
 
-function WaitingRow({ project, color }: { project: Project; color?: string }) {
+function WaitingRow({
+  project,
+  color,
+  cover,
+}: {
+  project: Project;
+  color?: string;
+  cover?: Blob;
+}) {
   const t = useStrings();
   const days = daysSincePaused(project);
 
@@ -259,6 +279,7 @@ function WaitingRow({ project, color }: { project: Project; color?: string }) {
       className="border-line bg-surface hover:border-line-strong flex items-center gap-3 rounded-md border p-3 transition"
     >
       <YarnStripe color={color} />
+      <CoverThumb blob={cover} size="sm" />
       <div className="min-w-0 flex-1">
         <p className="text-small truncate font-medium">{project.name}</p>
         <p className="text-hibernating text-caption">

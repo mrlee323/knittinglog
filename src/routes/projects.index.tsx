@@ -8,6 +8,8 @@ import { StatusBadge } from "@/features/project/components/status-badge";
 import { listProjects } from "@/features/project/repository";
 import { pausedLabel } from "@/features/project/format";
 import { projectColors } from "@/features/yarn/repository";
+import { coverPhotos } from "@/features/photo/repository";
+import { CoverThumb } from "@/features/photo/components/cover-thumb";
 import { YarnStripe } from "@/features/yarn/components/yarn-swatch";
 import { daysSincePaused } from "@/domain/projectStatus";
 import { useStrings } from "@/i18n";
@@ -47,6 +49,7 @@ function Projects() {
   const projects = useLiveQuery(() => listProjects(status), [status]);
   // 프로젝트마다 실을 따로 조회하면 N+1이 된다. 한 번에 색만 받아온다.
   const colors = useLiveQuery(() => projectColors(), []);
+  const covers = useLiveQuery(() => coverPhotos(), []);
 
   return (
     <Page
@@ -91,7 +94,11 @@ function Projects() {
         <ul className="space-y-2">
           {projects.map((project) => (
             <li key={project.id}>
-              <ProjectCard project={project} color={colors?.get(project.id)} />
+              <ProjectCard
+                project={project}
+                color={colors?.get(project.id)}
+                cover={covers?.get(project.id)}
+              />
             </li>
           ))}
         </ul>
@@ -100,7 +107,15 @@ function Projects() {
   );
 }
 
-function ProjectCard({ project, color }: { project: Project; color?: string }) {
+function ProjectCard({
+  project,
+  color,
+  cover,
+}: {
+  project: Project;
+  color?: string;
+  cover?: Blob;
+}) {
   const t = useStrings();
   const pausedDays = daysSincePaused(project);
 
@@ -127,6 +142,7 @@ function ProjectCard({ project, color }: { project: Project; color?: string }) {
           </p>
         )}
       </div>
+      <CoverThumb blob={cover} />
     </Link>
   );
 }
