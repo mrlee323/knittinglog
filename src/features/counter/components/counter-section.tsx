@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { Link } from "@tanstack/react-router";
 import { useLiveQuery } from "dexie-react-hooks";
 import { Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -52,13 +51,6 @@ export function CounterSection({ projectId }: { projectId: Id }) {
           ))}
         </ul>
       )}
-
-      {/* 뜨기 모드로 가는 입구. 대시보드에서 2탭 안에 여기 도달해야 한다. */}
-      <Link to="/projects/$projectId/knit" params={{ projectId }}>
-        <Button block disabled={counters.length === 0}>
-          {t.counter.knit}
-        </Button>
-      </Link>
 
       {adding && (
         <CounterFormSheet

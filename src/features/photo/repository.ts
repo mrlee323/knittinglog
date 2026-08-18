@@ -17,17 +17,31 @@ export async function listPhotos(projectId: Id) {
     .equals(projectId)
     .reverse()
     .sortBy("takenAt");
-  return photos.filter((p) => p.kind !== "reference");
+  return photos.filter((p) => !p.kind || p.kind === "progress");
 }
 
-/** 참고 사진(무드보드). 먼저 모은 것이 위에 오도록 오래된 순이다. */
-export async function listReferencePhotos(projectId: Id) {
+/**
+ * 참고 사진·도안 이미지. 먼저 모은 것이 위에 오도록 오래된 순이다.
+ *
+ * 진행 기록과 정렬 방향이 반대인 것은 의도다. 진행은 최신이 궁금하고,
+ * 참고 자료는 모은 순서가 곧 맥락이다.
+ */
+export async function listPhotosByKind(
+  projectId: Id,
+  kind: NonNullable<ProjectPhoto["kind"]>
+) {
   const photos = await db.projectPhotos
     .where("projectId")
     .equals(projectId)
     .sortBy("takenAt");
-  return photos.filter((p) => p.kind === "reference");
+  return photos.filter((p) => p.kind === kind);
 }
+
+export const listReferencePhotos = (projectId: Id) =>
+  listPhotosByKind(projectId, "reference");
+
+export const listPatternPhotos = (projectId: Id) =>
+  listPhotosByKind(projectId, "pattern");
 
 /**
  * 목록 화면용 대표 사진 묶음.
@@ -127,7 +141,7 @@ export async function deletePhoto(id: Id) {
         .equals(photo.projectId)
         .reverse()
         .sortBy("takenAt")
-    ).filter((p) => p.kind !== "reference");
+    ).filter((p) => !p.kind || p.kind === "progress");
     // 고정해둔 장이 사라졌으면 고정도 함께 푼다. 안 풀면 새 사진을 올려도
     // 대표가 비어 있는 채로 남는다.
     await db.projects.update(
