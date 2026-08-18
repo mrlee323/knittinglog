@@ -268,6 +268,17 @@ export const ko = {
     delete: "삭제",
     back: "뒤로",
   },
+  install: {
+    title: "앱으로 설치",
+    installed: "앱으로 실행 중이에요",
+    hint: "홈 화면에 설치하면 오프라인에서도 쓸 수 있어요",
+    action: "설치하기",
+    unavailable: "이 브라우저에서는 앱 안에서 설치할 수 없어요",
+    // 브라우저마다 메뉴 이름이 다르다. "홈 화면에 추가"는 바로가기만 만들고
+    // 앱으로 설치되지 않으므로 구분해서 안내한다.
+    manual:
+      "Chrome 메뉴에서 '앱 설치'를 눌러주세요. '홈 화면에 추가'는 바로가기만 만들어요.",
+  },
   settings: {
     language: "언어 / Language",
     theme: "테마",

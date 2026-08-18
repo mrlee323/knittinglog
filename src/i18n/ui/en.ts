@@ -261,6 +261,15 @@ export const en: UIStrings = {
     delete: "Delete",
     back: "Back",
   },
+  install: {
+    title: "Install as an app",
+    installed: "Running as an installed app",
+    hint: "Install to your home screen to use it offline",
+    action: "Install",
+    unavailable: "This browser can't install from inside the app",
+    manual:
+      "Use your browser menu and choose 'Install app'. 'Add to Home screen' only makes a shortcut.",
+  },
   settings: {
     // 언어 라벨만은 두 언어를 병기한다 — 모르는 언어로 갇혔을 때 탈출구가 된다
     language: "언어 / Language",
