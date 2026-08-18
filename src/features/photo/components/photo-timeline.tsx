@@ -1,87 +1,110 @@
 import { useRef, useState } from "react";
-import { Camera, ImagePlus } from "lucide-react";
+import { Camera } from "lucide-react";
 import { useLiveQuery } from "dexie-react-hooks";
-import { addPhoto, listPhotos } from "@/features/photo/repository";
 import {
   PhotoImage,
   PhotoStamp,
 } from "@/features/photo/components/photo-image";
 import { PhotoViewer } from "@/features/photo/components/photo-viewer";
-import { useStrings } from "@/i18n";
+import { addPhoto, listPhotos } from "@/features/photo/repository";
+import { useLocale, useStrings } from "@/i18n";
 import { cn } from "@/lib/utils";
 import type { Id } from "@/types/entities";
 
 /**
- * 작품 사진 타임라인.
+ * 진행 기록.
  *
- * 이 앱에서 사진은 장식이 아니라 복귀 수단이다. 그래서 갤러리처럼 균일한
- * 격자로 늘어놓지 않고 **마지막 모습을 크게** 보여주고 나머지를 아래 줄에
- * 담는다. 3개월 만에 프로젝트를 열었을 때 필요한 건 "가장 최근에 어디까지
- * 떴는지" 한 장이다(docs/PLAN.md §3.1 복귀 브리핑).
+ * 사진 갤러리가 아니라 **히스토리**다. 한 항목은 "언제 · 몇 단 · 그때 모습"이고,
+ * 최근 것이 위에 쌓인다. 3개월 만에 프로젝트를 열었을 때 필요한 건 사진 자체가
+ * 아니라 "마지막에 어디까지 떴는지"이고, 그건 날짜와 단수가 사진에 붙어 있어야
+ * 성립한다(기획 §3.1 복귀 브리핑).
+ *
+ * 기준 화면이 태블릿·PC라 사진을 줄이지 않는다. 큰 화면에서 진행 사진은 편물의
+ * 무늬와 색을 확인하는 자료이기도 하다.
  */
 export function PhotoTimeline({ projectId }: { projectId: Id }) {
   const t = useStrings();
+  const locale = useLocale();
   const photos = useLiveQuery(() => listPhotos(projectId), [projectId]);
   const [openAt, setOpenAt] = useState<number>();
 
   if (photos === undefined) return null;
 
-  const [latest, ...rest] = photos;
+  const formatDate = (date: Date) =>
+    new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(date);
 
   return (
-    <section className="mb-6">
-      {latest ? (
-        <>
-          <button
-            type="button"
-            onClick={() => setOpenAt(0)}
-            className="border-line bg-sunken block w-full overflow-hidden rounded-md border"
-          >
-            <PhotoImage
-              photo={latest}
-              className="aspect-[4/3] w-full object-cover"
-            />
-          </button>
-          {/* 단수는 사진 밖에 둔다. 사진 위에 얹으면 편물 색에 따라 읽히지
-              않는 경우가 생기고, 이 값은 읽혀야 의미가 있는 정보다. */}
-          <div className="text-text-2 text-caption mt-2 flex items-center gap-2">
-            <PhotoStamp photo={latest} />
-            <span className="ml-auto">
+    <section className="mb-8">
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <h2 className="text-heading font-semibold">
+          {t.photo.history}
+          {photos.length > 0 && (
+            <span className="text-text-3 text-small ml-2 font-normal">
               {t.photo.count.replace("{n}", String(photos.length))}
             </span>
-          </div>
+          )}
+        </h2>
+        <AddButton
+          projectId={projectId}
+          // 사진을 올리면 바로 전체보기를 열어 설명을 적을 수 있게 한다.
+          // "이 단에서 뭘 했는지"는 찍은 직후가 아니면 다시 안 쓴다.
+          onAdded={() => setOpenAt(0)}
+        />
+      </div>
 
-          <div className="no-scrollbar -mx-4 mt-2 flex gap-1.5 overflow-x-auto px-4">
-            {rest.map((photo, i) => (
-              <button
-                key={photo.id}
-                type="button"
-                onClick={() => setOpenAt(i + 1)}
-                className="border-line bg-sunken size-16 shrink-0 overflow-hidden rounded-md border"
-              >
-                <PhotoImage photo={photo} className="size-full object-cover" />
-              </button>
-            ))}
-            <AddButton projectId={projectId} compact />
-          </div>
-        </>
-      ) : (
-        <div className="border-line rounded-md border border-dashed px-6 py-8 text-center">
+      {photos.length === 0 ? (
+        <div className="border-line rounded-md border border-dashed px-6 py-10 text-center">
           <p className="text-text-2 text-small">{t.photo.empty}</p>
-          <p className="text-text-3 text-caption mx-auto mt-1 max-w-[19rem] text-balance">
+          <p className="text-text-3 text-caption mx-auto mt-1 max-w-[22rem] text-balance">
             {t.photo.emptyHint}
           </p>
-          <div className="mt-4 flex justify-center">
-            <AddButton projectId={projectId} />
-          </div>
         </div>
+      ) : (
+        <ol className="space-y-5">
+          {photos.map((photo, i) => (
+            <li
+              key={photo.id}
+              className="border-line border-t pt-4 first:border-t-0 first:pt-0"
+            >
+              {/* 단수가 왼쪽, 날짜가 오른쪽. 훑을 때 눈이 따라가는 건 단수다. */}
+              <div className="mb-2 flex items-baseline justify-between gap-3">
+                <span className="text-small">
+                  <PhotoStamp photo={photo} />
+                </span>
+                <time
+                  dateTime={photo.takenAt.toISOString()}
+                  className="text-text-2 text-caption"
+                >
+                  {formatDate(photo.takenAt)}
+                </time>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setOpenAt(i)}
+                className="border-line bg-sunken block w-full overflow-hidden rounded-md border"
+              >
+                <PhotoImage
+                  photo={photo}
+                  className="aspect-[4/3] w-full object-cover"
+                />
+              </button>
+
+              {photo.caption && (
+                <p className="text-text-2 text-small mt-2 whitespace-pre-wrap">
+                  {photo.caption}
+                </p>
+              )}
+            </li>
+          ))}
+        </ol>
       )}
 
-      {openAt !== undefined && (
+      {openAt !== undefined && photos.length > 0 && (
         <PhotoViewer
           projectId={projectId}
           photos={photos}
-          index={openAt}
+          index={Math.min(openAt, photos.length - 1)}
           onIndex={setOpenAt}
           onClose={() => setOpenAt(undefined)}
         />
@@ -91,17 +114,17 @@ export function PhotoTimeline({ projectId }: { projectId: Id }) {
 }
 
 /**
- * 사진 추가.
+ * 기록 추가.
  *
  * capture 속성을 주지 않는다. 카메라를 강제하면 이미 찍어둔 사진을 고를 수
  * 없어지는데, 뜨다가 찍어놓고 나중에 등록하는 쪽이 훨씬 흔하다.
  */
 function AddButton({
   projectId,
-  compact,
+  onAdded,
 }: {
   projectId: Id;
-  compact?: boolean;
+  onAdded?: () => void;
 }) {
   const t = useStrings();
   const input = useRef<HTMLInputElement>(null);
@@ -115,6 +138,9 @@ function AddButton({
       for (const file of Array.from(files)) {
         await addPhoto(projectId, file);
       }
+      // 여러 장을 한꺼번에 올렸으면 설명 창을 열지 않는다 — 어느 장에
+      // 쓰라는 건지 알 수 없고, 그 상태에서 뜨는 창은 방해다.
+      if (files.length === 1) onAdded?.();
     } finally {
       setSaving(false);
       // 같은 파일을 다시 고를 수 있게 비운다. 안 비우면 두 번째 선택에서
@@ -126,20 +152,13 @@ function AddButton({
   return (
     <label
       className={cn(
-        "text-small bg-sunken text-text inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-md font-medium whitespace-nowrap transition",
-        saving && "opacity-40",
-        compact ? "border-line size-16 shrink-0 border border-dashed" : "px-4"
+        "text-small bg-sunken text-text inline-flex min-h-11 shrink-0 cursor-pointer items-center justify-center gap-2 rounded-md px-4 font-medium whitespace-nowrap transition",
+        saving && "opacity-40"
       )}
       aria-busy={saving}
     >
-      {compact ? (
-        <ImagePlus size={18} className="text-text-2" aria-hidden />
-      ) : (
-        <>
-          <Camera size={16} aria-hidden />
-          {saving ? t.photo.saving : t.photo.add}
-        </>
-      )}
+      <Camera size={16} aria-hidden />
+      {saving ? t.photo.saving : t.photo.add}
       <input
         ref={input}
         type="file"
