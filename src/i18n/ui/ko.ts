@@ -272,6 +272,8 @@ export const ko = {
     title: "앱으로 설치",
     installed: "앱으로 실행 중이에요",
     hint: "홈 화면에 설치하면 오프라인에서도 쓸 수 있어요",
+    alreadyInstalled: "이미 설치돼 있어요",
+    openFromLauncher: "홈 화면이나 앱 목록에서 열면 앱으로 실행돼요",
     action: "설치하기",
     unavailable: "이 브라우저에서는 앱 안에서 설치할 수 없어요",
     // 브라우저마다 메뉴 이름이 다르다. "홈 화면에 추가"는 바로가기만 만들고

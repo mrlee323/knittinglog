@@ -265,6 +265,9 @@ export const en: UIStrings = {
     title: "Install as an app",
     installed: "Running as an installed app",
     hint: "Install to your home screen to use it offline",
+    alreadyInstalled: "Already installed",
+    openFromLauncher:
+      "Open it from your home screen or app list to run as an app",
     action: "Install",
     unavailable: "This browser can't install from inside the app",
     manual:
