@@ -18,6 +18,7 @@ import type {
   Needle,
   Pattern,
   Project,
+  ProjectLink,
   ProjectLog,
   ProjectPhoto,
   Yarn,
@@ -27,6 +28,7 @@ import type {
 
 export class KnittinglogDB extends Dexie {
   projects!: EntityTable<Project, "id">;
+  projectLinks!: EntityTable<ProjectLink, "id">;
   projectPhotos!: EntityTable<ProjectPhoto, "id">;
   projectLogs!: EntityTable<ProjectLog, "id">;
   froggingLogs!: EntityTable<FroggingLog, "id">;
@@ -77,6 +79,13 @@ export class KnittinglogDB extends Dexie {
     // 바뀐 스토어만 적으면 나머지는 이전 버전에서 이어받는다.
     this.version(2).stores({
       yarns: "id, brand, weightClass, dyeLot, updatedAt",
+    });
+
+    // v3 — 프로젝트에 붙이는 참고 링크(영상). 사진은 kind로 진행/참고를
+    // 구분하는데, 그건 인덱스를 걸지 않은 필드라 스키마 변경이 없다 —
+    // 프로젝트당 사진은 많아야 수십 장이어서 메모리에서 걸러도 된다.
+    this.version(3).stores({
+      projectLinks: "id, projectId",
     });
   }
 }
