@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { embedUrl, parseYouTube, thumbnailUrl, watchUrl } from "./youtube";
+import {
+  embedUrl,
+  parseYouTube,
+  playerMessage,
+  playerStateFrom,
+  thumbnailUrl,
+  watchUrl,
+} from "./youtube";
 
 describe("parseYouTube", () => {
   const id = "dQw4w9WgXcQ";
@@ -78,10 +85,18 @@ describe("주소 만들기", () => {
   });
 
   it("시작 지점과 자동재생을 붙인다", () => {
-    expect(embedUrl(ref, true)).toContain("start=90");
-    expect(embedUrl(ref, true)).toContain("autoplay=1");
+    expect(embedUrl(ref, { autoplay: true })).toContain("start=90");
+    expect(embedUrl(ref, { autoplay: true })).toContain("autoplay=1");
     // 재생을 누르기 전에는 자동재생을 붙이지 않는다
     expect(embedUrl(ref)).not.toContain("autoplay");
+  });
+
+  it("API를 켜면 부모 출처를 함께 붙인다", () => {
+    const url = embedUrl(ref, { jsApi: true, origin: "https://example.com" });
+    expect(url).toContain("enablejsapi=1");
+    expect(url).toContain("origin=https%3A%2F%2Fexample.com");
+    // 켜지 않으면 붙지 않는다 — 필요 없는 파라미터를 남기지 않는다
+    expect(embedUrl(ref)).not.toContain("enablejsapi");
   });
 
   it("썸네일은 모든 영상에 있는 크기를 쓴다", () => {
@@ -92,5 +107,32 @@ describe("주소 만들기", () => {
     expect(watchUrl(ref)).toBe(
       "https://www.youtube.com/watch?v=dQw4w9WgXcQ&t=90"
     );
+  });
+});
+
+describe("플레이어 제어", () => {
+  it("명령은 유튜브가 요구하는 문자열 형식이다", () => {
+    expect(JSON.parse(playerMessage("pauseVideo"))).toEqual({
+      event: "command",
+      func: "pauseVideo",
+      args: [],
+    });
+  });
+
+  it("상태 메시지를 재생·일시정지로 읽는다", () => {
+    // 플레이어는 문자열로도, 객체로도, info 안에 감싸서도 보낸다
+    expect(
+      playerStateFrom(JSON.stringify({ event: "infoDelivery", info: 1 }))
+    ).toBe("playing");
+    expect(playerStateFrom({ info: 2 })).toBe("paused");
+    expect(playerStateFrom({ info: { playerState: 1 } })).toBe("playing");
+    // 끝난 것도 멈춘 상태로 본다 — 버튼이 "다시 재생"을 가리켜야 한다
+    expect(playerStateFrom({ info: 0 })).toBe("paused");
+  });
+
+  it("관계없는 메시지는 무시한다", () => {
+    expect(playerStateFrom("not json")).toBeNull();
+    expect(playerStateFrom({ info: 3 })).toBeNull();
+    expect(playerStateFrom(null)).toBeNull();
   });
 });

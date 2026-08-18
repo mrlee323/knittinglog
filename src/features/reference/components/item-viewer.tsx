@@ -2,10 +2,7 @@ import { useState } from "react";
 import { Maximize2, Youtube } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PhotoImage } from "@/features/photo/components/photo-image";
-import {
-  VideoEmbed,
-  WatchOnYouTube,
-} from "@/features/reference/components/video-embed";
+import { VideoEmbed } from "@/features/reference/components/video-embed";
 import { useStrings } from "@/i18n";
 import { cn } from "@/lib/utils";
 import type { ViewerItem } from "@/features/reference/items";
@@ -34,15 +31,18 @@ export function ItemViewer({
     return (
       <div className="p-2">
         <VideoEmbed video={item.video} title={item.title} />
-        <div className="mt-1.5">
-          {item.title && <p className="text-small font-medium">{item.title}</p>}
-          {item.note && (
-            <p className="text-text-2 text-caption whitespace-pre-wrap">
-              {item.note}
-            </p>
-          )}
-          <WatchOnYouTube video={item.video} />
-        </div>
+        {(item.title || item.note) && (
+          <div className="mt-1.5">
+            {item.title && (
+              <p className="text-small font-medium">{item.title}</p>
+            )}
+            {item.note && (
+              <p className="text-text-2 text-caption whitespace-pre-wrap">
+                {item.note}
+              </p>
+            )}
+          </div>
+        )}
       </div>
     );
   }

@@ -88,16 +88,80 @@ export function parseYouTube(input: string): YouTubeRef | null {
   return null;
 }
 
-/** 재생용 임베드 주소. 자동재생은 사용자가 재생을 누른 뒤에만 붙인다. */
-export function embedUrl(ref: YouTubeRef, autoplay = false): string {
+/** 임베드 플레이어의 출처. postMessage를 보낼 때 대상으로 쓴다. */
+export const PLAYER_ORIGIN = "https://www.youtube-nocookie.com";
+
+export interface EmbedOptions {
+  /** 사용자가 재생을 누른 뒤에만 켠다 */
+  autoplay?: boolean;
+  /**
+   * IFrame API를 켠다.
+   *
+   * 이걸 켜야 우리 버튼으로 일시정지·재생을 보낼 수 있다. 유튜브 자체 컨트롤은
+   * iframe 안에 있어서 우리가 손댈 수 없고, 터치 기기에서는 첫 탭이 컨트롤을
+   * 띄우는 데 쓰여 "눌렀는데 안 멈춘다"로 느껴진다.
+   */
+  jsApi?: boolean;
+  /** API를 켤 때 요구되는 부모 출처 */
+  origin?: string;
+}
+
+/** 재생용 임베드 주소 */
+export function embedUrl(ref: YouTubeRef, options: EmbedOptions = {}): string {
   const params = new URLSearchParams();
   if (ref.startSeconds) params.set("start", String(ref.startSeconds));
-  if (autoplay) params.set("autoplay", "1");
+  if (options.autoplay) params.set("autoplay", "1");
+  if (options.jsApi) {
+    params.set("enablejsapi", "1");
+    if (options.origin) params.set("origin", options.origin);
+  }
   // 관련 영상을 이 채널로 제한한다. 뜨개 영상을 보다가 추천으로 빠지는 걸 줄인다.
   params.set("rel", "0");
 
   const query = params.toString();
-  return `https://www.youtube-nocookie.com/embed/${ref.videoId}${query ? `?${query}` : ""}`;
+  return `${PLAYER_ORIGIN}/embed/${ref.videoId}${query ? `?${query}` : ""}`;
+}
+
+/** 플레이어에 보내는 명령 */
+export type PlayerCommand = "playVideo" | "pauseVideo";
+
+/**
+ * IFrame API 명령을 만든다.
+ *
+ * 문자열로 감싸는 건 유튜브 플레이어가 요구하는 형식이다. 객체를 그대로 보내면
+ * 무시된다 — 실패해도 에러가 나지 않아서 원인을 찾기 어렵다.
+ */
+export const playerMessage = (func: PlayerCommand) =>
+  JSON.stringify({ event: "command", func, args: [] });
+
+/** 플레이어가 상태 변화를 알려주도록 요청하는 첫 인사 */
+export const playerHandshake = () => JSON.stringify({ event: "listening" });
+
+/** 플레이어 상태 코드 — 1: 재생, 2: 일시정지, 0: 끝 */
+export function playerStateFrom(data: unknown): "playing" | "paused" | null {
+  const parsed =
+    typeof data === "string"
+      ? (() => {
+          try {
+            return JSON.parse(data) as unknown;
+          } catch {
+            return null;
+          }
+        })()
+      : data;
+
+  if (!parsed || typeof parsed !== "object") return null;
+  const info = (parsed as { info?: unknown }).info;
+  const state =
+    typeof info === "number"
+      ? info
+      : typeof info === "object" && info !== null
+        ? (info as { playerState?: unknown }).playerState
+        : undefined;
+
+  if (state === 1) return "playing";
+  if (state === 2 || state === 0) return "paused";
+  return null;
 }
 
 /**
