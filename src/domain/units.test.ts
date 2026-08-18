@@ -4,6 +4,7 @@ import {
   findNeedle,
   gramsToMeters,
   gramsToOunces,
+  guessWeightFromLabel,
   guessYarnWeight,
   inchToCm,
   KNITTING_NEEDLES,
@@ -89,5 +90,45 @@ describe("실 길이 ↔ 무게", () => {
 
   it("왕복 변환이 일치한다", () => {
     expect(metersToGrams(gramsToMeters(37, 50, 125), 50, 125)).toBeCloseTo(37);
+  });
+});
+
+describe("guessWeightFromLabel", () => {
+  const ko = (grams: number, meters: number) =>
+    guessWeightFromLabel(grams, meters)?.names.ko;
+
+  it("라벨의 그램·미터로 굵기를 되짚는다", () => {
+    // 100g에 800m — 레이스실
+    expect(ko(100, 800)).toBe("레이스사");
+    // 100g에 400m — 중세사(fingering). 양말실의 전형이다
+    expect(ko(100, 400)).toBe("중세사");
+    // 50g에 125m = 100g에 250m — 합태사
+    expect(ko(50, 125)).toBe("합태사");
+    // 100g에 200m — 병태사(DK)
+    expect(ko(100, 200)).toBe("병태사");
+    // 100g에 160m — 극태사(worsted)
+    expect(ko(100, 160)).toBe("극태사");
+    // 50g에 50m = 100g에 100m — 초극태사
+    expect(ko(50, 50)).toBe("초극태사");
+  });
+
+  it("아주 두꺼운 실도 등급 밖으로 새지 않는다", () => {
+    expect(ko(100, 60)).toBe("슈퍼벌키");
+    expect(ko(100, 20)).toBe("점보");
+    // 구간 최소보다 짧아도 가장 두꺼운 등급으로 본다
+    expect(ko(1000, 3)).toBe("점보");
+  });
+
+  it("숫자가 없거나 0이면 추정하지 않는다", () => {
+    expect(guessWeightFromLabel(undefined, 200)).toBeUndefined();
+    expect(guessWeightFromLabel(100, undefined)).toBeUndefined();
+    expect(guessWeightFromLabel(0, 200)).toBeUndefined();
+    expect(guessWeightFromLabel(100, 0)).toBeUndefined();
+  });
+
+  it("추정한 등급의 권장 게이지·바늘을 함께 쓸 수 있다", () => {
+    const weight = guessWeightFromLabel(100, 200);
+    expect(weight?.gaugeRange[0]).toBeGreaterThan(0);
+    expect(weight?.needleRangeMm[0]).toBeGreaterThan(0);
   });
 });

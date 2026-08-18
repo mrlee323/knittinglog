@@ -128,6 +128,11 @@ export const en: UIStrings = {
     fiberPlaceholder: "60% wool, 40% cotton",
     weightClass: "Weight",
     weightUnset: "Unknown",
+    weightHint:
+      "No weight on the label? Fill in grams and metres above and we'll work it out.",
+    weightGuess: "By the label this looks like {name}",
+    weightApply: "Use this weight",
+    weightMismatch: "Your pick differs from the label maths — that says {name}",
     skeinGrams: "Grams per skein",
     skeinMeters: "Metres per skein",
     skeinCount: "Skeins on hand",

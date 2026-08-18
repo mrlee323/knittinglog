@@ -2,7 +2,12 @@ import { useState, type FormEvent } from "react";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SelectField, TextField } from "@/components/ui/field";
-import { YARN_WEIGHTS, type YarnWeightClass } from "@/domain/units";
+import {
+  guessWeightFromLabel,
+  YARN_WEIGHTS,
+  type YarnWeight,
+  type YarnWeightClass,
+} from "@/domain/units";
 import {
   yarnFormSchema,
   type YarnFormValues,
@@ -36,6 +41,27 @@ export function YarnForm({
     key: K,
     value: YarnFormValues[K]
   ) => setValues((prev) => ({ ...prev, [key]: value }));
+
+  /**
+   * 굵기 등급 표기.
+   *
+   * 국내 명칭과 영문 명칭을 함께 보여준다. 해외 도안을 국내 실로 옮겨 뜰 때
+   * 이 대조가 없으면 어느 굵기인지 고를 수 없다.
+   */
+  const weightName = (w: YarnWeight) =>
+    locale === "ko"
+      ? `${w.names.ko} · ${w.names.en}`
+      : `${w.names.en} · ${w.names.ja}`;
+
+  // 라벨의 무게·길이로 굵기를 되짚는다. 사용자는 자기 실이 몇 번인지 대개
+  // 모르지만 라벨의 두 숫자는 옮겨 적을 수 있다.
+  const guessed = guessWeightFromLabel(values.skeinGrams, values.skeinMeters);
+  const range = (w: YarnWeight) =>
+    `${t.yarn.gaugeRange
+      .replace("{min}", String(w.gaugeRange[0]))
+      .replace("{max}", String(w.gaugeRange[1]))} · ${t.yarn.needleRange
+      .replace("{min}", String(w.needleRangeMm[0]))
+      .replace("{max}", String(w.needleRangeMm[1]))}`;
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
@@ -125,33 +151,6 @@ export function YarnForm({
         </div>
       </div>
 
-      <SelectField
-        label={t.yarn.weightClass}
-        value={
-          values.weightClass === undefined ? "" : String(values.weightClass)
-        }
-        onChange={(e) =>
-          set(
-            "weightClass",
-            e.target.value === ""
-              ? undefined
-              : (Number(e.target.value) as YarnWeightClass)
-          )
-        }
-        options={[
-          { value: "", label: t.yarn.weightUnset },
-          ...YARN_WEIGHTS.map((w) => ({
-            value: String(w.cyc),
-            // 국내 명칭과 영문 명칭을 함께 보여준다. 해외 도안을 국내 실로
-            // 옮겨 뜰 때 이 대조가 없으면 굵기를 못 고른다.
-            label:
-              locale === "ko"
-                ? `${w.names.ko} · ${w.names.en}`
-                : `${w.names.en} · ${w.names.ja}`,
-          })),
-        ]}
-      />
-
       <TextField
         label={t.yarn.fiber}
         placeholder={t.yarn.fiberPlaceholder}
@@ -186,6 +185,59 @@ export function YarnForm({
           />
         </div>
       </div>
+
+      {/* 굵기는 무게·길이 뒤에 묻는다. 등급을 먼저 물으면 대부분 "모름"을
+          고르는데, 앞의 두 숫자만 있으면 여기서 추정할 수 있다. */}
+      <SelectField
+        label={t.yarn.weightClass}
+        hint={guessed ? undefined : t.yarn.weightHint}
+        value={
+          values.weightClass === undefined ? "" : String(values.weightClass)
+        }
+        onChange={(e) =>
+          set(
+            "weightClass",
+            e.target.value === ""
+              ? undefined
+              : (Number(e.target.value) as YarnWeightClass)
+          )
+        }
+        options={[
+          { value: "", label: t.yarn.weightUnset },
+          ...YARN_WEIGHTS.map((w) => ({
+            value: String(w.cyc),
+            label: weightName(w),
+          })),
+        ]}
+      />
+
+      {guessed && values.weightClass === undefined && (
+        <div className="bg-sunken mb-4 rounded-md p-3">
+          <p className="text-small">
+            {t.yarn.weightGuess.replace("{name}", weightName(guessed))}
+          </p>
+          {/* 등급 이름만 말해주면 그게 뭔지 알 수 없다. 권장 게이지와 바늘을
+              함께 보여주면 등급이 무엇을 뜻하는지도 같이 배운다. */}
+          <p className="text-text-2 text-caption mt-0.5">{range(guessed)}</p>
+          <Button
+            variant="secondary"
+            className="mt-2"
+            onClick={() => set("weightClass", guessed.cyc)}
+          >
+            {t.yarn.weightApply}
+          </Button>
+        </div>
+      )}
+
+      {/* 고른 등급과 라벨 계산이 다르면 알려주되 고치지 않는다. 실제로 라벨이
+          틀린 경우도 있고, 그 판단은 실을 손에 쥔 사람이 한다. */}
+      {guessed &&
+        values.weightClass !== undefined &&
+        guessed.cyc !== values.weightClass && (
+          <p className="text-hibernating text-caption mb-4">
+            {t.yarn.weightMismatch.replace("{name}", weightName(guessed))}
+          </p>
+        )}
 
       <TextField
         label={t.yarn.shop}

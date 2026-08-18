@@ -129,6 +129,15 @@ export interface YarnWeight {
   gaugeRange: [number, number];
   /** 권장 대바늘 mm [최소, 최대] */
   needleRangeMm: [number, number];
+  /**
+   * 100g당 길이 범위(m) [최소, 최대].
+   *
+   * 굵기 등급은 라벨에 없을 때가 많지만 그램과 미터는 거의 항상 적혀 있다.
+   * 같은 100g에서 실이 가늘수록 길이가 길다는 관계로 굵기를 되짚는다.
+   * 구간은 인접 등급과 이어붙는다 — 사이에 빈 곳을 두면 흔한 실이
+   * "모름"으로 떨어진다.
+   */
+  metersPer100g: [number, number];
 }
 
 export const YARN_WEIGHTS: YarnWeight[] = [
@@ -137,6 +146,7 @@ export const YARN_WEIGHTS: YarnWeight[] = [
     names: { en: "Lace", uk: "1–3 ply", ja: "レース糸", ko: "레이스사" },
     gaugeRange: [33, 40],
     needleRangeMm: [1.5, 2.25],
+    metersPer100g: [600, 1500],
   },
   {
     cyc: 1,
@@ -148,18 +158,21 @@ export const YARN_WEIGHTS: YarnWeight[] = [
     },
     gaugeRange: [27, 32],
     needleRangeMm: [2.25, 3.25],
+    metersPer100g: [350, 600],
   },
   {
     cyc: 2,
     names: { en: "Fine / Sport", uk: "5 ply", ja: "合太", ko: "합태사" },
     gaugeRange: [23, 26],
     needleRangeMm: [3.25, 3.75],
+    metersPer100g: [250, 350],
   },
   {
     cyc: 3,
     names: { en: "Light / DK", uk: "8 ply", ja: "並太", ko: "병태사" },
     gaugeRange: [21, 24],
     needleRangeMm: [3.75, 4.5],
+    metersPer100g: [190, 250],
   },
   {
     cyc: 4,
@@ -171,6 +184,7 @@ export const YARN_WEIGHTS: YarnWeight[] = [
     },
     gaugeRange: [16, 20],
     needleRangeMm: [4.5, 5.5],
+    metersPer100g: [130, 190],
   },
   {
     cyc: 5,
@@ -182,23 +196,50 @@ export const YARN_WEIGHTS: YarnWeight[] = [
     },
     gaugeRange: [12, 15],
     needleRangeMm: [5.5, 8.0],
+    metersPer100g: [80, 130],
   },
   {
     cyc: 6,
     names: { en: "Super Bulky", uk: "16 ply", ja: "ジャンボ", ko: "슈퍼벌키" },
     gaugeRange: [7, 11],
     needleRangeMm: [8.0, 12.75],
+    metersPer100g: [40, 80],
   },
   {
     cyc: 7,
     names: { en: "Jumbo", uk: "—", ja: "ジャンボ", ko: "점보" },
     gaugeRange: [1, 6],
     needleRangeMm: [12.75, 25.0],
+    metersPer100g: [5, 40],
   },
 ];
 
 export const yarnWeight = (cyc: YarnWeightClass) =>
   YARN_WEIGHTS.find((w) => w.cyc === cyc)!;
+
+/**
+ * 타래 라벨의 무게·길이로 실 굵기를 추정한다.
+ *
+ * 사용자는 자기 실이 몇 번 굵기인지 대개 모른다. CYC 0~7은 미국 규격이고
+ * 국내에서는 합태·병태 같은 일본식 명칭을 쓰는데, 정작 라벨에 거의 항상
+ * 적혀 있는 것은 그램과 미터다. 모르는 걸 묻지 말고 아는 숫자에서 되짚는다.
+ *
+ * 구간이 이어져 있으므로 가는 쪽부터 훑어 처음 걸리는 등급이 답이다.
+ * 어느 구간에도 안 걸릴 만큼 짧으면(100g에 5m 미만) 가장 두꺼운 등급으로 본다.
+ */
+export function guessWeightFromLabel(
+  skeinGrams: number | undefined,
+  skeinMeters: number | undefined
+): YarnWeight | undefined {
+  if (!skeinGrams || !skeinMeters || skeinGrams <= 0 || skeinMeters <= 0) {
+    return undefined;
+  }
+  const per100g = (skeinMeters / skeinGrams) * 100;
+  return (
+    YARN_WEIGHTS.find((w) => per100g >= w.metersPer100g[0]) ??
+    YARN_WEIGHTS[YARN_WEIGHTS.length - 1]
+  );
+}
 
 /**
  * 게이지로 실 굵기를 역추정한다.
