@@ -11,10 +11,12 @@ import {
   countByStatus,
   finishedInYear,
   longestPaused,
-  pauseReasonBreakdown,
+  medianPauseDays,
+  reasonOutcomes,
   rowsHeatmap,
   splitDuration,
   sumYarnUse,
+  type ReasonOutcome,
   type HeatCell,
 } from "@/domain/stats";
 import { db } from "@/lib/db";
@@ -34,10 +36,11 @@ function Stats() {
   const projects = useLiveQuery(() => db.projects.toArray(), []);
   const sessions = useLiveQuery(() => db.counterSessions.toArray(), []);
   const allocations = useLiveQuery(() => db.yarnAllocations.toArray(), []);
+  const pauses = useLiveQuery(() => db.pauseEvents.toArray(), []);
   const yarns = useLiveQuery(() => db.yarns.toArray(), []);
   const colors = useLiveQuery(() => projectColors(), []);
 
-  if (!projects || !sessions || !allocations || !yarns) return null;
+  if (!projects || !sessions || !allocations || !yarns || !pauses) return null;
 
   // 현재 시각은 렌더마다 한 번만 읽는다. 계산 중에 날짜가 넘어가면
   // 히트맵과 집계가 서로 다른 기준을 보게 된다.
@@ -46,7 +49,10 @@ function Stats() {
   const counts = countByStatus(projects);
   const total = aggregateSessions(sessions);
   const heat = rowsHeatmap(sessions, now, HEATMAP_DAYS);
-  const reasons = pauseReasonBreakdown(projects);
+  // 평생 이력에서 센다. 프로젝트의 pauseReason은 재개하면 지워지므로
+  // 현재 상태만 보면 "주로 무엇 때문에 멈추는가"를 알 수 없다.
+  const reasons = reasonOutcomes(pauses);
+  const medianDays = medianPauseDays(pauses, now);
   const idle = longestPaused(projects, 5);
 
   // 쓴 실 = 완성한 작품에 배정한 실. 진행중인 것은 아직 쓴 게 아니다.
@@ -95,19 +101,24 @@ function Stats() {
                 <Empty>{t.stats.reasonEmpty}</Empty>
               ) : (
                 <>
-                  <p className="text-subhead mb-3 font-semibold">
+                  <p className="text-subhead font-semibold">
                     {t.stats.reasonTop.replace(
                       "{reason}",
                       t.pauseReason[reasons[0].reason]
                     )}
                   </p>
+                  {medianDays !== null && (
+                    <p className="text-text-2 text-small mb-3">
+                      {t.stats.medianPause.replace("{n}", String(medianDays))}
+                    </p>
+                  )}
                   <ul className="space-y-2">
-                    {reasons.map(({ reason, count }) => (
-                      <li key={reason}>
+                    {reasons.map((outcome) => (
+                      <li key={outcome.reason}>
                         <ReasonBar
-                          label={t.pauseReason[reason]}
-                          count={count}
-                          max={reasons[0].count}
+                          label={t.pauseReason[outcome.reason]}
+                          outcome={outcome}
+                          max={reasons[0].total}
                         />
                       </li>
                     ))}
@@ -213,23 +224,42 @@ function Stats() {
  */
 function ReasonBar({
   label,
-  count,
+  outcome,
   max,
 }: {
   label: string;
-  count: number;
+  outcome: ReasonOutcome;
   max: number;
 }) {
+  const t = useStrings();
+
+  // 횟수만 보여주면 "자주 멈추는 사유"까지만 알 수 있다. 돌아온 횟수를 함께
+  // 두면 대응이 갈린다 — 늘 돌아오는 사유는 그냥 리듬이고, 한 번 멈추면
+  // 안 돌아오는 사유가 실제로 손봐야 할 것이다.
+  //
+  // 아는 사실만 적는다. resumed가 0인 것은 "아직 안 돌아왔다"는 뜻이 아니다 —
+  // 완성으로 끝났을 수도, 풀어버렸을 수도 있다. 그걸 뭉개서 "아직 안 돌아옴"이라
+  // 쓰면 완성한 작품을 방치한 것처럼 말하게 된다.
+  const facts = [t.stats.reasonCount.replace("{n}", String(outcome.total))];
+  if (outcome.resumed > 0) {
+    facts.push(t.stats.reasonReturned.replace("{n}", String(outcome.resumed)));
+  }
+  if (outcome.open > 0) {
+    facts.push(t.stats.reasonOpen.replace("{n}", String(outcome.open)));
+  }
+
   return (
     <div>
       <div className="mb-1 flex items-baseline justify-between gap-2">
         <span className="text-small">{label}</span>
-        <span className="text-text-2 text-caption">{count}</span>
+        <span className="text-text-2 text-caption shrink-0">
+          {facts.join(" · ")}
+        </span>
       </div>
       <div className="bg-sunken h-1.5 overflow-hidden rounded-full">
         <div
           className="bg-hibernating h-full rounded-full"
-          style={{ width: `${(count / max) * 100}%` }}
+          style={{ width: `${(outcome.total / max) * 100}%` }}
         />
       </div>
     </div>

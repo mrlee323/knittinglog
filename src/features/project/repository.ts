@@ -1,12 +1,16 @@
 import { z } from "zod";
 import { db, stamp, touch } from "@/lib/db";
-import { statusPatch, type ProjectEvent } from "@/domain/projectStatus";
+import {
+  statusPatch,
+  type ProjectEvent,
+  type ProjectEventType,
+} from "@/domain/projectStatus";
 import { counterBlueprints } from "@/domain/counter";
 import {
   createCountersFromBlueprints,
   listCounters,
 } from "@/features/counter/repository";
-import type { Id, Project, ProjectStatus } from "@/types/entities";
+import type { Id, PauseEvent, Project, ProjectStatus } from "@/types/entities";
 
 /* --- 입력 검증 ------------------------------------------------------------ */
 
@@ -87,9 +91,72 @@ export async function applyEvent(id: Id, event: ProjectEvent) {
     );
   }
 
-  await db.projects.update(id, touch(patch));
+  // 프로젝트 갱신과 이력 기록을 한 트랜잭션으로 묶는다. 따로 커밋되면
+  // 그 사이에 앱이 죽었을 때 상태와 이력이 어긋난 채로 남는다.
+  await db.transaction("rw", [db.projects, db.pauseEvents], async () => {
+    await db.projects.update(id, touch(patch));
+
+    if (event.type === "PAUSE") {
+      await db.pauseEvents.add(
+        stamp({
+          projectId: id,
+          reason: event.reason,
+          note: event.note,
+          pausedAt: patch.pausedAt ?? new Date(),
+        }) as PauseEvent
+      );
+      return;
+    }
+
+    // 멈춤을 벗어나는 전이는 열려 있는 이력을 닫는다. 어떻게 끝났는지가
+    // 사유별 횟수보다 쓸모 있는 정보다 — 그 사유로 멈춘 것이 돌아왔는지.
+    const endedBy = CLOSES_PAUSE[event.type];
+    if (!endedBy) return;
+
+    const open = await openPauseEvent(id);
+    if (open) {
+      await db.pauseEvents.update(
+        open.id,
+        touch({ endedAt: new Date(), endedBy })
+      );
+    }
+  });
+
   return patch.status;
 }
+
+/** 멈춤 이력을 닫는 전이와, 그때 기록할 결말 */
+const CLOSES_PAUSE: Partial<Record<ProjectEventType, PauseEvent["endedBy"]>> = {
+  RESUME: "resumed",
+  FINISH: "finished",
+  FROG: "frogged",
+};
+
+/**
+ * 아직 닫히지 않은 중단 이력.
+ *
+ * 정상적으로는 프로젝트당 하나뿐이다. 여러 개가 남아 있다면 과거의 버그이므로
+ * 가장 최근 것을 닫는다 — 오래된 것을 닫으면 최신 상태와 더 어긋난다.
+ */
+async function openPauseEvent(projectId: Id) {
+  const events = await db.pauseEvents
+    .where("projectId")
+    .equals(projectId)
+    .filter((e) => !e.endedAt)
+    .toArray();
+  if (events.length === 0) return null;
+  return events.reduce((latest, e) =>
+    e.pausedAt.getTime() > latest.pausedAt.getTime() ? e : latest
+  );
+}
+
+/** 프로젝트의 중단 이력을 최근 것부터 */
+export const listPauseEvents = (projectId: Id) =>
+  db.pauseEvents
+    .where("projectId")
+    .equals(projectId)
+    .reverse()
+    .sortBy("pausedAt");
 
 /**
  * 같은 작품을 다시 뜬다.
@@ -146,6 +213,7 @@ export async function deleteProject(id: Id) {
       db.projectPhotos,
       db.projectLogs,
       db.froggingLogs,
+      db.pauseEvents,
       db.counters,
       db.counterMarks,
       db.counterSessions,
@@ -163,6 +231,7 @@ export async function deleteProject(id: Id) {
       await db.projectPhotos.where("projectId").equals(id).delete();
       await db.projectLogs.where("projectId").equals(id).delete();
       await db.froggingLogs.where("projectId").equals(id).delete();
+      await db.pauseEvents.where("projectId").equals(id).delete();
       await db.projects.delete(id);
     }
   );

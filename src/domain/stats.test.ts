@@ -7,13 +7,15 @@ import {
   finishedInYear,
   localDateKey,
   longestPaused,
-  pauseReasonBreakdown,
+  medianPauseDays,
+  reasonOutcomes,
   rowsHeatmap,
   resumeCandidate,
   rowsByDate,
   sessionsSince,
   splitDuration,
   sumYarnUse,
+  type PauseRecord,
   type ProjectLike,
   type SessionLike,
 } from "./stats";
@@ -272,39 +274,6 @@ describe("잔디 히트맵", () => {
   });
 });
 
-describe("중단 사유 분포", () => {
-  const projects: ProjectLike[] = [
-    {
-      id: "a",
-      status: "hibernating",
-      updatedAt: NOW,
-      pauseReason: "gauge-failed",
-    },
-    {
-      id: "b",
-      status: "hibernating",
-      updatedAt: NOW,
-      pauseReason: "gauge-failed",
-    },
-    { id: "c", status: "hibernating", updatedAt: NOW, pauseReason: "bored" },
-    // 진행중은 세지 않는다
-    { id: "d", status: "active", updatedAt: NOW, pauseReason: "bored" },
-    // 사유 없는 잠시멈춤도 세지 않는다
-    { id: "e", status: "hibernating", updatedAt: NOW },
-  ];
-
-  it("많은 사유부터 센다", () => {
-    expect(pauseReasonBreakdown(projects)).toEqual([
-      { reason: "gauge-failed", count: 2 },
-      { reason: "bored", count: 1 },
-    ]);
-  });
-
-  it("멈춘 게 없으면 빈 목록", () => {
-    expect(pauseReasonBreakdown([])).toEqual([]);
-  });
-});
-
 describe("실 소비량", () => {
   it("타래 수와 무게·길이를 합산한다", () => {
     expect(
@@ -367,5 +336,110 @@ describe("히트맵 단계 나누기", () => {
         byKey.get("2026-08-11"),
       ]).size
     ).toBeGreaterThan(1);
+  });
+});
+
+describe("중단 이력", () => {
+  const D = (m: number, d: number) => new Date(2026, m - 1, d);
+  const events: PauseRecord[] = [
+    // 게이지실패 3번 — 그중 1번만 돌아왔다
+    {
+      reason: "gauge-failed",
+      pausedAt: D(1, 1),
+      endedAt: D(1, 11),
+      endedBy: "resumed",
+    },
+    {
+      reason: "gauge-failed",
+      pausedAt: D(3, 1),
+      endedAt: D(3, 6),
+      endedBy: "frogged",
+    },
+    { reason: "gauge-failed", pausedAt: D(6, 1) },
+    // 실부족 2번 — 둘 다 돌아왔다
+    {
+      reason: "out-of-yarn",
+      pausedAt: D(2, 1),
+      endedAt: D(2, 21),
+      endedBy: "resumed",
+    },
+    {
+      reason: "out-of-yarn",
+      pausedAt: D(5, 1),
+      endedAt: D(5, 3),
+      endedBy: "resumed",
+    },
+    // 싫증 1번 — 완성으로 끝났다
+    {
+      reason: "bored",
+      pausedAt: D(4, 1),
+      endedAt: D(4, 5),
+      endedBy: "finished",
+    },
+  ];
+
+  it("평생 횟수를 사유별로 센다", () => {
+    expect(reasonOutcomes(events).map((o) => [o.reason, o.total])).toEqual([
+      ["gauge-failed", 3],
+      ["out-of-yarn", 2],
+      ["bored", 1],
+    ]);
+  });
+
+  it("돌아온 횟수를 따로 센다 — 자주 멈추는 것과 안 돌아오는 것은 다르다", () => {
+    const byReason = new Map(reasonOutcomes(events).map((o) => [o.reason, o]));
+    expect(byReason.get("gauge-failed")).toMatchObject({
+      total: 3,
+      resumed: 1,
+      open: 1,
+    });
+    expect(byReason.get("out-of-yarn")).toMatchObject({
+      total: 2,
+      resumed: 2,
+      open: 0,
+    });
+    // 완성으로 끝난 것은 "돌아온" 것이 아니다
+    expect(byReason.get("bored")).toMatchObject({
+      total: 1,
+      resumed: 0,
+      open: 0,
+    });
+  });
+
+  it("이력이 없으면 빈 목록", () => {
+    expect(reasonOutcomes([])).toEqual([]);
+  });
+
+  it("멈춘 기간의 중앙값을 낸다", () => {
+    // 기간: 10, 5, ?, 20, 2, 4
+    const now = D(6, 11); // 열려 있는 건 10일째
+    // 정렬하면 2, 4, 5, 10, 10, 20 → 중앙값 (5+10)/2 = 7.5 → 8
+    expect(medianPauseDays(events, now)).toBe(8);
+  });
+
+  it("평균이 아니라 중앙값이다 — 한 번의 장기 방치에 끌려가지 않는다", () => {
+    const withOutlier: PauseRecord[] = [
+      { reason: "bored", pausedAt: D(1, 1), endedAt: D(1, 3) },
+      { reason: "bored", pausedAt: D(2, 1), endedAt: D(2, 4) },
+      { reason: "bored", pausedAt: D(3, 1), endedAt: D(3, 5) },
+      // 700일 방치
+      {
+        reason: "bored",
+        pausedAt: new Date(2024, 0, 1),
+        endedAt: new Date(2025, 11, 1),
+      },
+    ];
+    const median = medianPauseDays(withOutlier, D(6, 1))!;
+    expect(median).toBeLessThan(10);
+  });
+
+  it("아직 멈춰 있는 것도 지금까지의 기간으로 센다", () => {
+    // 진행 중인 방치를 빼면 가장 오래 멈춘 것들이 통계에서 사라진다
+    const open: PauseRecord[] = [{ reason: "bored", pausedAt: D(1, 1) }];
+    expect(medianPauseDays(open, D(1, 31))).toBe(30);
+  });
+
+  it("이력이 없으면 null", () => {
+    expect(medianPauseDays([], D(1, 1))).toBeNull();
   });
 });
