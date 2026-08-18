@@ -2,9 +2,12 @@
 <html lang="ko">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="./icon.svg" />
-    <!-- 안드로이드·iOS 홈화면 아이콘. PNG가 없으면 설치 시 화면 캡처가 들어간다. -->
-    <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
+    <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+    <!-- 안드로이드·iOS 홈화면 아이콘. PNG가 없으면 설치 시 화면 캡처가 들어간다.
+         경로는 반드시 절대경로로 둔다. 상대경로(./)는 /projects/<id> 같은 깊은
+         경로에서 /projects/apple-touch-icon.png 로 풀려 404가 된다.
+         Vite가 빌드 때 base를 붙여준다. -->
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <!-- 뜨기 모드가 풀스크린이라 노치 영역까지 쓴다 -->
     <meta
       name="viewport"
