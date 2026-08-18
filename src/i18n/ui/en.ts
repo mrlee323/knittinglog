@@ -263,10 +263,12 @@ export const en: UIStrings = {
   },
   photo: {
     title: "Photos",
-    add: "Add photo",
+    history: "Progress log",
+    add: "Add entry",
     saving: "Saving",
     empty: "No photos yet",
-    emptyHint: "A shot of where you are now tells you where to pick up later",
+    emptyHint:
+      "Each photo keeps the row count and date it was taken, so you know where to pick up.",
     atRow: "{label} row {n}",
     count: "{n} photos",
     caption: "Caption",

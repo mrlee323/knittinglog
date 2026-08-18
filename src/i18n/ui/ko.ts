@@ -273,10 +273,12 @@ export const ko = {
   },
   photo: {
     title: "사진",
-    add: "사진 추가",
+    history: "진행 기록",
+    add: "기록 추가",
     saving: "저장 중",
     empty: "사진이 없어요",
-    emptyHint: "지금 모습을 찍어두면 다시 꺼낼 때 어디까지 떴는지 바로 알아요",
+    emptyHint:
+      "사진을 올리면 그때 단수와 날짜가 함께 남아요. 다시 꺼낼 때 어디까지 떴는지 바로 알 수 있어요.",
     /** 사진을 시각이 아니라 진행으로 읽게 하는 값 */
     atRow: "{label} {n}단",
     count: "{n}장",
