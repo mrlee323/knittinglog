@@ -253,6 +253,22 @@ export const en: UIStrings = {
     emptyHint:
       "Start with something you never finished. That's the whole point.",
   },
+  photo: {
+    title: "Photos",
+    add: "Add photo",
+    saving: "Saving",
+    empty: "No photos yet",
+    emptyHint: "A shot of where you are now tells you where to pick up later",
+    atRow: "{label} row {n}",
+    count: "{n} photos",
+    caption: "Caption",
+    captionPlaceholder: "Right before the armhole decreases",
+    setCover: "Use as cover",
+    isCover: "Cover photo",
+    deleteConfirm: "Delete this photo?",
+    prev: "Previous photo",
+    next: "Next photo",
+  },
   action: {
     create: "Create",
     save: "Save",

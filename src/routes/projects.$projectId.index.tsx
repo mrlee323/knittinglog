@@ -14,6 +14,7 @@ import {
 } from "@/features/project/repository";
 import { pausedLabel } from "@/features/project/format";
 import { CounterSection } from "@/features/counter/components/counter-section";
+import { PhotoTimeline } from "@/features/photo/components/photo-timeline";
 import { AllocationSection } from "@/features/yarn/components/allocation-section";
 import { allowedEvents, daysSincePaused } from "@/domain/projectStatus";
 import { useLocale, useStrings } from "@/i18n";
@@ -65,6 +66,8 @@ function ProjectDetail() {
         <ChevronLeft size={16} />
         {t.nav.projects}
       </Link>
+
+      <PhotoTimeline projectId={projectId} />
 
       <dl className="text-small mb-5 space-y-1.5">
         <div className="flex gap-2">
