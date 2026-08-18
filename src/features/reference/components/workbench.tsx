@@ -1,29 +1,23 @@
-import { useMemo, useRef, useState } from "react";
-import { useLiveQuery } from "dexie-react-hooks";
-import { Columns2, Maximize2, Trash2, Youtube } from "lucide-react";
+import { useRef, useState } from "react";
+import { Columns2, Trash2, Youtube } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ConfirmSheet } from "@/components/ui/confirm-sheet";
-import { parseYouTube, type YouTubeRef } from "@/domain/youtube";
 import { AddPhotoButton } from "@/features/photo/components/add-photo-button";
-import { PhotoImage } from "@/features/photo/components/photo-image";
+import { deletePhoto } from "@/features/photo/repository";
 import {
-  deletePhoto,
-  listPatternPhotos,
-  listReferencePhotos,
-} from "@/features/photo/repository";
+  ItemThumb,
+  ItemViewer,
+} from "@/features/reference/components/item-viewer";
+import {
+  preferPattern,
+  useWorkbenchItems,
+  type ViewerItem,
+} from "@/features/reference/items";
 import { LinkSheet } from "@/features/reference/components/link-sheet";
-import {
-  VideoEmbed,
-  WatchOnYouTube,
-} from "@/features/reference/components/video-embed";
-import {
-  addLink,
-  deleteLink,
-  listLinks,
-} from "@/features/reference/repository";
+import { addLink, deleteLink } from "@/features/reference/repository";
 import { useStrings } from "@/i18n";
 import { cn } from "@/lib/utils";
-import type { Id, ProjectPhoto } from "@/types/entities";
+import type { Id } from "@/types/entities";
 
 /**
  * 작업대.
@@ -41,27 +35,10 @@ import type { Id, ProjectPhoto } from "@/types/entities";
  */
 type Filter = "all" | "pattern" | "reference" | "video";
 
-interface Item {
-  id: Id;
-  kind: "pattern" | "reference" | "video";
-  photo?: ProjectPhoto;
-  video?: YouTubeRef;
-  title?: string;
-  note?: string;
-}
-
 export function Workbench({ projectId }: { projectId: Id }) {
   const t = useStrings();
 
-  const patterns = useLiveQuery(
-    () => listPatternPhotos(projectId),
-    [projectId]
-  );
-  const references = useLiveQuery(
-    () => listReferencePhotos(projectId),
-    [projectId]
-  );
-  const links = useLiveQuery(() => listLinks(projectId), [projectId]);
+  const { items, loading } = useWorkbenchItems(projectId);
 
   const [filter, setFilter] = useState<Filter>("all");
   const [split, setSplit] = useState(false);
@@ -71,35 +48,9 @@ export function Workbench({ projectId }: { projectId: Id }) {
   ]);
   const [focus, setFocus] = useState<0 | 1>(0);
   const [addingLink, setAddingLink] = useState(false);
-  const [pendingDelete, setPendingDelete] = useState<Item>();
+  const [pendingDelete, setPendingDelete] = useState<ViewerItem>();
 
-  const items = useMemo<Item[]>(
-    () => [
-      ...(patterns ?? []).map(
-        (photo): Item => ({ id: photo.id, kind: "pattern", photo })
-      ),
-      ...(references ?? []).map(
-        (photo): Item => ({ id: photo.id, kind: "reference", photo })
-      ),
-      ...(links ?? []).flatMap((link): Item[] => {
-        const video = parseYouTube(link.url);
-        return video
-          ? [
-              {
-                id: link.id,
-                kind: "video",
-                video,
-                title: link.title,
-                note: link.note,
-              },
-            ]
-          : [];
-      }),
-    ],
-    [patterns, references, links]
-  );
-
-  if (!patterns || !references || !links) return null;
+  if (loading) return null;
 
   const shown = items.filter((i) => filter === "all" || i.kind === filter);
   const byId = (id: Id | undefined) => items.find((i) => i.id === id);
@@ -113,11 +64,11 @@ export function Workbench({ projectId }: { projectId: Id }) {
    *
    * 기본값은 도안이다. 작업대에 들어오는 이유는 대개 도안을 보려는 것이다.
    */
-  const fallback = items.find((i) => i.kind === "pattern") ?? items[0];
+  const fallback = preferPattern(items);
   const left = byId(slots[0]) ?? fallback;
   const right = byId(slots[1]);
 
-  function pick(item: Item) {
+  function pick(item: ViewerItem) {
     setSlots((prev) => {
       const next: [Id | undefined, Id | undefined] = [...prev];
       next[split ? focus : 0] = item.id;
@@ -125,7 +76,7 @@ export function Workbench({ projectId }: { projectId: Id }) {
     });
   }
 
-  async function handleDelete(item: Item) {
+  async function handleDelete(item: ViewerItem) {
     if (item.kind === "video") await deleteLink(item.id);
     else await deletePhoto(item.id);
     setPendingDelete(undefined);
@@ -218,7 +169,7 @@ export function Workbench({ projectId }: { projectId: Id }) {
                         : "border-line hover:border-line-strong"
                     )}
                   >
-                    <Thumb item={item} />
+                    <ItemThumb item={item} />
                   </button>
                   {/* 지우기는 트레이에서만 한다. 뷰어에 두면 도안을 보는 중에
                       삭제 버튼이 항상 손 근처에 있게 된다. */}
@@ -276,8 +227,8 @@ function Stage({
   split: boolean;
   focus: 0 | 1;
   onFocus: (slot: 0 | 1) => void;
-  left?: Item;
-  right?: Item;
+  left?: ViewerItem;
+  right?: ViewerItem;
 }) {
   const t = useStrings();
   const container = useRef<HTMLDivElement>(null);
@@ -367,13 +318,11 @@ function Slot({
   onFocus,
   split,
 }: {
-  item?: Item;
+  item?: ViewerItem;
   focused?: boolean;
   onFocus?: () => void;
   split?: boolean;
 }) {
-  const t = useStrings();
-
   return (
     <div
       onPointerDown={onFocus}
@@ -383,99 +332,7 @@ function Slot({
         split && focused ? "border-accent" : "border-line"
       )}
     >
-      {!item ? (
-        <div className="text-text-3 text-caption flex aspect-video items-center justify-center px-4 text-center">
-          {t.workbench.pickItem}
-        </div>
-      ) : item.kind === "video" && item.video ? (
-        <div className="p-2">
-          <VideoEmbed video={item.video} title={item.title} />
-          <div className="mt-1.5">
-            {item.title && (
-              <p className="text-small font-medium">{item.title}</p>
-            )}
-            {item.note && (
-              <p className="text-text-2 text-caption whitespace-pre-wrap">
-                {item.note}
-              </p>
-            )}
-            <WatchOnYouTube video={item.video} />
-          </div>
-        </div>
-      ) : item.photo ? (
-        <ImageStage photo={item.photo} />
-      ) : null}
+      <ItemViewer item={item} />
     </div>
   );
-}
-
-/** 확대 단계. 맞춤은 화면에 맞추고, 나머지는 원본 비율로 키운다. */
-const ZOOMS = [1, 1.6, 2.6] as const;
-
-/**
- * 도안 이미지 보기.
- *
- * 도안은 읽는 이미지다 — 코 기호와 숫자를 봐야 하므로 확대와 이동이 없으면
- * 쓸 수 없다. 확대는 컨테이너를 스크롤 가능한 상태로 두고 이미지를 키우는
- * 방식으로 한다. 브라우저의 스크롤·터치 드래그를 그대로 쓸 수 있어서
- * 직접 만든 팬 제스처보다 손에 익다.
- */
-function ImageStage({ photo }: { photo: ProjectPhoto }) {
-  const t = useStrings();
-  const [step, setStep] = useState(0);
-  const zoom = ZOOMS[step];
-
-  return (
-    <div className="relative">
-      <div
-        className={cn(
-          "flex max-h-[70vh] min-h-[16rem] justify-center",
-          zoom === 1 ? "overflow-hidden" : "overflow-auto"
-        )}
-      >
-        <PhotoImage
-          photo={photo}
-          className={cn(
-            zoom === 1 ? "max-h-[70vh] w-auto object-contain" : "max-w-none"
-          )}
-        />
-      </div>
-
-      <Button
-        icon
-        variant="secondary"
-        aria-label={t.workbench.zoom}
-        className="bg-surface/90 absolute top-2 right-2"
-        onClick={() => setStep((s) => (s + 1) % ZOOMS.length)}
-      >
-        <Maximize2 size={16} />
-      </Button>
-      {zoom !== 1 && (
-        <span className="bg-surface/90 text-caption text-text-2 absolute top-3 left-2 rounded-sm px-1.5">
-          {zoom}×
-        </span>
-      )}
-    </div>
-  );
-}
-
-function Thumb({ item }: { item: Item }) {
-  if (item.kind === "video" && item.video) {
-    return (
-      <span className="relative block size-full">
-        <img
-          src={`https://i.ytimg.com/vi/${item.video.videoId}/default.jpg`}
-          alt=""
-          loading="lazy"
-          className="size-full object-cover"
-        />
-        <span className="absolute inset-0 flex items-center justify-center">
-          <Youtube size={16} className="text-white drop-shadow" aria-hidden />
-        </span>
-      </span>
-    );
-  }
-  return item.photo ? (
-    <PhotoImage photo={item.photo} className="size-full object-cover" />
-  ) : null;
 }
