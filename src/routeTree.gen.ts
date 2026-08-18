@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as StatsRouteImport } from './routes/stats'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as YarnIndexRouteImport } from './routes/yarn.index'
@@ -30,6 +31,11 @@ import { Route as ProjectsProjectIdEditRouteImport } from './routes/projects.$pr
 import { Route as ProfilesProfileIdEditRouteImport } from './routes/profiles.$profileId.edit'
 import { Route as GaugeGaugeIdEditRouteImport } from './routes/gauge.$gaugeId.edit'
 
+const StatsRoute = StatsRouteImport.update({
+  id: '/stats',
+  path: '/stats',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
@@ -134,6 +140,7 @@ const GaugeGaugeIdEditRoute = GaugeGaugeIdEditRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/settings': typeof SettingsRoute
+  '/stats': typeof StatsRoute
   '/gauge/calc': typeof GaugeCalcRoute
   '/gauge/new': typeof GaugeNewRoute
   '/profiles/new': typeof ProfilesNewRoute
@@ -156,6 +163,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/settings': typeof SettingsRoute
+  '/stats': typeof StatsRoute
   '/gauge/calc': typeof GaugeCalcRoute
   '/gauge/new': typeof GaugeNewRoute
   '/profiles/new': typeof ProfilesNewRoute
@@ -179,6 +187,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/settings': typeof SettingsRoute
+  '/stats': typeof StatsRoute
   '/gauge/calc': typeof GaugeCalcRoute
   '/gauge/new': typeof GaugeNewRoute
   '/profiles/new': typeof ProfilesNewRoute
@@ -203,6 +212,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/settings'
+    | '/stats'
     | '/gauge/calc'
     | '/gauge/new'
     | '/profiles/new'
@@ -225,6 +235,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/settings'
+    | '/stats'
     | '/gauge/calc'
     | '/gauge/new'
     | '/profiles/new'
@@ -247,6 +258,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/settings'
+    | '/stats'
     | '/gauge/calc'
     | '/gauge/new'
     | '/profiles/new'
@@ -270,6 +282,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   SettingsRoute: typeof SettingsRoute
+  StatsRoute: typeof StatsRoute
   GaugeCalcRoute: typeof GaugeCalcRoute
   GaugeNewRoute: typeof GaugeNewRoute
   ProfilesNewRoute: typeof ProfilesNewRoute
@@ -292,6 +305,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/stats': {
+      id: '/stats'
+      path: '/stats'
+      fullPath: '/stats'
+      preLoaderRoute: typeof StatsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/settings': {
       id: '/settings'
       path: '/settings'
@@ -438,6 +458,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   SettingsRoute: SettingsRoute,
+  StatsRoute: StatsRoute,
   GaugeCalcRoute: GaugeCalcRoute,
   GaugeNewRoute: GaugeNewRoute,
   ProfilesNewRoute: ProfilesNewRoute,

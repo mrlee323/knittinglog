@@ -11,6 +11,7 @@ export const ko = {
     projects: "프로젝트",
     gauge: "게이지",
     yarn: "실",
+    stats: "기록",
     settings: "설정",
   },
   status: {
@@ -361,6 +362,37 @@ export const ko = {
     emptyKnit: "작업대에 도안이나 참고 자료를 올려두면 뜨면서 볼 수 있어요",
     deleteImageConfirm: "이 이미지를 지울까요?",
     deleteVideoConfirm: "이 영상 링크를 지울까요?",
+  },
+  stats: {
+    title: "기록",
+    /* 방치 리포트 — 이 서비스 컨셉의 핵심 화면 */
+    idle: "멈춰 있는 것",
+    idleEmpty: "지금 멈춘 프로젝트가 없어요",
+    /* 재개하면 사유가 지워지므로 평생 이력이 아니라 현재 단면이다.
+       문구가 그 이상을 주장하면 안 된다. */
+    reasonTitle: "왜 멈췄나",
+    reasonNote: "지금 멈춘 것들의 사유예요",
+    reasonEmpty: "사유를 남긴 프로젝트가 아직 없어요",
+    // 사유마다 받침이 달라 "이에요/예요"가 갈린다. 조사를 붙이지 않는 문장으로
+    // 두면 사유 목록이 늘어나도 문법이 깨지지 않는다.
+    reasonTop: "가장 많은 사유 — {reason}",
+    /* 잔디 */
+    activity: "뜬 날",
+    activityNote: "최근 13주 · 진하기는 내 기록 안에서의 상대값이에요",
+    activityEmpty: "아직 뜬 기록이 없어요",
+    /* 누적 */
+    totals: "누적",
+    totalRows: "뜬 단수",
+    totalTime: "뜬 시간",
+    totalDays: "뜬 날",
+    finishedCount: "완성",
+    finishedThisYear: "올해 {n}개",
+    yarnUsed: "쓴 실",
+    yarnUsedNote: "완성한 작품에 배정한 실이에요",
+    yarnUsedValue: "{skeins}타래",
+    yarnUsedDetail: "{grams}g · {meters}m",
+    empty: "보여줄 기록이 아직 없어요",
+    emptyHint: "프로젝트를 만들고 카운터를 세면 여기가 채워져요",
   },
   action: {
     create: "만들기",

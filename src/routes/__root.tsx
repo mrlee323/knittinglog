@@ -4,7 +4,14 @@ import {
   Outlet,
   useRouterState,
 } from "@tanstack/react-router";
-import { Home, Layers, Ruler, Settings, Spool } from "lucide-react";
+import {
+  ChartColumn,
+  Home,
+  Layers,
+  Ruler,
+  Settings,
+  Spool,
+} from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useApplyTheme } from "@/app/theme";
 import { useStrings } from "@/i18n";
@@ -45,6 +52,7 @@ function RootLayout() {
     { to: "/projects", icon: Layers, label: t.nav.projects },
     { to: "/gauge", icon: Ruler, label: t.nav.gauge },
     { to: "/yarn", icon: Spool, label: t.nav.yarn },
+    { to: "/stats", icon: ChartColumn, label: t.nav.stats },
     { to: "/settings", icon: Settings, label: t.nav.settings },
   ];
 
