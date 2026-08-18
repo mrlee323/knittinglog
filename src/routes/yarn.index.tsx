@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useLiveQuery } from "dexie-react-hooks";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Page } from "@/components/ui/page";
+import { CardGrid, Page } from "@/components/ui/page";
 import { YarnTile } from "@/features/yarn/components/yarn-swatch";
 import { listYarns } from "@/features/yarn/repository";
 import { freeSkeins, stashTotal } from "@/domain/yarn";
@@ -23,6 +23,7 @@ function YarnIndex() {
 
   return (
     <Page
+      wide
       title={t.yarn.title}
       action={
         <Button
@@ -49,7 +50,7 @@ function YarnIndex() {
           </Button>
         </div>
       ) : (
-        <ul className="space-y-2">
+        <CardGrid>
           {yarns.map((yarn) => (
             <li key={yarn.id}>
               <YarnRow
@@ -60,7 +61,7 @@ function YarnIndex() {
               />
             </li>
           ))}
-        </ul>
+        </CardGrid>
       )}
     </Page>
   );

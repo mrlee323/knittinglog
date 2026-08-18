@@ -4,7 +4,7 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { Calculator, Plus, Ruler } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ConfirmSheet } from "@/components/ui/confirm-sheet";
-import { Page } from "@/components/ui/page";
+import { CardGrid, Page } from "@/components/ui/page";
 import { deleteGauge, listGauges } from "@/features/gauge/repository";
 import { findNeedle } from "@/domain/units";
 import { useStrings } from "@/i18n";
@@ -26,6 +26,7 @@ function GaugeIndex() {
 
   return (
     <Page
+      wide
       title={t.gauge.title}
       action={
         <Button
@@ -52,7 +53,7 @@ function GaugeIndex() {
           <p className="text-text-3 text-small mt-1">{t.gauge.emptyHint}</p>
         </div>
       ) : (
-        <ul className="space-y-2">
+        <CardGrid>
           {gauges.map((gauge) => {
             const needle = gauge.needleMm ? findNeedle(gauge.needleMm) : null;
             return (
@@ -89,7 +90,7 @@ function GaugeIndex() {
               </li>
             );
           })}
-        </ul>
+        </CardGrid>
       )}
 
       {pending && (

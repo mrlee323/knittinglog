@@ -13,8 +13,13 @@ export function CoverThumb({
   size = "md",
 }: {
   blob?: Blob;
-  /** 촘촘한 줄에서는 sm. 카드 높이를 사진이 결정하면 목록이 늘어진다. */
-  size?: "sm" | "md";
+  /**
+   * 촘촘한 줄에서는 sm. 카드 높이를 사진이 결정하면 목록이 늘어진다.
+   *
+   * lg는 태블릿·PC의 목록 격자용이다. 폰에서는 md와 같은 크기로 두는데,
+   * 좁은 화면에서 사진을 키우면 이름과 상태가 밀려 목록을 훑을 수 없게 된다.
+   */
+  size?: "sm" | "md" | "lg";
 }) {
   const ref = useBlobImage(blob);
   if (!blob) return null;
@@ -24,7 +29,9 @@ export function CoverThumb({
       alt=""
       className={cn(
         "border-line shrink-0 rounded-md border object-cover",
-        size === "sm" ? "size-11" : "size-16"
+        size === "sm" && "size-11",
+        size === "md" && "size-16",
+        size === "lg" && "size-16 sm:size-24"
       )}
     />
   );
