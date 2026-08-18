@@ -17,6 +17,7 @@ import {
 import { pausedLabel } from "@/features/project/format";
 import { CounterSection } from "@/features/counter/components/counter-section";
 import { PhotoTimeline } from "@/features/photo/components/photo-timeline";
+import { ReferenceSection } from "@/features/reference/components/reference-section";
 import { AllocationSection } from "@/features/yarn/components/allocation-section";
 import { allowedEvents, daysSincePaused } from "@/domain/projectStatus";
 import { useLocale, useStrings } from "@/i18n";
@@ -87,6 +88,8 @@ function ProjectDetail() {
         main={
           <>
             <PhotoTimeline projectId={projectId} />
+
+            <ReferenceSection projectId={projectId} />
 
             {project.derivedFromProjectId && (
               <DerivedFrom sourceId={project.derivedFromProjectId} />

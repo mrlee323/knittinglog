@@ -101,12 +101,35 @@ export interface ProjectPhoto extends Base {
    */
   atRow?: number;
   atCounterLabel?: string;
+  /**
+   * 진행 사진인지 참고 사진인지.
+   *
+   * 둘은 저장·압축·보기가 완전히 같아서 테이블을 나누지 않았다. 다른 건
+   * 읽는 방식이다 — 진행 사진은 시간순으로 쌓여 "어디까지 떴는지"를 말하고,
+   * 참고 사진은 뜨기 전에 모아두는 무드보드다. 값이 없으면 진행 사진으로
+   * 본다(이 필드가 생기기 전에 저장된 사진).
+   */
+  kind?: "progress" | "reference";
 }
 
 export interface ProjectLog extends Base {
   projectId: Id;
   date: Date;
   body: string;
+}
+
+/**
+ * 프로젝트에 붙여둔 링크.
+ *
+ * 도안 영상·튜토리얼은 뜨개 학습의 절반이고, 대개 유튜브에 있다. 주소만
+ * 저장하고 영상 id는 화면에서 다시 해석한다(domain/youtube.ts) — 파싱 결과를
+ * 저장해두면 해석 규칙을 고쳤을 때 이미 저장된 링크가 옛 결과에 묶인다.
+ */
+export interface ProjectLink extends Base {
+  projectId: Id;
+  url: string;
+  title?: string;
+  note?: string;
 }
 
 /** 푼 기록. 통계에서 "뜬 단수" 옆에 "푼 단수"로 보여준다. */
