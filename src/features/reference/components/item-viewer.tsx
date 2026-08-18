@@ -29,6 +29,8 @@ export function ItemViewer({
 
   if (item.kind === "video" && item.video) {
     return (
+      // 영상 자리에는 overflow·transform을 걸지 않는다. iframe을 자르거나
+      // 변형하는 조상이 있으면 iOS에서 플레이어 조작이 먹지 않을 수 있다.
       <div className="p-2">
         <VideoEmbed video={item.video} title={item.title} />
         {(item.title || item.note) && (
