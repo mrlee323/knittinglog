@@ -4,7 +4,7 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { ChevronLeft, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ConfirmSheet } from "@/components/ui/confirm-sheet";
-import { Page } from "@/components/ui/page";
+import { CardGrid, Page } from "@/components/ui/page";
 import { useUnits } from "@/app/units";
 import { filledCount, nearestEasePreset } from "@/domain/body";
 import { deleteProfile, listProfiles } from "@/features/profile/repository";
@@ -24,6 +24,7 @@ function Profiles() {
 
   return (
     <Page
+      wide
       title={t.profile.title}
       action={
         <Button
@@ -49,7 +50,7 @@ function Profiles() {
           <p className="text-text-3 text-small mt-1">{t.profile.emptyHint}</p>
         </div>
       ) : (
-        <ul className="space-y-2">
+        <CardGrid>
           {profiles.map((profile) => {
             const ease = profile.preferredEaseCm ?? 0;
             return (
@@ -82,7 +83,7 @@ function Profiles() {
               </li>
             );
           })}
-        </ul>
+        </CardGrid>
       )}
 
       {pending && (

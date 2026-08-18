@@ -4,7 +4,7 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { ChevronLeft, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ConfirmSheet } from "@/components/ui/confirm-sheet";
-import { Page } from "@/components/ui/page";
+import { Columns, Page } from "@/components/ui/page";
 import { PauseSheet } from "@/features/project/components/pause-sheet";
 import { StatusBadge } from "@/features/project/components/status-badge";
 import { DerivedFrom } from "@/features/project/components/derived-from";
@@ -68,7 +68,11 @@ function ProjectDetail() {
   }
 
   return (
-    <Page title={project.name} action={<StatusBadge status={project.status} />}>
+    <Page
+      wide
+      title={project.name}
+      action={<StatusBadge status={project.status} />}
+    >
       <Link
         to="/projects"
         className="text-text-2 text-small -mt-2 mb-4 inline-flex items-center gap-1"
@@ -77,93 +81,117 @@ function ProjectDetail() {
         {t.nav.projects}
       </Link>
 
-      <PhotoTimeline projectId={projectId} />
+      {/* 왼쪽은 보는 것(사진·기록), 오른쪽은 조작하는 것(카운터·상태·실).
+          큰 화면에서 카운터가 스크롤과 함께 사라지지 않도록 side는 붙는다. */}
+      <Columns
+        main={
+          <>
+            <PhotoTimeline projectId={projectId} />
 
-      {project.derivedFromProjectId && (
-        <DerivedFrom sourceId={project.derivedFromProjectId} />
-      )}
-
-      <dl className="text-small mb-5 space-y-1.5">
-        <div className="flex gap-2">
-          <dt className="text-text-2">{t.project.craft}</dt>
-          <dd>{t.craft[project.craft]}</dd>
-        </div>
-        <div className="flex gap-2">
-          <dt className="text-text-2">{t.project.category}</dt>
-          <dd>{t.category[project.category]}</dd>
-        </div>
-        {project.startedAt && (
-          <div className="text-text-2">
-            {t.project.startedOn.replace(
-              "{date}",
-              formatDate(project.startedAt)
+            {project.derivedFromProjectId && (
+              <DerivedFrom sourceId={project.derivedFromProjectId} />
             )}
-          </div>
-        )}
-        {project.finishedAt && (
-          <div className="text-text-2">
-            {t.project.finishedOn.replace(
-              "{date}",
-              formatDate(project.finishedAt)
+
+            {project.notes && (
+              <p className="bg-sunken text-small mb-5 rounded-md p-4 whitespace-pre-wrap">
+                {project.notes}
+              </p>
             )}
-          </div>
-        )}
-      </dl>
+          </>
+        }
+        side={
+          <>
+            {/* 잠시멈춤 상태의 복귀 단서. 나중에 복귀 브리핑으로 확장된다. */}
+            {pausedDays !== null && (
+              <div className="border-line bg-sunken mb-5 rounded-md border p-4">
+                <p className="text-hibernating text-small font-medium">
+                  {pausedLabel(t, pausedDays)}
+                  {project.pauseReason &&
+                    ` · ${t.pauseReason[project.pauseReason]}`}
+                </p>
+                {project.pauseNote && (
+                  <p className="text-text-2 text-small mt-1.5">
+                    {project.pauseNote}
+                  </p>
+                )}
+              </div>
+            )}
 
-      {/* 잠시멈춤 상태의 복귀 단서. 나중에 복귀 브리핑으로 확장된다. */}
-      {pausedDays !== null && (
-        <div className="border-line bg-sunken mb-5 rounded-md border p-4">
-          <p className="text-hibernating text-small font-medium">
-            {pausedLabel(t, pausedDays)}
-            {project.pauseReason && ` · ${t.pauseReason[project.pauseReason]}`}
-          </p>
-          {project.pauseNote && (
-            <p className="text-text-2 text-small mt-1.5">{project.pauseNote}</p>
-          )}
-        </div>
-      )}
+            <dl className="text-small mb-5 space-y-1.5">
+              <div className="flex gap-2">
+                <dt className="text-text-2">{t.project.craft}</dt>
+                <dd>{t.craft[project.craft]}</dd>
+              </div>
+              <div className="flex gap-2">
+                <dt className="text-text-2">{t.project.category}</dt>
+                <dd>{t.category[project.category]}</dd>
+              </div>
+              {project.startedAt && (
+                <div className="text-text-2">
+                  {t.project.startedOn.replace(
+                    "{date}",
+                    formatDate(project.startedAt)
+                  )}
+                </div>
+              )}
+              {project.finishedAt && (
+                <div className="text-text-2">
+                  {t.project.finishedOn.replace(
+                    "{date}",
+                    formatDate(project.finishedAt)
+                  )}
+                </div>
+              )}
+            </dl>
 
-      {project.notes && (
-        <p className="bg-sunken text-small mb-5 rounded-md p-4 whitespace-pre-wrap">
-          {project.notes}
-        </p>
-      )}
+            <div className="mb-6 flex flex-wrap gap-2">
+              {events.map((type) => (
+                <Button
+                  key={type}
+                  variant={
+                    PRIMARY_EVENTS.includes(type) ? "primary" : "secondary"
+                  }
+                  onClick={() => handleEvent(type)}
+                >
+                  {t.event[type]}
+                </Button>
+              ))}
+            </div>
 
-      <div className="mb-6 flex flex-wrap gap-2">
-        {events.map((type) => (
-          <Button
-            key={type}
-            variant={PRIMARY_EVENTS.includes(type) ? "primary" : "secondary"}
-            onClick={() => handleEvent(type)}
-          >
-            {t.event[type]}
-          </Button>
-        ))}
-      </div>
+            <CounterSection projectId={projectId} />
+            <AllocationSection projectId={projectId} />
 
-      <CounterSection projectId={projectId} />
-      <AllocationSection projectId={projectId} />
+            {/* 같은 작품을 다른 실로 다시 뜨기. 상태와 무관하게 열어둔다 —
+                완성한 걸 또 뜨기도 하고, 뜨는 중에 선물용을 하나 더
+                시작하기도 한다. */}
+            <section className="border-line mb-6 rounded-md border p-4">
+              <p className="text-text-2 text-caption">
+                {t.project.restartHint}
+              </p>
+              <Button
+                variant="secondary"
+                className="mt-3"
+                onClick={() => void handleRestart()}
+              >
+                <Copy size={16} aria-hidden />
+                {t.project.restart}
+              </Button>
+            </section>
 
-      {/* 같은 작품을 다른 실로 다시 뜨기. 상태와 무관하게 열어둔다 —
-          완성한 걸 또 뜨기도 하고, 뜨는 중에 선물용을 하나 더 시작하기도 한다. */}
-      <section className="border-line mb-6 flex items-center gap-3 rounded-md border p-4">
-        <p className="text-text-2 text-caption min-w-0 flex-1">
-          {t.project.restartHint}
-        </p>
-        <Button variant="secondary" onClick={() => void handleRestart()}>
-          <Copy size={16} aria-hidden />
-          {t.project.restart}
-        </Button>
-      </section>
-
-      <div className="border-line flex gap-2 border-t pt-4">
-        <Link to="/projects/$projectId/edit" params={{ projectId }}>
-          <Button variant="ghost">{t.action.edit}</Button>
-        </Link>
-        <Button variant="danger" onClick={() => setConfirmingDelete(true)}>
-          {t.action.delete}
-        </Button>
-      </div>
+            <div className="border-line flex gap-2 border-t pt-4">
+              <Link to="/projects/$projectId/edit" params={{ projectId }}>
+                <Button variant="ghost">{t.action.edit}</Button>
+              </Link>
+              <Button
+                variant="danger"
+                onClick={() => setConfirmingDelete(true)}
+              >
+                {t.action.delete}
+              </Button>
+            </div>
+          </>
+        }
+      />
 
       {confirmingDelete && (
         <ConfirmSheet

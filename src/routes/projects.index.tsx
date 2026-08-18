@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useLiveQuery } from "dexie-react-hooks";
 import { Plus } from "lucide-react";
 import { z } from "zod";
-import { Page } from "@/components/ui/page";
+import { CardGrid, Page } from "@/components/ui/page";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/features/project/components/status-badge";
 import { listProjects } from "@/features/project/repository";
@@ -53,6 +53,7 @@ function Projects() {
 
   return (
     <Page
+      wide
       title={t.nav.projects}
       action={
         <Button
@@ -91,7 +92,7 @@ function Projects() {
           <p className="text-text-3 text-small mt-1">{t.project.emptyHint}</p>
         </div>
       ) : (
-        <ul className="space-y-2">
+        <CardGrid columns={3}>
           {projects.map((project) => (
             <li key={project.id}>
               <ProjectCard
@@ -101,7 +102,7 @@ function Projects() {
               />
             </li>
           ))}
-        </ul>
+        </CardGrid>
       )}
     </Page>
   );
@@ -142,7 +143,7 @@ function ProjectCard({
           </p>
         )}
       </div>
-      <CoverThumb blob={cover} />
+      <CoverThumb blob={cover} size="lg" />
     </Link>
   );
 }

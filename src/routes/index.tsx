@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useLiveQuery } from "dexie-react-hooks";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Page } from "@/components/ui/page";
+import { Columns, Page } from "@/components/ui/page";
 import { StatusBadge } from "@/features/project/components/status-badge";
 import { pausedLabel } from "@/features/project/format";
 import { YarnStripe } from "@/features/yarn/components/yarn-swatch";
@@ -71,78 +71,97 @@ function Dashboard() {
   }
 
   return (
-    <Page title={t.nav.dashboard}>
-      <ResumeCard
-        project={resume}
-        counters={counters}
-        color={resume ? colors?.get(resume.id) : undefined}
-        cover={resume ? covers?.get(resume.id) : undefined}
-      />
+    <Page wide title={t.nav.dashboard}>
+      {/* 왼쪽은 손대는 것(지금 뜨는 것·기다리는 것), 오른쪽은 집계다.
+          매일 여는 화면이므로 큰 화면에서 스크롤 없이 둘 다 보이게 한다. */}
+      <Columns
+        main={
+          <>
+            <ResumeCard
+              project={resume}
+              counters={counters}
+              color={resume ? colors?.get(resume.id) : undefined}
+              cover={resume ? covers?.get(resume.id) : undefined}
+            />
 
-      {/* 상태 요약 — 누르면 그 상태로 필터된 목록으로 간다 */}
-      <section className="mb-6">
-        <h2 className="text-micro text-text-3 mb-2">{t.dashboard.summary}</h2>
-        <div className="grid grid-cols-3 gap-2">
-          <StatTile to="active" label={t.status.active} value={counts.active} />
-          <StatTile
-            to="hibernating"
-            label={t.status.hibernating}
-            value={counts.hibernating}
-          />
-          {/* 타일은 누르면 그 상태로 필터된 목록으로 간다. 그래서 숫자도
-              목록과 같은 기준이어야 한다 — "올해 완성"을 보여주면서 전체
-              완성 목록으로 보내면 숫자와 목적지가 어긋난다.
-              연도별 집계는 연간 결산(기획 §3.9 P2)의 몫으로 남긴다. */}
-          <StatTile
-            to="finished"
-            label={t.status.finished}
-            value={counts.finished}
-          />
-        </div>
-      </section>
-
-      {waiting.length > 0 && (
-        <section className="mb-6">
-          <h2 className="text-micro text-text-3 mb-1">{t.dashboard.waiting}</h2>
-          <p className="text-text-3 text-caption mb-2">
-            {t.dashboard.waitingHint}
-          </p>
-          <ul className="space-y-2">
-            {waiting.map((project) => (
-              <li key={project.id}>
-                <WaitingRow
-                  project={project}
-                  color={colors?.get(project.id)}
-                  cover={covers?.get(project.id)}
+            {waiting.length > 0 && (
+              <section className="mb-6">
+                <h2 className="text-micro text-text-3 mb-1">
+                  {t.dashboard.waiting}
+                </h2>
+                <p className="text-text-3 text-caption mb-2">
+                  {t.dashboard.waitingHint}
+                </p>
+                <ul className="space-y-2">
+                  {waiting.map((project) => (
+                    <li key={project.id}>
+                      <WaitingRow
+                        project={project}
+                        color={colors?.get(project.id)}
+                        cover={covers?.get(project.id)}
+                      />
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+          </>
+        }
+        side={
+          <>
+            {/* 상태 요약 — 누르면 그 상태로 필터된 목록으로 간다 */}
+            <section className="mb-6">
+              <h2 className="text-micro text-text-3 mb-2">
+                {t.dashboard.summary}
+              </h2>
+              <div className="grid grid-cols-3 gap-2">
+                <StatTile
+                  to="active"
+                  label={t.status.active}
+                  value={counts.active}
                 />
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
+                <StatTile
+                  to="hibernating"
+                  label={t.status.hibernating}
+                  value={counts.hibernating}
+                />
+                {/* 타일은 누르면 그 상태로 필터된 목록으로 간다. 그래서 숫자도
+                    목록과 같은 기준이어야 한다 — "올해 완성"을 보여주면서 전체
+                    완성 목록으로 보내면 숫자와 목적지가 어긋난다.
+                    연도별 집계는 연간 결산(기획 §3.9 P2)의 몫으로 남긴다. */}
+                <StatTile
+                  to="finished"
+                  label={t.status.finished}
+                  value={counts.finished}
+                />
+              </div>
+            </section>
 
-      <section className="mb-6 grid grid-cols-2 gap-2">
-        <ActivityCard
-          label={t.dashboard.thisWeek}
-          rows={week.rows}
-          durationMs={week.durationMs}
-          note={
-            streak > 0
-              ? t.dashboard.streak.replace("{n}", String(streak))
-              : undefined
-          }
-        />
-        <ActivityCard
-          label={t.dashboard.allTime}
-          rows={total.rows}
-          durationMs={total.durationMs}
-          note={
-            total.days > 0
-              ? t.dashboard.days.replace("{n}", String(total.days))
-              : undefined
-          }
-        />
-      </section>
+            <section className="mb-6 grid grid-cols-2 gap-2">
+              <ActivityCard
+                label={t.dashboard.thisWeek}
+                rows={week.rows}
+                durationMs={week.durationMs}
+                note={
+                  streak > 0
+                    ? t.dashboard.streak.replace("{n}", String(streak))
+                    : undefined
+                }
+              />
+              <ActivityCard
+                label={t.dashboard.allTime}
+                rows={total.rows}
+                durationMs={total.durationMs}
+                note={
+                  total.days > 0
+                    ? t.dashboard.days.replace("{n}", String(total.days))
+                    : undefined
+                }
+              />
+            </section>
+          </>
+        }
+      />
     </Page>
   );
 }
