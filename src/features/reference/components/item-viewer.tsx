@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Maximize2, Youtube } from "lucide-react";
+import { ExternalLink, Maximize2, Youtube } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PhotoImage } from "@/features/photo/components/photo-image";
 import { VideoEmbed } from "@/features/reference/components/video-embed";
@@ -12,10 +12,13 @@ import type { ProjectPhoto } from "@/types/entities";
 export function ItemViewer({
   item,
   maxHeight = "70vh",
+  onEmbedBlocked,
 }: {
   item?: ViewerItem;
   /** 뜨기 모드처럼 높이가 정해진 자리에서는 100%를 준다 */
   maxHeight?: string;
+  /** 재생해보고 "임베드 금지"임을 알게 되면 알린다 */
+  onEmbedBlocked?: (id: string) => void;
 }) {
   const t = useStrings();
 
@@ -32,7 +35,12 @@ export function ItemViewer({
       // 영상 자리에는 overflow·transform을 걸지 않는다. iframe을 자르거나
       // 변형하는 조상이 있으면 iOS에서 플레이어 조작이 먹지 않을 수 있다.
       <div className="p-2">
-        <VideoEmbed video={item.video} title={item.title} />
+        <VideoEmbed
+          video={item.video}
+          title={item.title}
+          blocked={item.embedBlocked}
+          onBlocked={() => onEmbedBlocked?.(item.id)}
+        />
         {(item.title || item.note) && (
           <div className="mt-1.5">
             {item.title && (
@@ -125,6 +133,13 @@ export function ItemThumb({ item }: { item: ViewerItem }) {
         <span className="absolute inset-0 flex items-center justify-center">
           <Youtube size={16} className="text-white drop-shadow" aria-hidden />
         </span>
+        {/* 앱에서 재생 안 되는 영상은 트레이에서 미리 알린다 — 눌러보고
+            알게 되는 것보다 낫다. */}
+        {item.embedBlocked && (
+          <span className="text-micro absolute inset-x-0 bottom-0 bg-black/65 py-0.5 text-center text-white">
+            <ExternalLink size={9} className="inline" aria-hidden />
+          </span>
+        )}
       </span>
     );
   }

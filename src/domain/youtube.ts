@@ -137,6 +137,46 @@ export const playerMessage = (func: PlayerCommand) =>
 /** 플레이어가 상태 변화를 알려주도록 요청하는 첫 인사 */
 export const playerHandshake = () => JSON.stringify({ event: "listening" });
 
+/**
+ * 플레이어 오류.
+ *
+ * 유튜브 영상은 소유자가 "다른 사이트에서 재생 금지"를 걸 수 있고, 그런 영상은
+ * 우리 화면에서 재생할 방법이 없다. 플레이어는 그 상황을 오류 코드로 알려주므로
+ * 그걸 읽어 "앱에서는 못 보고 유튜브에서 봐야 한다"고 안내한다.
+ *
+ * 101과 150은 같은 뜻이다(둘 다 임베드 거부). 유튜브가 두 코드를 섞어 쓴다.
+ */
+export type PlayerError = "embed-blocked" | "unavailable" | "playback";
+
+export function playerErrorFrom(data: unknown): PlayerError | null {
+  const parsed =
+    typeof data === "string"
+      ? (() => {
+          try {
+            return JSON.parse(data) as unknown;
+          } catch {
+            return null;
+          }
+        })()
+      : data;
+
+  if (!parsed || typeof parsed !== "object") return null;
+  const record = parsed as { event?: unknown; info?: unknown };
+  if (record.event !== "onError") return null;
+
+  const code =
+    typeof record.info === "number"
+      ? record.info
+      : typeof record.info === "object" && record.info !== null
+        ? (record.info as { errorCode?: unknown }).errorCode
+        : undefined;
+
+  if (code === 101 || code === 150) return "embed-blocked";
+  if (code === 100) return "unavailable";
+  if (code === 2 || code === 5) return "playback";
+  return null;
+}
+
 /** 플레이어 상태 코드 — 1: 재생, 2: 일시정지, 0: 끝 */
 export function playerStateFrom(data: unknown): "playing" | "paused" | null {
   const parsed =

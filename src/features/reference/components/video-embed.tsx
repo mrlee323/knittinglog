@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { ExternalLink, Pause, Play, X } from "lucide-react";
 import {
   embedUrl,
+  playerErrorFrom,
   playerHandshake,
   playerMessage,
   playerStateFrom,
@@ -9,6 +10,7 @@ import {
   thumbnailUrl,
   watchUrl,
   type PlayerCommand,
+  type PlayerError,
   type YouTubeRef,
 } from "@/domain/youtube";
 import { useStrings } from "@/i18n";
@@ -30,17 +32,34 @@ import { useStrings } from "@/i18n";
 export function VideoEmbed({
   video,
   title,
+  blocked,
+  onBlocked,
 }: {
   video: YouTubeRef;
   title?: string;
+  /** 이미 "임베드 금지"로 확인된 영상 — 플레이어를 띄우지 않는다 */
+  blocked?: boolean;
+  onBlocked?: () => void;
 }) {
   const t = useStrings();
   const [playing, setPlaying] = useState(false);
   const [thumbFailed, setThumbFailed] = useState(false);
 
+  // 재생되지 않을 걸 아는 영상에는 플레이어를 만들지 않는다. 유튜브의 회색
+  // 오류 카드를 우리 화면에 띄우는 것보다, 우리 말로 설명하고 나가는 문을
+  // 주는 편이 낫다.
+  if (blocked) {
+    return <Unplayable video={video} reason="embed-blocked" />;
+  }
+
   if (playing) {
     return (
-      <Player video={video} title={title} onClose={() => setPlaying(false)} />
+      <Player
+        video={video}
+        title={title}
+        onClose={() => setPlaying(false)}
+        onBlocked={onBlocked}
+      />
     );
   }
 
@@ -91,13 +110,16 @@ function Player({
   video,
   title,
   onClose,
+  onBlocked,
 }: {
   video: YouTubeRef;
   title?: string;
   onClose: () => void;
+  onBlocked?: () => void;
 }) {
   const t = useStrings();
   const frame = useRef<HTMLIFrameElement>(null);
+  const [error, setError] = useState<PlayerError>();
   // 자동재생으로 시작하므로 재생 중으로 둔다. 이후에는 플레이어가 알려주는
   // 상태를 따라간다 — 유튜브 컨트롤로 멈춰도 우리 버튼이 어긋나지 않는다.
   const [state, setState] = useState<"playing" | "paused">("playing");
@@ -106,12 +128,22 @@ function Player({
     function onMessage(event: MessageEvent) {
       // 출처를 확인하지 않으면 아무 창이나 우리 버튼 모양을 바꿀 수 있다
       if (event.origin !== PLAYER_ORIGIN) return;
+
+      const failure = playerErrorFrom(event.data);
+      if (failure) {
+        setError(failure);
+        // 임베드 금지는 영상의 성질이라 다음에도 같다. 기억해두면 두 번째부터는
+        // 재생되지 않을 플레이어를 띄우지 않는다.
+        if (failure === "embed-blocked") onBlocked?.();
+        return;
+      }
+
       const next = playerStateFrom(event.data);
       if (next) setState(next);
     }
     window.addEventListener("message", onMessage);
     return () => window.removeEventListener("message", onMessage);
-  }, []);
+  }, [onBlocked]);
 
   const send = (func: PlayerCommand) => {
     frame.current?.contentWindow?.postMessage(
@@ -127,6 +159,10 @@ function Player({
     // 반응이 없는 순간이 생기고, 그게 이 기능의 원래 문제였다.
     setState(next);
   };
+
+  if (error) {
+    return <Unplayable video={video} reason={error} onClose={onClose} />;
+  }
 
   return (
     <div className="relative">
@@ -184,6 +220,70 @@ function Player({
           <WatchOnYouTube video={video} />
         </span>
       </div>
+    </div>
+  );
+}
+
+/**
+ * 앱 안에서 재생할 수 없는 영상.
+ *
+ * 유튜브가 보여주는 회색 오류 카드를 그대로 두지 않는다. 그 카드는 우리 앱이
+ * 고장난 것처럼 보이고, 실제 원인(소유자가 임베드를 막았다)도 잘 읽히지 않는다.
+ * 대신 썸네일은 그대로 두고 — 어떤 영상인지는 알아야 한다 — 우리 말로 이유를
+ * 적고 유튜브로 나가는 문을 크게 준다.
+ */
+function Unplayable({
+  video,
+  reason,
+  onClose,
+}: {
+  video: YouTubeRef;
+  reason: PlayerError;
+  onClose?: () => void;
+}) {
+  const t = useStrings();
+  const message =
+    reason === "embed-blocked"
+      ? t.reference.embedBlocked
+      : reason === "unavailable"
+        ? t.reference.unavailable
+        : t.reference.playbackFailed;
+
+  return (
+    <div>
+      <div className="border-line bg-sunken relative aspect-video w-full overflow-hidden rounded-md border">
+        <img
+          src={thumbnailUrl(video.videoId)}
+          alt=""
+          loading="lazy"
+          className="size-full object-cover opacity-25"
+        />
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 p-6 text-center">
+          <p className="text-small max-w-[22rem] text-balance">{message}</p>
+          <a
+            href={watchUrl(video)}
+            target="_blank"
+            rel="noreferrer noopener"
+            className="bg-accent text-on-accent text-small inline-flex min-h-11 items-center gap-1.5 rounded-md px-4 font-medium"
+          >
+            <ExternalLink size={15} aria-hidden />
+            {t.reference.openExternal}
+          </a>
+        </div>
+      </div>
+
+      {onClose && (
+        <div className="mt-1.5">
+          <button
+            type="button"
+            onClick={onClose}
+            className="text-text-2 hover:text-text text-caption inline-flex min-h-11 items-center gap-1"
+          >
+            <X size={14} aria-hidden />
+            {t.reference.stop}
+          </button>
+        </div>
+      )}
     </div>
   );
 }

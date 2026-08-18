@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   embedUrl,
   parseYouTube,
+  playerErrorFrom,
   playerMessage,
   playerStateFrom,
   thumbnailUrl,
@@ -134,5 +135,33 @@ describe("플레이어 제어", () => {
     expect(playerStateFrom("not json")).toBeNull();
     expect(playerStateFrom({ info: 3 })).toBeNull();
     expect(playerStateFrom(null)).toBeNull();
+  });
+});
+
+describe("playerErrorFrom", () => {
+  it("소유자가 임베드를 막은 영상을 알아낸다", () => {
+    // 유튜브는 같은 뜻으로 101과 150을 섞어 쓴다
+    expect(playerErrorFrom({ event: "onError", info: 150 })).toBe(
+      "embed-blocked"
+    );
+    expect(playerErrorFrom({ event: "onError", info: 101 })).toBe(
+      "embed-blocked"
+    );
+    expect(
+      playerErrorFrom(JSON.stringify({ event: "onError", info: 150 }))
+    ).toBe("embed-blocked");
+  });
+
+  it("없어진 영상과 재생 실패를 구분한다", () => {
+    expect(playerErrorFrom({ event: "onError", info: 100 })).toBe(
+      "unavailable"
+    );
+    expect(playerErrorFrom({ event: "onError", info: 5 })).toBe("playback");
+  });
+
+  it("오류가 아닌 메시지는 무시한다", () => {
+    expect(playerErrorFrom({ event: "infoDelivery", info: 1 })).toBeNull();
+    expect(playerErrorFrom({ event: "onError", info: 999 })).toBeNull();
+    expect(playerErrorFrom("not json")).toBeNull();
   });
 });

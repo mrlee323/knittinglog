@@ -134,6 +134,14 @@ export interface ProjectLink extends Base {
   url: string;
   title?: string;
   note?: string;
+  /**
+   * 소유자가 다른 사이트에서의 재생을 막아둔 영상인지.
+   *
+   * 재생을 시도해봐야 알 수 있는 값이라, 한 번 확인하면 기억해둔다. 그러면
+   * 다음부터는 재생되지 않을 플레이어를 띄우는 대신 곧바로 "유튜브에서 열기"를
+   * 안내할 수 있다 — 같은 벽에 두 번 부딪히지 않게 한다.
+   */
+  embedBlocked?: boolean;
 }
 
 /** 푼 기록. 통계에서 "뜬 단수" 옆에 "푼 단수"로 보여준다. */
