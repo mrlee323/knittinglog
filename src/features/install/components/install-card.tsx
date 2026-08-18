@@ -23,6 +23,16 @@ export function InstallCard() {
           <Check size={16} />
           {t.install.installed}
         </p>
+      ) : state === "installed-elsewhere" ? (
+        <>
+          <p className="text-small flex items-center gap-1.5 font-medium">
+            <Check size={16} />
+            {t.install.alreadyInstalled}
+          </p>
+          <p className="text-text-2 text-small mt-1.5">
+            {t.install.openFromLauncher}
+          </p>
+        </>
       ) : state === "available" ? (
         <>
           <p className="text-text-2 text-small mb-3">{t.install.hint}</p>

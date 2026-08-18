@@ -57,18 +57,34 @@ export default defineConfig({
         orientation: "portrait",
         scope: BASE,
         start_url: BASE,
+        // 자기 자신을 선언해두면 브라우저 탭에서 navigator.getInstalledRelatedApps()
+        // 로 "이미 설치됐는지"를 알 수 있다. 이게 없으면 설치된 앱을 브라우저로
+        // 열었을 때 "이미 설치됨"과 "설치 불가"를 구분할 방법이 없다.
+        related_applications: [
+          { platform: "webapp", url: `${BASE}manifest.webmanifest` },
+        ],
         icons: [
           { src: `${BASE}icon-192.png`, sizes: "192x192", type: "image/png" },
           { src: `${BASE}icon-512.png`, sizes: "512x512", type: "image/png" },
           // maskable은 별도 파일이어야 한다. 안전영역(안쪽 80%) 밖은 잘리므로
           // 같은 이미지를 any/maskable로 겸용하면 런처에서 모티프가 잘린다.
+          //
+          // SVG는 여기 넣지 않는다. sizes:"any"가 붙은 SVG를 Chrome이 최적
+          // 아이콘으로 골라버리고, 안드로이드 WebAPK 생성 서버는 아이콘을
+          // 서버에서 래스터화해야 해서 거기서 실패한다 — "설치 중"에서
+          // 끝나지 않는 증상이 이걸로 난다. SVG는 favicon 자리에만 둔다.
+          {
+            src: `${BASE}icon-maskable-192.png`,
+            sizes: "192x192",
+            type: "image/png",
+            purpose: "maskable",
+          },
           {
             src: `${BASE}icon-maskable-512.png`,
             sizes: "512x512",
             type: "image/png",
             purpose: "maskable",
           },
-          { src: `${BASE}icon.svg`, sizes: "any", type: "image/svg+xml" },
         ],
       },
     }),
