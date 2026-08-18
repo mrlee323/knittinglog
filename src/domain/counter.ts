@@ -182,6 +182,69 @@ export function reconcileLinked(
 
 /* --- Lifeline ------------------------------------------------------------- */
 
+/* --- 구성 복제 ------------------------------------------------------------ */
+
+export interface CounterLayout {
+  id: string;
+  label: string;
+  sortOrder: number;
+  target?: number;
+  repeatLength?: number;
+  repeatTarget?: number;
+  linkedCounterId?: string;
+  linkRatio?: number;
+}
+
+/** 새 프로젝트에 그대로 만들 수 있는 카운터 설계도. 참조는 id가 아니라 순번이다. */
+export interface CounterBlueprint {
+  label: string;
+  target?: number;
+  repeatLength?: number;
+  repeatTarget?: number;
+  /** 따라갈 카운터의 배열 순번. 없으면 연동 없음. */
+  linkedIndex?: number;
+  linkRatio?: number;
+}
+
+/**
+ * 카운터 구성을 다른 프로젝트로 옮길 형태로 바꾼다.
+ *
+ * 같은 작품을 다른 실로 다시 뜰 때 쓴다(기획 §3.1 — 같은 옷을 두 번 뜨는 건
+ * 뜨개에서 흔한 일이다). id를 그대로 복사하면 새 카운터가 옛 프로젝트의
+ * 카운터를 따라가버리므로, 참조를 **배열 순번으로 바꿔서** 넘긴다. 저장
+ * 계층이 새 id를 만든 뒤 순번으로 다시 이어붙인다.
+ *
+ * 값(value)과 linkOffset은 옮기지 않는다. 새로 뜨는 것이므로 0단에서
+ * 시작하고, offset은 "도중에 연동을 붙였을 때의 보정"이라 처음부터 다시
+ * 뜨는 카운터에는 의미가 없다.
+ */
+export function counterBlueprints(
+  counters: CounterLayout[]
+): CounterBlueprint[] {
+  const ordered = [...counters].sort((a, b) => a.sortOrder - b.sortOrder);
+  const indexById = new Map(ordered.map((c, i) => [c.id, i]));
+
+  return ordered.map((counter) => {
+    const linkedIndex =
+      counter.linkedCounterId === undefined
+        ? undefined
+        : indexById.get(counter.linkedCounterId);
+
+    // 따라가던 카운터가 목록에 없으면(지워졌거나 다른 프로젝트) 연동을 버린다.
+    // 유령 참조를 옮기면 새 카운터가 영원히 0에 멈춘다.
+    const linked = linkedIndex !== undefined && counter.linkRatio;
+
+    return {
+      label: counter.label,
+      target: counter.target,
+      repeatLength: counter.repeatLength,
+      repeatTarget: counter.repeatTarget,
+      linkedIndex: linked ? linkedIndex : undefined,
+      linkRatio: linked ? counter.linkRatio : undefined,
+    };
+  });
+}
+
 /**
  * 현재 단수 기준으로 가장 가까운 아래쪽 생명줄을 찾는다.
  *

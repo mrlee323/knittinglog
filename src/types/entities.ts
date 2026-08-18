@@ -71,6 +71,14 @@ export interface Project extends Base {
    * 그 뒤로 사진을 더 올려도 그 장이 유지된다.
    */
   coverPinned?: boolean;
+  /**
+   * 이 프로젝트를 어느 작품에서 이어받았는지.
+   *
+   * 같은 옷을 다른 색으로 다시 뜨는 건 뜨개에서 흔한 일이고, 그때 필요한 건
+   * 지난번 치수다. 이 참조가 있으면 상세 화면에서 이전 작품의 사진·메모·
+   * 게이지로 한 번에 건너갈 수 있다.
+   */
+  derivedFromProjectId?: Id;
   patternId?: Id;
   gaugeId?: Id;
   notes?: string;
