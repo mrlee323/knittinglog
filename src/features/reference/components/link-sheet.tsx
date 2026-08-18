@@ -27,6 +27,10 @@ export function LinkSheet({
   const [title, setTitle] = useState(initial?.title ?? "");
   const [note, setNote] = useState(initial?.note ?? "");
   const [saving, setSaving] = useState(false);
+  // 미리보기에서 재생을 시도해봤을 때 임베드가 막힌 영상으로 드러나면
+  // 저장 전에 알려준다. 저장 자체는 막지 않는다 — 링크로서는 여전히 쓸모가
+  // 있고, 누르면 유튜브에서 열린다.
+  const [blocked, setBlocked] = useState(false);
 
   const parsed = parseYouTube(url);
   const touched = url.trim().length > 0;
@@ -73,7 +77,17 @@ export function LinkSheet({
 
         {parsed && (
           <div className="mb-4">
-            <VideoEmbed video={parsed} title={title || undefined} />
+            <VideoEmbed
+              video={parsed}
+              title={title || undefined}
+              blocked={blocked}
+              onBlocked={() => setBlocked(true)}
+            />
+            {blocked && (
+              <p className="text-hibernating text-caption mt-1.5">
+                {t.reference.embedBlocked}
+              </p>
+            )}
           </div>
         )}
 

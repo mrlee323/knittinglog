@@ -24,6 +24,8 @@ export interface ViewerItem {
   video?: YouTubeRef;
   title?: string;
   note?: string;
+  /** 앱 안에서 재생할 수 없는 영상 */
+  embedBlocked?: boolean;
 }
 
 export interface WorkbenchItems {
@@ -63,6 +65,7 @@ export function useWorkbenchItems(projectId: Id): WorkbenchItems {
                 video,
                 title: link.title,
                 note: link.note,
+                embedBlocked: link.embedBlocked,
               },
             ]
           : [];

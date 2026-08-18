@@ -40,4 +40,8 @@ export async function addLink(
 export const updateLink = (id: Id, values: LinkFormValues) =>
   db.projectLinks.update(id, touch(linkFormSchema.parse(values)));
 
+/** 재생해보고 알게 된 사실을 기억해둔다 — 다음부터는 시도하지 않는다 */
+export const markEmbedBlocked = (id: Id) =>
+  db.projectLinks.update(id, touch({ embedBlocked: true }));
+
 export const deleteLink = (id: Id) => db.projectLinks.delete(id);

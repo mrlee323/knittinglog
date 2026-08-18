@@ -322,6 +322,11 @@ export const en: UIStrings = {
     resume: "Play",
     openExternal: "Open on YouTube",
     offline: "Playing this needs an internet connection",
+    embedBlocked:
+      "The owner doesn't allow this video to play on other sites. You'll need to watch it on YouTube.",
+    unavailable: "This video isn't available — it may be private or deleted.",
+    playbackFailed: "The video wouldn't play. Try opening it on YouTube.",
+    onlyOnYouTube: "YouTube only",
     empty: "No references yet",
     emptyHint:
       "Collect the shape you're after, colour swatches and tutorial videos — they stay with the project",

@@ -4,6 +4,7 @@ import {
   ItemViewer,
 } from "@/features/reference/components/item-viewer";
 import { preferPattern, useWorkbenchItems } from "@/features/reference/items";
+import { markEmbedBlocked } from "@/features/reference/repository";
 import { useStrings } from "@/i18n";
 import { cn } from "@/lib/utils";
 import type { Id } from "@/types/entities";
@@ -44,7 +45,11 @@ export function KnitPanel({ projectId }: { projectId: Id }) {
     <div className="flex h-full flex-col">
       <div className="min-h-0 flex-1">
         {/* 자리 높이가 정해져 있으므로 뷰어에 100%를 준다 */}
-        <ItemViewer item={current} maxHeight="100%" />
+        <ItemViewer
+          item={current}
+          maxHeight="100%"
+          onEmbedBlocked={(id) => void markEmbedBlocked(id)}
+        />
       </div>
 
       {items.length > 1 && (

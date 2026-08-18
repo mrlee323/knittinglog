@@ -335,6 +335,11 @@ export const ko = {
     resume: "다시 재생",
     openExternal: "유튜브에서 열기",
     offline: "영상을 보려면 인터넷이 필요해요",
+    embedBlocked:
+      "이 영상은 소유자가 다른 사이트에서 재생할 수 없게 설정했어요. 유튜브에서 보셔야 해요.",
+    unavailable: "영상을 찾을 수 없어요. 비공개이거나 삭제된 것 같아요.",
+    playbackFailed: "영상을 재생하지 못했어요. 유튜브에서 열어보세요.",
+    onlyOnYouTube: "유튜브에서만",
     empty: "참고 자료가 없어요",
     emptyHint:
       "뜨고 싶은 모양, 배색 견본, 도안 영상을 모아두면 뜨는 동안 계속 꺼내 볼 수 있어요",

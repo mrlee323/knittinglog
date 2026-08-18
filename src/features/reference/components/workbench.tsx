@@ -14,7 +14,11 @@ import {
   type ViewerItem,
 } from "@/features/reference/items";
 import { LinkSheet } from "@/features/reference/components/link-sheet";
-import { addLink, deleteLink } from "@/features/reference/repository";
+import {
+  addLink,
+  deleteLink,
+  markEmbedBlocked,
+} from "@/features/reference/repository";
 import { useStrings } from "@/i18n";
 import { cn } from "@/lib/utils";
 import type { Id } from "@/types/entities";
@@ -339,7 +343,10 @@ function Slot({
         split && focused ? "border-accent" : "border-line"
       )}
     >
-      <ItemViewer item={item} />
+      <ItemViewer
+        item={item}
+        onEmbedBlocked={(id) => void markEmbedBlocked(id)}
+      />
     </div>
   );
 }
