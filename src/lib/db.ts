@@ -9,6 +9,7 @@
 import Dexie, { type EntityTable } from "dexie";
 import type {
   BodyProfile,
+  ColorChartRecord,
   Counter,
   CounterMark,
   CounterSession,
@@ -34,6 +35,7 @@ export class KnittinglogDB extends Dexie {
   projectLogs!: EntityTable<ProjectLog, "id">;
   froggingLogs!: EntityTable<FroggingLog, "id">;
   pauseEvents!: EntityTable<PauseEvent, "id">;
+  colorCharts!: EntityTable<ColorChartRecord, "id">;
 
   counters!: EntityTable<Counter, "id">;
   counterMarks!: EntityTable<CounterMark, "id">;
@@ -94,6 +96,12 @@ export class KnittinglogDB extends Dexie {
     // 평생 패턴(주로 무엇 때문에 멈추는가)은 사건을 따로 쌓아야 알 수 있다.
     this.version(4).stores({
       pauseEvents: "id, projectId, pausedAt, reason",
+    });
+
+    // v5 — 색상 차트. 목록을 최근 수정순으로 보여주므로 updatedAt에 인덱스가
+    // 필요하다(orderBy는 sortBy와 달리 인덱스를 요구한다).
+    this.version(5).stores({
+      colorCharts: "id, updatedAt, projectId",
     });
   }
 }

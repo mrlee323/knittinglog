@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useLiveQuery } from "dexie-react-hooks";
-import { Calculator, Plus, Ruler } from "lucide-react";
+import { Calculator, Grid2x2, Plus, Ruler } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ConfirmSheet } from "@/components/ui/confirm-sheet";
 import { CardGrid, Page } from "@/components/ui/page";
@@ -38,13 +38,24 @@ function GaugeIndex() {
         </Button>
       }
     >
-      {/* 계산기가 이 화면의 주된 목적지다. 스와치는 계산기의 입력일 뿐이다. */}
-      <Link to="/gauge/calc" className="mb-5 block">
-        <Button block variant="secondary">
-          <Calculator size={16} />
-          {t.gauge.calcTitle}
-        </Button>
-      </Link>
+      {/* 계산기가 이 화면의 주된 목적지다. 스와치는 계산기의 입력일 뿐이다.
+          문양도 여기 둔다 — "완성 모양 미리보기"가 게이지 없이는 성립하지
+          않으므로 게이지와 같은 자리에 있는 게 맞고, 하단 탭을 늘리지 않아도
+          된다. */}
+      <div className="mb-5 grid gap-2 sm:grid-cols-2">
+        <Link to="/gauge/calc">
+          <Button block variant="secondary">
+            <Calculator size={16} />
+            {t.gauge.calcTitle}
+          </Button>
+        </Link>
+        <Link to="/charts">
+          <Button block variant="secondary">
+            <Grid2x2 size={16} />
+            {t.chart.title}
+          </Button>
+        </Link>
+      </div>
 
       {gauges === undefined ? null : gauges.length === 0 ? (
         <div className="border-line rounded-md border border-dashed px-6 py-12 text-center">
