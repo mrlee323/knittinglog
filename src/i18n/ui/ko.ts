@@ -344,6 +344,54 @@ export const ko = {
    * 커뮤니티를 열지 않는 대신 내 작업을 이미지로 내보낸다. 공유는 우리가
    * 만들고 커뮤니티는 남의 플랫폼에 둔다.
    */
+  /**
+   * 백업 — 기획 §3.13의 P0 "데이터 내보내기 · 락인 없음".
+   *
+   * 계정이 없으므로 기기를 바꾸거나 브라우저 데이터를 지우면 기록이 사라진다.
+   * 이건 기능이 아니라 신뢰의 문제다.
+   */
+  backup: {
+    title: "백업",
+    hint: "계정이 없어서 기록은 이 기기에만 있어요. 파일로 내보내 두면 기기를 바꿔도 옮길 수 있어요.",
+    /* 내보내기 */
+    exportTitle: "내보내기",
+    exportAll: "사진까지 전부",
+    exportRecordsOnly: "기록만 (사진 없이)",
+    exportHint: "사진과 PDF가 용량의 거의 전부예요. 기록만 담으면 파일이 훨씬 작아요.",
+    exporting: "만드는 중…",
+    exported: "{n}개 기록을 내보냈어요 · {size}",
+    exportFailed: "내보내기에 실패했어요",
+    recordCount: "지금 {n}개 기록이 있어요",
+    /* 가져오기 */
+    importTitle: "가져오기",
+    importPick: "백업 파일 고르기",
+    importHint: "합치기는 이 기기에 있는 기록을 덮지 않아요. 덮어쓰기는 지금 것을 모두 지워요.",
+    modeMerge: "합치기",
+    modeReplace: "덮어쓰기",
+    reading: "읽는 중…",
+    importing: "넣는 중…",
+    imported: "{n}개를 넣었어요",
+    importedSkipped: "{n}개를 넣고 {skipped}개는 이미 있어서 건너뛰었어요",
+    importedNone: "넣을 새 기록이 없었어요",
+    notBackup: "knittinglog 백업 파일이 아니에요",
+    tooNew: "더 새 버전에서 만든 파일이에요. 앱을 새로고침한 뒤 다시 시도해 주세요.",
+    unknownTables: "이 앱이 모르는 항목 {tables}은(는) 넣지 않았어요",
+    replaceConfirm: "지금 기록을 모두 지우고 넣을까요?",
+    replaceConfirmBody: "이 기기의 기록 {n}개가 사라져요. 되돌릴 수 없어요.",
+    /* 저장 공간 */
+    storageTitle: "저장 공간",
+    storageUsed: "{used} 사용 중",
+    storageOf: "{used} / {quota}",
+    storageUnknown: "브라우저가 알려주지 않아요",
+    storageTight: "여유가 얼마 없어요. 사진을 정리하거나 백업해 두세요.",
+    storageFull: "거의 찼어요. 사진이 저장되지 않을 수 있어요.",
+    /* 영속성 — 이걸 못 받으면 브라우저가 데이터를 스스로 지울 수 있다 */
+    persistTitle: "데이터 보호",
+    persistOn: "브라우저가 이 기록을 함부로 지우지 않아요",
+    persistOff: "저장 공간이 부족할 때 브라우저가 이 기록을 지울 수 있어요",
+    persistAsk: "보호 요청하기",
+    persistDenied: "브라우저가 허락하지 않았어요. 앱을 설치하면 대개 허락돼요.",
+  },
   card: {
     open: "카드로 공유",
     title: "공유 카드",
@@ -582,6 +630,9 @@ export const ko = {
     history: "진행 기록",
     add: "기록 추가",
     saving: "저장 중",
+    /* 조용히 실패하면 사진이 올라간 줄 안다 */
+    quotaFull: "저장 공간이 부족해요. 설정에서 정리하거나 백업해 주세요.",
+    saveFailed: "저장하지 못했어요",
     empty: "사진이 없어요",
     emptyHint:
       "사진을 올리면 그때 단수와 날짜가 함께 남아요. 다시 꺼낼 때 어디까지 떴는지 바로 알 수 있어요.",

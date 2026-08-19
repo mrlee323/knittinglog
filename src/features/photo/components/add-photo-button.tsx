@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import { Camera, ImagePlus } from "lucide-react";
 import { addPhoto } from "@/features/photo/repository";
+import { isQuotaError } from "@/features/backup/storage";
 import { useStrings } from "@/i18n";
 import { cn } from "@/lib/utils";
 import type { Id, ProjectPhoto } from "@/types/entities";
@@ -31,9 +32,11 @@ export function AddPhotoButton({
   const t = useStrings();
   const input = useRef<HTMLInputElement>(null);
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string>();
 
   async function handleFiles(files: FileList) {
     setSaving(true);
+    setError(undefined);
     try {
       // 한 장씩 처리한다. 여러 장을 동시에 디코딩하면 저사양 기기에서
       // 메모리가 튀어 탭이 죽는다.
@@ -42,6 +45,9 @@ export function AddPhotoButton({
         ids.push(await addPhoto(projectId, file, kind));
       }
       if (ids.length === 1) onAdded?.(ids[0]);
+    } catch (cause) {
+      // 저장 공간이 부족해 실패한 것을 조용히 넘기면 사진이 올라간 줄 안다
+      setError(isQuotaError(cause) ? t.photo.quotaFull : t.photo.saveFailed);
     } finally {
       setSaving(false);
       // 같은 파일을 다시 고를 수 있게 비운다. 안 비우면 두 번째 선택에서
@@ -53,6 +59,7 @@ export function AddPhotoButton({
   const Icon = icon === "camera" ? Camera : ImagePlus;
 
   return (
+    <span className="inline-flex shrink-0 flex-col">
     <label
       className={cn(
         "text-small bg-sunken text-text inline-flex min-h-11 shrink-0 cursor-pointer items-center justify-center gap-2 rounded-md px-4 font-medium whitespace-nowrap transition",
@@ -75,5 +82,7 @@ export function AddPhotoButton({
         }}
       />
     </label>
+    {error && <span className="text-frogged text-caption mt-1">{error}</span>}
+    </span>
   );
 }

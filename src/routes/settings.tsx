@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useAtom } from "jotai";
 import { ChevronRight, Ruler } from "lucide-react";
 import { InstallCard } from "@/features/install/components/install-card";
+import { BackupCard } from "@/features/backup/components/backup-card";
 import { Page } from "@/components/ui/page";
 import { SegmentedControl } from "@/components/ui/segmented";
 import { themeAtom, type ThemeMode } from "@/app/theme";
@@ -26,6 +27,9 @@ function SettingsPage() {
   return (
     <Page title={t.nav.settings}>
       <InstallCard />
+
+      {/* 백업이 설정의 첫 자리다 — 계정이 없어서 이 기기가 유일한 사본이다 */}
+      <BackupCard />
 
       {/* 치수 프로필은 설정보다 데이터에 가깝지만 하단 탭을 늘리기엔 애매하다.
           계산기 안에서도 바로 고를 수 있으므로 입구는 여기 하나면 된다. */}
