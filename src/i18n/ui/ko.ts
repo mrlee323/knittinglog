@@ -234,6 +234,26 @@ export const ko = {
     deleteConfirm: "이 문양을 지울까요?",
     colorName: "{n}번 색",
   },
+  photoChart: {
+    open: "사진에서 옮기기",
+    title: "사진에서 문양 옮기기",
+    pick: "사진 고르기",
+    retake: "다른 사진",
+    /* 팔레트 출처 — 이게 이 기능의 갈림길이다 */
+    source: "색을 어디서 가져올까요",
+    fromPhoto: "사진에서 뽑기",
+    fromStash: "내 실 색으로",
+    /* 사진에서 뽑은 색은 살 수 없을 수도 있다 */
+    fromPhotoHint: "사진에 있는 색을 그대로 써요. 그 색 실이 없을 수도 있어요.",
+    fromStashHint: "스태시에 있는 실 색으로만 맞춰요. 바로 뜰 수 있어요.",
+    noStash: "스태시에 화면 색이 있는 실이 없어요",
+    colorCount: "색 개수",
+    size: "칸 수",
+    apply: "이 문양으로 바꾸기",
+    /* 되돌릴 수 없는 행동이라 미리 알린다 */
+    willReplace: "지금 그린 문양을 덮어써요",
+    preview: "미리 보기",
+  },
   calc: {
     myGauge: "내 게이지",
     pickGauge: "기록한 스와치에서 가져오기",
