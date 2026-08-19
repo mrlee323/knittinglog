@@ -197,6 +197,43 @@ export const ko = {
     calc: "계산기",
     calcTitle: "게이지 계산기",
   },
+  chart: {
+    title: "문양",
+    add: "문양 만들기",
+    name: "이름",
+    namePlaceholder: "눈송이 페어아일",
+    size: "크기",
+    widthLabel: "코수",
+    heightLabel: "단수",
+    /* 편집 격자와 미리보기의 차이가 이 기능의 핵심이다 */
+    editing: "격자",
+    editingHint: "칸을 끌어서 칠해요. 아래가 첫 단이에요.",
+    preview: "완성 모양",
+    /* 정사각 격자로 그리면 완성 모양이 실제와 다르다 */
+    previewHint:
+      "게이지 비율을 넣어 그린 거예요. 뜨개 코는 정사각형이 아니라서 격자와 모양이 달라요.",
+    needGauge: "게이지를 고르면 완성 모양을 볼 수 있어요",
+    gauge: "게이지",
+    gaugeNone: "고르지 않음",
+    finishedSize: "완성 {w} × {h}",
+    palette: "색",
+    addColor: "색 추가",
+    removeColor: "이 색 지우기",
+    mirror: "좌우 반전",
+    /* 색별 코수 — 실을 몇 타래 살지 가늠하는 근거 */
+    counts: "색별 코수",
+    countsValue: "{n}코",
+    /* 단별 읽기 */
+    readRow: "단별로 읽기",
+    readRowHint: "겉면 단은 오른쪽에서 왼쪽으로 읽어요",
+    rowLabel: "{n}단",
+    runOf: "{color} {n}코",
+    empty: "만든 문양이 없어요",
+    emptyHint:
+      "페어아일이나 인타르시아 무늬를 칸으로 그려두면 완성 모양까지 볼 수 있어요",
+    deleteConfirm: "이 문양을 지울까요?",
+    colorName: "{n}번 색",
+  },
   calc: {
     myGauge: "내 게이지",
     pickGauge: "기록한 스와치에서 가져오기",

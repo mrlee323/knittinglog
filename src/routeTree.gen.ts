@@ -16,11 +16,14 @@ import { Route as YarnIndexRouteImport } from './routes/yarn.index'
 import { Route as ProjectsIndexRouteImport } from './routes/projects.index'
 import { Route as ProfilesIndexRouteImport } from './routes/profiles.index'
 import { Route as GaugeIndexRouteImport } from './routes/gauge.index'
+import { Route as ChartsIndexRouteImport } from './routes/charts.index'
 import { Route as YarnNewRouteImport } from './routes/yarn.new'
 import { Route as ProjectsNewRouteImport } from './routes/projects.new'
 import { Route as ProfilesNewRouteImport } from './routes/profiles.new'
 import { Route as GaugeNewRouteImport } from './routes/gauge.new'
 import { Route as GaugeCalcRouteImport } from './routes/gauge.calc'
+import { Route as ChartsNewRouteImport } from './routes/charts.new'
+import { Route as ChartsChartIdRouteImport } from './routes/charts.$chartId'
 import { Route as YarnYarnIdIndexRouteImport } from './routes/yarn.$yarnId.index'
 import { Route as ProjectsProjectIdIndexRouteImport } from './routes/projects.$projectId.index'
 import { Route as YarnYarnIdEditRouteImport } from './routes/yarn.$yarnId.edit'
@@ -66,6 +69,11 @@ const GaugeIndexRoute = GaugeIndexRouteImport.update({
   path: '/gauge/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ChartsIndexRoute = ChartsIndexRouteImport.update({
+  id: '/charts/',
+  path: '/charts/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const YarnNewRoute = YarnNewRouteImport.update({
   id: '/yarn/new',
   path: '/yarn/new',
@@ -89,6 +97,16 @@ const GaugeNewRoute = GaugeNewRouteImport.update({
 const GaugeCalcRoute = GaugeCalcRouteImport.update({
   id: '/gauge/calc',
   path: '/gauge/calc',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ChartsNewRoute = ChartsNewRouteImport.update({
+  id: '/charts/new',
+  path: '/charts/new',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ChartsChartIdRoute = ChartsChartIdRouteImport.update({
+  id: '/charts/$chartId',
+  path: '/charts/$chartId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const YarnYarnIdIndexRoute = YarnYarnIdIndexRouteImport.update({
@@ -141,11 +159,14 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/settings': typeof SettingsRoute
   '/stats': typeof StatsRoute
+  '/charts/$chartId': typeof ChartsChartIdRoute
+  '/charts/new': typeof ChartsNewRoute
   '/gauge/calc': typeof GaugeCalcRoute
   '/gauge/new': typeof GaugeNewRoute
   '/profiles/new': typeof ProfilesNewRoute
   '/projects/new': typeof ProjectsNewRoute
   '/yarn/new': typeof YarnNewRoute
+  '/charts/': typeof ChartsIndexRoute
   '/gauge/': typeof GaugeIndexRoute
   '/profiles/': typeof ProfilesIndexRoute
   '/projects/': typeof ProjectsIndexRoute
@@ -164,11 +185,14 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/settings': typeof SettingsRoute
   '/stats': typeof StatsRoute
+  '/charts/$chartId': typeof ChartsChartIdRoute
+  '/charts/new': typeof ChartsNewRoute
   '/gauge/calc': typeof GaugeCalcRoute
   '/gauge/new': typeof GaugeNewRoute
   '/profiles/new': typeof ProfilesNewRoute
   '/projects/new': typeof ProjectsNewRoute
   '/yarn/new': typeof YarnNewRoute
+  '/charts': typeof ChartsIndexRoute
   '/gauge': typeof GaugeIndexRoute
   '/profiles': typeof ProfilesIndexRoute
   '/projects': typeof ProjectsIndexRoute
@@ -188,11 +212,14 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/settings': typeof SettingsRoute
   '/stats': typeof StatsRoute
+  '/charts/$chartId': typeof ChartsChartIdRoute
+  '/charts/new': typeof ChartsNewRoute
   '/gauge/calc': typeof GaugeCalcRoute
   '/gauge/new': typeof GaugeNewRoute
   '/profiles/new': typeof ProfilesNewRoute
   '/projects/new': typeof ProjectsNewRoute
   '/yarn/new': typeof YarnNewRoute
+  '/charts/': typeof ChartsIndexRoute
   '/gauge/': typeof GaugeIndexRoute
   '/profiles/': typeof ProfilesIndexRoute
   '/projects/': typeof ProjectsIndexRoute
@@ -213,11 +240,14 @@ export interface FileRouteTypes {
     | '/'
     | '/settings'
     | '/stats'
+    | '/charts/$chartId'
+    | '/charts/new'
     | '/gauge/calc'
     | '/gauge/new'
     | '/profiles/new'
     | '/projects/new'
     | '/yarn/new'
+    | '/charts/'
     | '/gauge/'
     | '/profiles/'
     | '/projects/'
@@ -236,11 +266,14 @@ export interface FileRouteTypes {
     | '/'
     | '/settings'
     | '/stats'
+    | '/charts/$chartId'
+    | '/charts/new'
     | '/gauge/calc'
     | '/gauge/new'
     | '/profiles/new'
     | '/projects/new'
     | '/yarn/new'
+    | '/charts'
     | '/gauge'
     | '/profiles'
     | '/projects'
@@ -259,11 +292,14 @@ export interface FileRouteTypes {
     | '/'
     | '/settings'
     | '/stats'
+    | '/charts/$chartId'
+    | '/charts/new'
     | '/gauge/calc'
     | '/gauge/new'
     | '/profiles/new'
     | '/projects/new'
     | '/yarn/new'
+    | '/charts/'
     | '/gauge/'
     | '/profiles/'
     | '/projects/'
@@ -283,11 +319,14 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   SettingsRoute: typeof SettingsRoute
   StatsRoute: typeof StatsRoute
+  ChartsChartIdRoute: typeof ChartsChartIdRoute
+  ChartsNewRoute: typeof ChartsNewRoute
   GaugeCalcRoute: typeof GaugeCalcRoute
   GaugeNewRoute: typeof GaugeNewRoute
   ProfilesNewRoute: typeof ProfilesNewRoute
   ProjectsNewRoute: typeof ProjectsNewRoute
   YarnNewRoute: typeof YarnNewRoute
+  ChartsIndexRoute: typeof ChartsIndexRoute
   GaugeIndexRoute: typeof GaugeIndexRoute
   ProfilesIndexRoute: typeof ProfilesIndexRoute
   ProjectsIndexRoute: typeof ProjectsIndexRoute
@@ -354,6 +393,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof GaugeIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/charts/': {
+      id: '/charts/'
+      path: '/charts'
+      fullPath: '/charts/'
+      preLoaderRoute: typeof ChartsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/yarn/new': {
       id: '/yarn/new'
       path: '/yarn/new'
@@ -387,6 +433,20 @@ declare module '@tanstack/react-router' {
       path: '/gauge/calc'
       fullPath: '/gauge/calc'
       preLoaderRoute: typeof GaugeCalcRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/charts/new': {
+      id: '/charts/new'
+      path: '/charts/new'
+      fullPath: '/charts/new'
+      preLoaderRoute: typeof ChartsNewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/charts/$chartId': {
+      id: '/charts/$chartId'
+      path: '/charts/$chartId'
+      fullPath: '/charts/$chartId'
+      preLoaderRoute: typeof ChartsChartIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/yarn/$yarnId/': {
@@ -459,11 +519,14 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   SettingsRoute: SettingsRoute,
   StatsRoute: StatsRoute,
+  ChartsChartIdRoute: ChartsChartIdRoute,
+  ChartsNewRoute: ChartsNewRoute,
   GaugeCalcRoute: GaugeCalcRoute,
   GaugeNewRoute: GaugeNewRoute,
   ProfilesNewRoute: ProfilesNewRoute,
   ProjectsNewRoute: ProjectsNewRoute,
   YarnNewRoute: YarnNewRoute,
+  ChartsIndexRoute: ChartsIndexRoute,
   GaugeIndexRoute: GaugeIndexRoute,
   ProfilesIndexRoute: ProfilesIndexRoute,
   ProjectsIndexRoute: ProjectsIndexRoute,

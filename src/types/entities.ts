@@ -172,6 +172,27 @@ export interface FroggingLog extends Base {
   reason?: string;
 }
 
+/**
+ * 색상 차트(픽셀 도안).
+ *
+ * 셀 배열의 행 순서와 좌표 규칙은 domain/colorChart.ts가 소유한다 —
+ * 뜨개는 아래에서 위로 뜨므로 y=0이 첫 단이다. 여기 저장 형태는 그 규칙을
+ * 그대로 담는 그릇이다.
+ *
+ * 게이지를 참조로 물린다. "완성 모양 미리보기"가 이 기능의 존재 이유이고,
+ * 그건 게이지 없이는 그릴 수 없다. 사본이 아니라 참조인 이유는 스와치를
+ * 다시 재면 미리보기도 따라 바뀌어야 하기 때문이다.
+ */
+export interface ColorChartRecord extends Base {
+  name: string;
+  width: number;
+  height: number;
+  palette: string[];
+  cells: number[];
+  gaugeId?: Id;
+  projectId?: Id;
+  notes?: string;
+}
 /* --- 카운터 --------------------------------------------------------------- */
 
 export interface Counter extends Base {
