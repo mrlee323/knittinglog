@@ -52,6 +52,10 @@ export default defineConfig({
       registerType: "autoUpdate",
       includeAssets: ["icon.svg", "apple-touch-icon.png"],
       workbox: {
+        // 공유 대상(POST) 처리를 Workbox 서비스워커 맨 위에 얹는다. Workbox는
+        // GET만 다루므로 리스너가 서로 부딪히지 않는다. 이 파일 없이는 공유가
+        // 서버로 나가는데, 우리에겐 서버가 없다.
+        importScripts: ["share-target.js"],
         // pdf.js(본체 ~420KB + 워커 ~1MB)는 프리캐시에서 뺀다. PDF 도안을
         // 넣지 않는 사람에게 설치할 때 받게 할 이유가 없다. 아래
         // runtimeCaching이 처음 쓸 때 받아 남긴다 — PDF를 읽으려면 먼저
@@ -105,6 +109,24 @@ export default defineConfig({
         theme_color: "#fbfaf9",
         background_color: "#fbfaf9",
         display: "standalone",
+        /**
+         * 공유 시트에 이 앱을 올린다 — 기획 §13.2.
+         *
+         * 핀터레스트·Threads의 저장 항목을 API로 읽는 길은 막혀 있어서, 대신
+         * 사용자가 보내주는 것을 받는다. 서버도 심사도 필요 없다.
+         * iOS Safari는 아직 지원하지 않아 붙여넣기 경로를 함께 둔다.
+         */
+        share_target: {
+          action: `${BASE}share`,
+          method: "POST",
+          enctype: "multipart/form-data",
+          params: {
+            title: "title",
+            text: "text",
+            url: "url",
+            files: [{ name: "images", accept: ["image/*"] }],
+          },
+        },
         orientation: "portrait",
         scope: BASE,
         start_url: BASE,

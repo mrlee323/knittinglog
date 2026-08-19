@@ -10,6 +10,7 @@ import Dexie, { type EntityTable } from "dexie";
 import type {
   BodyProfile,
   ColorChartRecord,
+  Inspiration,
   PatternDoc,
   StitchChartRecord,
   Counter,
@@ -36,6 +37,7 @@ export class KnittinglogDB extends Dexie {
   projectPhotos!: EntityTable<ProjectPhoto, "id">;
   projectLogs!: EntityTable<ProjectLog, "id">;
   patternDocs!: EntityTable<PatternDoc, "id">;
+  inspirations!: EntityTable<Inspiration, "id">;
   froggingLogs!: EntityTable<FroggingLog, "id">;
   pauseEvents!: EntityTable<PauseEvent, "id">;
   colorCharts!: EntityTable<ColorChartRecord, "id">;
@@ -116,6 +118,12 @@ export class KnittinglogDB extends Dexie {
     // v7 — PDF 도안. 프로젝트별로 붙으므로 projectId에 인덱스가 필요하다.
     this.version(7).stores({
       patternDocs: "id, updatedAt, projectId",
+    });
+
+    // v8 — 영감 보관함. projectId가 비어 있는 것이 정상 상태라(아직 안 붙인
+    // 영감) 인덱스로 그것만 골라낼 수 있어야 한다.
+    this.version(8).stores({
+      inspirations: "id, updatedAt, projectId",
     });
   }
 }

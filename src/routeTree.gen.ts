@@ -10,7 +10,9 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as StatsRouteImport } from './routes/stats'
+import { Route as ShareRouteImport } from './routes/share'
 import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as InspirationRouteImport } from './routes/inspiration'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as YarnIndexRouteImport } from './routes/yarn.index'
 import { Route as ProjectsIndexRouteImport } from './routes/projects.index'
@@ -42,9 +44,19 @@ const StatsRoute = StatsRouteImport.update({
   path: '/stats',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ShareRoute = ShareRouteImport.update({
+  id: '/share',
+  path: '/share',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InspirationRoute = InspirationRouteImport.update({
+  id: '/inspiration',
+  path: '/inspiration',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -175,7 +187,9 @@ const GaugeGaugeIdEditRoute = GaugeGaugeIdEditRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/inspiration': typeof InspirationRoute
   '/settings': typeof SettingsRoute
+  '/share': typeof ShareRoute
   '/stats': typeof StatsRoute
   '/charts/$chartId': typeof ChartsChartIdRoute
   '/charts/new': typeof ChartsNewRoute
@@ -204,7 +218,9 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/inspiration': typeof InspirationRoute
   '/settings': typeof SettingsRoute
+  '/share': typeof ShareRoute
   '/stats': typeof StatsRoute
   '/charts/$chartId': typeof ChartsChartIdRoute
   '/charts/new': typeof ChartsNewRoute
@@ -234,7 +250,9 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/inspiration': typeof InspirationRoute
   '/settings': typeof SettingsRoute
+  '/share': typeof ShareRoute
   '/stats': typeof StatsRoute
   '/charts/$chartId': typeof ChartsChartIdRoute
   '/charts/new': typeof ChartsNewRoute
@@ -265,7 +283,9 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/inspiration'
     | '/settings'
+    | '/share'
     | '/stats'
     | '/charts/$chartId'
     | '/charts/new'
@@ -294,7 +314,9 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/inspiration'
     | '/settings'
+    | '/share'
     | '/stats'
     | '/charts/$chartId'
     | '/charts/new'
@@ -323,7 +345,9 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/inspiration'
     | '/settings'
+    | '/share'
     | '/stats'
     | '/charts/$chartId'
     | '/charts/new'
@@ -353,7 +377,9 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  InspirationRoute: typeof InspirationRoute
   SettingsRoute: typeof SettingsRoute
+  ShareRoute: typeof ShareRoute
   StatsRoute: typeof StatsRoute
   ChartsChartIdRoute: typeof ChartsChartIdRoute
   ChartsNewRoute: typeof ChartsNewRoute
@@ -390,11 +416,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StatsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/share': {
+      id: '/share'
+      path: '/share'
+      fullPath: '/share'
+      preLoaderRoute: typeof ShareRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/settings': {
       id: '/settings'
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/inspiration': {
+      id: '/inspiration'
+      path: '/inspiration'
+      fullPath: '/inspiration'
+      preLoaderRoute: typeof InspirationRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -577,7 +617,9 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  InspirationRoute: InspirationRoute,
   SettingsRoute: SettingsRoute,
+  ShareRoute: ShareRoute,
   StatsRoute: StatsRoute,
   ChartsChartIdRoute: ChartsChartIdRoute,
   ChartsNewRoute: ChartsNewRoute,

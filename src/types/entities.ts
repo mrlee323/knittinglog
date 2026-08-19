@@ -395,6 +395,30 @@ export interface Needle extends Base {
   occupiedByProjectId?: Id;
 }
 
+/* --- 영감 보관함 ---------------------------------------------------------- */
+
+/**
+ * 모아둔 영감 — 기획 §13.2.
+ *
+ * 뜨기 전에 모으는 것들이다. 핀터레스트에서 본 무늬, 유튜브 영상, "다음엔
+ * 래글런으로" 같은 한 줄.
+ *
+ * **프로젝트가 없어도 존재한다.** 영감은 대개 프로젝트보다 먼저 오고, 어느
+ * 작품에 쓸지는 나중에 정해진다 — 그래서 `projectId`가 선택이고, 이 테이블이
+ * 보관함이 된다. 프로젝트를 지워도 영감은 보관함으로 돌아갈 뿐 사라지지 않는다.
+ */
+export interface Inspiration extends Base {
+  /** 이미지로 모은 것. 로컬 전용 동안에는 Blob. */
+  blob?: Blob;
+  remoteUrl?: string;
+  /** 영감의 출처 주소 */
+  sourceUrl?: string;
+  title?: string;
+  note?: string;
+  /** 어느 프로젝트에 붙였는지. 없으면 보관함에만 있다. */
+  projectId?: Id;
+}
+
 /* --- 도안 (P1) ------------------------------------------------------------ */
 
 export interface Pattern extends Base {
