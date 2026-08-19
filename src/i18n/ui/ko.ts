@@ -338,6 +338,32 @@ export const ko = {
    * 프로젝트가 없어도 존재한다. 영감은 대개 프로젝트보다 먼저 오고, 어느
    * 작품에 쓸지는 나중에 정해진다.
    */
+  /**
+   * 공유 카드 — 기획 §13.3.
+   *
+   * 커뮤니티를 열지 않는 대신 내 작업을 이미지로 내보낸다. 공유는 우리가
+   * 만들고 커뮤니티는 남의 플랫폼에 둔다.
+   */
+  card: {
+    open: "카드로 공유",
+    title: "공유 카드",
+    hint: "이 그림을 다른 앱으로 보낼 수 있어요. 카드는 늘 밝은 색으로 나와요.",
+    share: "공유하기",
+    downloadNote: "공유 시트가 없으면 이미지로 내려받아요",
+    failed: "카드를 만들지 못했어요",
+    /* 카드에 들어가는 값들 */
+    madeOn: "{date}",
+    projectRows: "뜬 단수",
+    projectDays: "함께한 날",
+    gaugeLabel: "게이지",
+    needleLabel: "바늘",
+    yarnLabel: "실",
+    sizeLabel: "완성 크기",
+    stitchesLabel: "코수",
+    rowsLabel: "단수",
+    repeatLabel: "무늬 반복",
+    motifSize: "{w}코 × {h}단 무늬",
+  },
   inspiration: {
     title: "영감 보관함",
     open: "영감 보관함",
@@ -658,6 +684,7 @@ export const ko = {
     edit: "수정",
     delete: "삭제",
     back: "뒤로",
+    close: "닫기",
   },
   install: {
     title: "앱으로 설치",
