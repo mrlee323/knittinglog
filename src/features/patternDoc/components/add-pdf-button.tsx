@@ -4,6 +4,7 @@ import {
   addPatternDoc,
   NotPdfError,
 } from "@/features/patternDoc/repository";
+import { isQuotaError } from "@/features/backup/storage";
 import { useStrings } from "@/i18n";
 import { cn } from "@/lib/utils";
 import type { Id } from "@/types/entities";
@@ -42,7 +43,11 @@ export function AddPdfButton({
       // 열 수 없는 파일은 넣는 순간 알려준다. 뜨려고 앉았을 때 알게 되면
       // 그때는 도안이 없는 셈이다.
       setError(
-        cause instanceof NotPdfError ? t.patternDoc.notPdf : t.patternDoc.failed
+        cause instanceof NotPdfError
+          ? t.patternDoc.notPdf
+          : isQuotaError(cause)
+            ? t.photo.quotaFull
+            : t.patternDoc.failed
       );
     } finally {
       setSaving(false);

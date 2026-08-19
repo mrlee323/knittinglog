@@ -97,6 +97,8 @@ export async function addPhoto(
     takenAt: new Date(),
     ...progress,
   });
+  // 쿼터를 넘기면 던진다. 잡아 넘기지 않고 올려보낸다 — 사진을 올린 줄 알고
+  // 넘어가는 것이 가장 나쁘다. 화면이 "저장 공간이 부족해요"로 바꿔 말한다.
   await db.projectPhotos.add(photo as ProjectPhoto);
 
   // 대표 사진은 진행 사진의 최신을 따라간다. 목록에서 알고 싶은 건 "지금
