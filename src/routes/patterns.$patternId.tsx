@@ -1,0 +1,426 @@
+import { useEffect, useState } from "react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useLiveQuery } from "dexie-react-hooks";
+import {
+  Check,
+  ChevronLeft,
+  FlipHorizontal2,
+  TriangleAlert,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { SelectField, TextField } from "@/components/ui/field";
+import { BackLink, Page } from "@/components/ui/page";
+import { SegmentedControl } from "@/components/ui/segmented";
+import {
+  SymbolCanvas,
+  SymbolSwatch,
+} from "@/features/stitchChart/components/symbol-canvas";
+import {
+  getStitchChart,
+  renameStitchChart,
+  saveStitchChart,
+  setStitchChartCastOn,
+  setStitchChartGauge,
+  toStitchChart,
+} from "@/features/stitchChart/repository";
+import { listGauges } from "@/features/gauge/repository";
+import {
+  cellAspect,
+  mirrorStitchChart,
+  opCounts,
+  opRuns,
+  resizeStitchChart,
+  setOp,
+  stitchChartSizeCm,
+  usedOps,
+  verifyChart,
+  type StitchChart,
+} from "@/domain/stitchChart";
+import { stitchOps } from "@/domain/stitches";
+import { formatRow, stitchLabel } from "@/i18n/stitches";
+import { useUnits } from "@/app/units";
+import {
+  LOCALE_NAMES,
+  LOCALES,
+  useLocale,
+  useStrings,
+  type Locale,
+} from "@/i18n";
+import { cn } from "@/lib/utils";
+import type { GaugeRecord, StitchChartRecord } from "@/types/entities";
+
+export const Route = createFileRoute("/patterns/$patternId")({
+  component: PatternEditor,
+});
+
+/** 심볼은 색과 달리 형태를 읽어야 하므로 편집 격자를 색상 차트보다 크게 둔다 */
+const EDIT_CELL = 26;
+const PREVIEW_CELL = 12;
+const SAVE_DELAY = 400;
+
+function PatternEditor() {
+  const { patternId } = Route.useParams();
+  const record = useLiveQuery(() => getStitchChart(patternId), [patternId]);
+  const gauges = useLiveQuery(() => listGauges(), []);
+
+  if (!record) return null;
+  // record.id로 키를 걸어 마운트할 때만 상태를 씨딩한다. DB가 바뀔 때마다
+  // 로컬 상태를 덮어쓰면 저장이 늦게 도착할 때 방금 찍은 칸이 되돌아간다.
+  return <Editor key={record.id} record={record} gauges={gauges ?? []} />;
+}
+
+function Editor({
+  record,
+  gauges,
+}: {
+  record: StitchChartRecord;
+  gauges: GaugeRecord[];
+}) {
+  const t = useStrings();
+  const units = useUnits();
+  const locale = useLocale();
+  const navigate = useNavigate();
+  const chartId = record.id;
+
+  const [chart, setChart] = useState<StitchChart>(() => toStitchChart(record));
+  const [name, setName] = useState(record.name);
+  // 기본 선택은 안뜨기다. 겉뜨기는 격자의 바탕이라 그걸 골라두면 처음
+  // 드래그했을 때 아무 일도 일어나지 않는다(빈 칸에 빈 칸을 찍는 셈).
+  const [op, setSelectedOp] = useState("purl");
+  const [castOn, setCastOnText] = useState(
+    record.castOn === undefined ? "" : String(record.castOn)
+  );
+  // 서술형은 앱 언어와 따로 고른다 — 한국어로 쓰면서 영문 도안을 뽑는 것이
+  // 이 기능의 목적이다(기획 §4).
+  const [proseLocale, setProseLocale] = useState<Locale>(locale);
+
+  useEffect(() => {
+    const timer = setTimeout(
+      () => void saveStitchChart(chartId, chart),
+      SAVE_DELAY
+    );
+    return () => clearTimeout(timer);
+  }, [chart, chartId]);
+
+  useEffect(() => {
+    if (name === record.name) return;
+    const timer = setTimeout(
+      () => void renameStitchChart(chartId, name),
+      SAVE_DELAY
+    );
+    return () => clearTimeout(timer);
+  }, [name, record.name, chartId]);
+
+  const gauge = gauges.find((g) => g.id === record.gaugeId);
+  const gaugeValues = gauge
+    ? {
+        stitchesPer10cm: gauge.blockedStitchesPer10cm ?? gauge.stitchesPer10cm,
+        rowsPer10cm: gauge.blockedRowsPer10cm ?? gauge.rowsPer10cm,
+      }
+    : null;
+
+  const aspect = gaugeValues ? cellAspect(gaugeValues) : 1;
+  const size = gaugeValues ? stitchChartSizeCm(chart, gaugeValues) : null;
+  const balance = verifyChart(chart, record.castOn);
+  const badRows = balance.rows.filter((r) => !r.ok).map((r) => r.row - 1);
+  const counts = opCounts(chart);
+  const legend = usedOps(chart);
+
+  const resize = (width: number, height: number) => {
+    if (width < 1 || height < 1) return;
+    setChart(
+      resizeStitchChart(chart, Math.min(120, width), Math.min(200, height))
+    );
+  };
+
+  const commitCastOn = (text: string) => {
+    setCastOnText(text);
+    const n = Number(text);
+    void setStitchChartCastOn(
+      chartId,
+      text.trim() === "" || !Number.isFinite(n) || n < 1
+        ? undefined
+        : Math.floor(n)
+    );
+  };
+
+  return (
+    <Page
+      wide
+      title={name || record.name}
+      back={
+        <Link to="/patterns">
+          <BackLink>
+            <ChevronLeft size={16} />
+            {t.pattern.title}
+          </BackLink>
+        </Link>
+      }
+    >
+      {/* 기법 고르기 — 배색 도안의 팔레트에 해당한다 */}
+      <section className="mb-5">
+        <h2 className="text-micro text-text-3 mb-1">{t.pattern.stitches}</h2>
+        <p className="text-text-3 text-caption mb-2">
+          {t.pattern.stitchesHint}
+        </p>
+        <div className="flex flex-wrap gap-1.5">
+          {stitchOps("knit").map((candidate) => (
+            <button
+              key={candidate}
+              type="button"
+              aria-pressed={op === candidate}
+              // 버튼에 보이는 건 축약형이라 소리로 들으면 모호하다
+              // ("1코2단"). 전개형을 이름으로 준다.
+              aria-label={stitchLabel(candidate, locale, "long")}
+              onClick={() => setSelectedOp(candidate)}
+              className={cn(
+                "flex items-center gap-1.5 rounded-sm px-2 py-1.5 ring-1 transition ring-inset",
+                op === candidate
+                  ? "ring-accent bg-sunken outline-accent outline-2 outline-offset-1"
+                  : "ring-line hover:bg-sunken"
+              )}
+            >
+              {/* 겉뜨기는 빈 칸이라 심볼만으로는 고를 수 없다 — 이름을 함께
+                  보여주는 이유이자, 범례가 필요한 이유이기도 하다 */}
+              <span className="border-line rounded-xs border">
+                <SymbolSwatch op={candidate} size={22} />
+              </span>
+              <span className="text-caption">
+                {stitchLabel(candidate, locale, "short")}
+              </span>
+            </button>
+          ))}
+        </div>
+      </section>
+
+      {/* 크기·반전 */}
+      <section className="mb-5">
+        <div className="flex flex-wrap items-end gap-3">
+          <div className="w-24">
+            <TextField
+              label={t.pattern.widthLabel}
+              className="mb-0"
+              inputMode="numeric"
+              value={chart.width}
+              onChange={(e) =>
+                resize(Number(e.target.value) || 1, chart.height)
+              }
+            />
+          </div>
+          <div className="w-24">
+            <TextField
+              label={t.pattern.heightLabel}
+              className="mb-0"
+              inputMode="numeric"
+              value={chart.height}
+              onChange={(e) => resize(chart.width, Number(e.target.value) || 1)}
+            />
+          </div>
+          <div>
+            <Button
+              variant="secondary"
+              onClick={() => setChart(mirrorStitchChart(chart))}
+            >
+              <FlipHorizontal2 size={16} />
+              {t.pattern.mirror}
+            </Button>
+          </div>
+        </div>
+        {/* 색에는 기울기가 없어서 배색 도안에는 없던 설명이다 */}
+        <p className="text-text-3 text-caption mt-2">{t.pattern.mirrorHint}</p>
+      </section>
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        <section>
+          <h2 className="text-micro text-text-3 mb-1">{t.pattern.editing}</h2>
+          <p className="text-text-3 text-caption mb-2">
+            {t.pattern.editingHint}
+          </p>
+          <div className="border-line overflow-auto rounded-md border p-2">
+            <SymbolCanvas
+              chart={chart}
+              cellWidth={EDIT_CELL}
+              cellHeight={EDIT_CELL}
+              badRows={badRows}
+              // 함수형 갱신을 쓴다. 클로저의 chart를 읽으면 같은 tick에 여러
+              // 포인터 이벤트가 오갈 때 앞서 찍은 칸이 덮여 사라진다.
+              onPaint={(x, y) => setChart((prev) => setOp(prev, x, y, op))}
+            />
+          </div>
+        </section>
+
+        <section>
+          <h2 className="text-micro text-text-3 mb-1">{t.pattern.preview}</h2>
+          <p className="text-text-3 text-caption mb-2">
+            {gaugeValues ? t.pattern.previewHint : t.pattern.needGauge}
+          </p>
+
+          <SelectField
+            label={t.pattern.gauge}
+            value={record.gaugeId ?? ""}
+            onChange={(e) =>
+              void setStitchChartGauge(chartId, e.target.value || undefined)
+            }
+            options={[
+              { value: "", label: t.pattern.gaugeNone },
+              ...gauges.map((g) => ({
+                value: g.id,
+                label:
+                  g.label ??
+                  t.gauge.summary
+                    .replace("{sts}", String(g.stitchesPer10cm))
+                    .replace("{rows}", String(g.rowsPer10cm)),
+              })),
+            ]}
+          />
+
+          {gaugeValues && (
+            <>
+              <div className="border-line bg-surface overflow-auto rounded-md border p-3">
+                <SymbolCanvas
+                  chart={chart}
+                  cellWidth={PREVIEW_CELL * aspect}
+                  cellHeight={PREVIEW_CELL}
+                  grid={false}
+                />
+              </div>
+              {size && (
+                <p className="text-text-2 text-small mt-2">
+                  {t.pattern.finishedSize
+                    .replace("{w}", units.formatLength(size.width, 1))
+                    .replace("{h}", units.formatLength(size.height, 1))}
+                </p>
+              )}
+            </>
+          )}
+        </section>
+      </div>
+
+      {/* 코수 검산 — 도안을 구조로 저장하는 가장 실용적인 이유(기획 §4).
+          손으로 세다 놓치면 몇 시간 뜬 뒤에 알게 된다. */}
+      <section className="mt-6">
+        <h2 className="text-micro text-text-3 mb-1">{t.pattern.verify}</h2>
+        <p className="text-text-3 text-caption mb-2">{t.pattern.verifyHint}</p>
+
+        <div className="max-w-40">
+          <TextField
+            label={t.pattern.castOn}
+            inputMode="numeric"
+            value={castOn}
+            onChange={(e) => commitCastOn(e.target.value)}
+          />
+        </div>
+        <p className="text-text-3 text-caption -mt-2 mb-3">
+          {t.pattern.castOnHint}
+        </p>
+
+        {balance.ok ? (
+          <p className="text-finished text-small flex items-center gap-1.5">
+            <Check size={15} className="shrink-0" />
+            {t.pattern.verifyOk
+              .replace("{start}", String(balance.castOn))
+              .replace("{end}", String(balance.finalCount))}
+          </p>
+        ) : (
+          <div>
+            <p className="text-frogged text-small mb-2 flex items-center gap-1.5">
+              <TriangleAlert size={15} className="shrink-0" />
+              {t.pattern.verifyBad.replace("{n}", String(badRows.length))}
+            </p>
+            <ul className="text-small space-y-1">
+              {balance.rows
+                .filter((r) => !r.ok)
+                .map((r) => (
+                  <li key={r.row} className="text-text-2">
+                    {t.pattern.verifyRow
+                      .replace("{row}", String(r.row))
+                      .replace("{expected}", String(r.expected))
+                      .replace("{consumes}", String(r.consumes))}
+                  </li>
+                ))}
+            </ul>
+          </div>
+        )}
+      </section>
+
+      {/* 서술형 도안 — 같은 구조에서 두 언어가 나온다. 한↔영 도안 변환의
+          출발점이고, 기계번역이 아니라 결정적 기호 변환이다(기획 §4). */}
+      <section className="mt-6">
+        <h2 className="text-micro text-text-3 mb-1">{t.pattern.prose}</h2>
+        <p className="text-text-3 text-caption mb-1">{t.pattern.proseHint}</p>
+        <p className="text-text-3 text-caption mb-3">
+          {t.pattern.proseFlatNote}
+        </p>
+
+        <SegmentedControl<Locale>
+          className="max-w-xs"
+          label={t.pattern.proseLocale}
+          value={proseLocale}
+          onChange={setProseLocale}
+          options={LOCALES.map((code) => ({
+            value: code,
+            label: LOCALE_NAMES[code],
+          }))}
+        />
+
+        {/* 위 단부터 읽지 않는다 — 도안은 1단부터 뜨므로 아래에서 위로 적는다 */}
+        <ol className="text-small space-y-1">
+          {Array.from({ length: chart.height }, (_, y) => (
+            <li key={y} className="flex gap-2">
+              <span className="text-text-3 w-12 shrink-0 tabular-nums">
+                {t.pattern.rowLabel.replace("{n}", String(y + 1))}
+              </span>
+              <span className="min-w-0">
+                {formatRow(opRuns(chart, y), proseLocale)}
+              </span>
+            </li>
+          ))}
+        </ol>
+      </section>
+
+      {/* 범례 — 겉뜨기가 빈 칸이고 심볼에 이름이 없으므로 도안에 반드시 붙는다 */}
+      <section className="mt-6">
+        <h2 className="text-micro text-text-3 mb-1">{t.pattern.legend}</h2>
+        <p className="text-text-3 text-caption mb-2">{t.pattern.legendHint}</p>
+        <ul className="grid gap-2 sm:grid-cols-2">
+          {legend.map((code) => (
+            <li
+              key={code}
+              className="border-line bg-surface flex items-center gap-2 rounded-md border px-3 py-2"
+            >
+              <span className="border-line shrink-0 rounded-xs border">
+                <SymbolSwatch op={code} size={24} />
+              </span>
+              <span className="text-small min-w-0">
+                {stitchLabel(code, locale, "long")}
+              </span>
+              <span className="text-text-3 text-caption ml-auto shrink-0">
+                {t.pattern.countsValue.replace(
+                  "{n}",
+                  String(counts[code] ?? 0)
+                )}
+              </span>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <div className="border-line mt-6 flex items-center gap-2 border-t pt-4">
+        <div className="min-w-0 flex-1">
+          <TextField
+            label={t.pattern.name}
+            className="mb-0"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
+        </div>
+        <Button
+          variant="secondary"
+          onClick={() => navigate({ to: "/patterns" })}
+        >
+          {t.action.back}
+        </Button>
+      </div>
+    </Page>
+  );
+}

@@ -3,49 +3,19 @@ import { useAtom } from "jotai";
 import { ChevronRight, Ruler } from "lucide-react";
 import { InstallCard } from "@/features/install/components/install-card";
 import { Page } from "@/components/ui/page";
+import { SegmentedControl } from "@/components/ui/segmented";
 import { themeAtom, type ThemeMode } from "@/app/theme";
 import { unitSystemAtom } from "@/app/preferences";
-import { localeAtom, useStrings, type Locale } from "@/i18n";
+import {
+  LOCALE_NAMES,
+  LOCALES,
+  localeAtom,
+  useStrings,
+  type Locale,
+} from "@/i18n";
 import type { UnitSystem } from "@/domain/units";
-import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/settings")({ component: SettingsPage });
-
-function SegmentedControl<T extends string>({
-  label,
-  value,
-  options,
-  onChange,
-}: {
-  label: string;
-  value: T;
-  options: { value: T; label: string }[];
-  onChange: (value: T) => void;
-}) {
-  return (
-    <section className="mb-5">
-      <h2 className="text-text-2 text-small mb-2 font-medium">{label}</h2>
-      <div className="bg-sunken flex gap-1 rounded-md p-1">
-        {options.map((option) => (
-          <button
-            key={option.value}
-            type="button"
-            onClick={() => onChange(option.value)}
-            aria-pressed={value === option.value}
-            className={cn(
-              "text-small flex-1 rounded-md py-2 transition-colors",
-              value === option.value
-                ? "bg-accent text-on-accent font-semibold"
-                : "text-text-2"
-            )}
-          >
-            {option.label}
-          </button>
-        ))}
-      </div>
-    </section>
-  );
-}
 
 function SettingsPage() {
   const t = useStrings();
@@ -74,10 +44,10 @@ function SettingsPage() {
         label={t.settings.language}
         value={locale}
         onChange={setLocale}
-        options={[
-          { value: "ko", label: "한국어" },
-          { value: "en", label: "English" },
-        ]}
+        options={LOCALES.map((code) => ({
+          value: code,
+          label: LOCALE_NAMES[code],
+        }))}
       />
 
       <SegmentedControl<ThemeMode>
