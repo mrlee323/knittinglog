@@ -233,6 +233,47 @@ export const ko = {
     finished: "완성 치수 {n}",
     flatPiece: "앞뒤로 나눠 뜨면 조각당 {n}",
   },
+  /** 크기를 아는 물체. 규격이 정해져 있어서 지갑만 있으면 된다.
+      참고 자료(reference)와 이름이 겹치지 않게 refObject로 둔다. */
+  refObject: {
+    "card-long": "카드 긴 변 (85.6mm)",
+    "card-short": "카드 짧은 변 (54mm)",
+    "coin-500": "500원 지름 (26.5mm)",
+    "coin-100": "100원 지름 (24mm)",
+    custom: "자로 직접 (길이 입력)",
+  },
+  photoGauge: {
+    title: "사진으로 재기",
+    open: "사진으로 재기",
+    /* 자동 인식이 아니라는 걸 처음부터 말한다 */
+    intro: "코는 직접 세고, 길이는 사진이 재요",
+    pick: "스와치 사진 고르기",
+    retake: "다른 사진",
+    /* 1단계 — 기준 물체 */
+    step1: "1. 크기를 아는 물체의 양 끝을 탭하세요",
+    step1Hint: "카드나 동전을 스와치 옆에 놓고 함께 찍으면 돼요",
+    refKind: "무엇을 놓았나요",
+    refCustom: "두 점 사이 길이 (mm)",
+    /* 2단계 — 편물 구간 */
+    step2: "2. 편물에서 센 구간의 양 끝을 탭하세요",
+    step2Hint: "많이 셀수록 정확해져요",
+    countLabel: "그 구간의 코수",
+    countLabelRows: "그 구간의 단수",
+    /* 결과 */
+    measuring: "가로(코수)",
+    measuringRows: "세로(단수)",
+    spanIs: "{n}mm 구간",
+    result: "10cm당 {n}코",
+    resultRows: "10cm당 {n}단",
+    tolerance: "± {n}",
+    /* 오차가 크면 알려준다. 문장보다 숫자가 줄어드는 걸 보여주는 게 빠르다. */
+    tooRough: "오차가 커요. 더 많은 코를 세거나 기준 물체를 길게 잡아보세요.",
+    reset: "점 다시 찍기",
+    apply: "이 값으로 기록",
+    needBoth: "가로와 세로를 모두 재면 기록할 수 있어요",
+    ref: "기준",
+    span: "구간",
+  },
   profile: {
     title: "치수 프로필",
     add: "프로필 추가",

@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from "react";
+import { Camera } from "lucide-react";
 import { useLiveQuery } from "dexie-react-hooks";
 import { Button } from "@/components/ui/button";
 import { SelectField, TextField } from "@/components/ui/field";
@@ -7,6 +8,7 @@ import {
   type GaugeFormValues,
 } from "@/features/gauge/repository";
 import { listYarns } from "@/features/yarn/repository";
+import { PhotoMeasure } from "./photo-measure";
 import { useStrings } from "@/i18n";
 
 const EMPTY: GaugeFormValues = { stitchesPer10cm: 22, rowsPer10cm: 30 };
@@ -29,6 +31,7 @@ export function GaugeForm({
   const [values, setValues] = useState<GaugeFormValues>(initial ?? EMPTY);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
+  const [measuring, setMeasuring] = useState(false);
 
   const set = <K extends keyof GaugeFormValues>(
     key: K,
@@ -64,6 +67,36 @@ export function GaugeForm({
         autoFocus
         onChange={(e) => set("label", e.target.value.trim() || undefined)}
       />
+
+      {/* 사진으로 재기. 자를 대고 눈으로 세는 대신 사진에서 재면 코수를
+          더 넓게 잡을 수 있고, 그게 정확도를 좌우한다(기획 §13.2). */}
+      {measuring ? (
+        <div className="border-line mb-4 rounded-md border p-3">
+          <PhotoMeasure
+            onApply={({ stitchesPer10cm, rowsPer10cm }) => {
+              set("stitchesPer10cm", stitchesPer10cm);
+              set("rowsPer10cm", rowsPer10cm);
+              setMeasuring(false);
+            }}
+          />
+          <Button
+            variant="ghost"
+            className="mt-2"
+            onClick={() => setMeasuring(false)}
+          >
+            {t.action.cancel}
+          </Button>
+        </div>
+      ) : (
+        <Button
+          variant="secondary"
+          className="mb-4"
+          onClick={() => setMeasuring(true)}
+        >
+          <Camera size={16} />
+          {t.photoGauge.open}
+        </Button>
+      )}
 
       {/* 게이지는 10cm 기준으로만 받는다. 인치권 4인치 기준과 섞으면
           값이 미묘하게 틀어지므로 단위계 토글을 여기 적용하지 않는다. */}
