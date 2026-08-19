@@ -298,6 +298,29 @@ export const ko = {
       "무늬를 기호로 그려두면 코수가 맞는지 자동으로 검산하고, 한국어·영문 서술형 도안으로 바꿔줘요",
     deleteConfirm: "이 도안을 지울까요?",
   },
+  /**
+   * PDF 도안.
+   *
+   * 상용 도안은 대개 PDF로 온다. 이미지 도안과 같은 자리에 쓰이지만 페이지와
+   * 읽던 자리가 붙는다.
+   */
+  patternDoc: {
+    add: "PDF 도안",
+    title: "PDF 도안",
+    pageOf: "{page}/{total}",
+    prevPage: "이전 장",
+    nextPage: "다음 장",
+    pages: "{n}쪽",
+    /* 넣을 때 한 번 읽어보므로 열 수 없는 파일은 여기서 걸린다 */
+    notPdf: "PDF 파일만 넣을 수 있어요",
+    failed: "이 PDF를 열 수 없어요. 암호가 걸렸거나 파일이 손상됐을 수 있어요.",
+    adding: "읽는 중…",
+    /* 처음 넣을 때만 받는다는 것을 알려둔다 — 오프라인에서 왜 되는지의 근거 */
+    firstUseNote:
+      "PDF를 읽는 데 필요한 파일을 처음 한 번만 받아요. 그 뒤로는 오프라인에서도 열려요.",
+    resumed: "{page}쪽에서 이어봐요",
+    deleteConfirm: "이 PDF 도안을 지울까요?",
+  },
   photoChart: {
     open: "사진에서 옮기기",
     title: "사진에서 문양 옮기기",
@@ -509,6 +532,7 @@ export const ko = {
   },
   workbench: {
     all: "전체",
+    pdf: "PDF",
     pattern: "도안",
     reference: "참고",
     video: "영상",
