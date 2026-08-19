@@ -332,6 +332,44 @@ export const ko = {
    * 상용 도안은 대개 PDF로 온다. 이미지 도안과 같은 자리에 쓰이지만 페이지와
    * 읽던 자리가 붙는다.
    */
+  /**
+   * 영감 보관함 — 뜨기 전에 모으는 것들.
+   *
+   * 프로젝트가 없어도 존재한다. 영감은 대개 프로젝트보다 먼저 오고, 어느
+   * 작품에 쓸지는 나중에 정해진다.
+   */
+  inspiration: {
+    title: "영감 보관함",
+    open: "영감 보관함",
+    empty: "모아둔 영감이 없어요",
+    emptyHint:
+      "핀터레스트나 인스타에서 본 무늬, 영상, 떠오른 한 줄을 여기 모아두면 새 작품을 시작할 때 꺼내 볼 수 있어요",
+    /* 공유 시트가 이 기능의 주된 입구다 */
+    shareHint:
+      "다른 앱에서 공유하기를 눌러 knittinglog를 고르면 여기로 들어와요.",
+    iosNote: "iOS는 아직 공유 시트를 지원하지 않아요. 주소를 붙여넣어 주세요.",
+    addLink: "주소 붙여넣기",
+    addImage: "이미지 고르기",
+    urlLabel: "주소",
+    urlPlaceholder: "https://…",
+    titleLabel: "제목",
+    noteLabel: "메모",
+    save: "보관함에 넣기",
+    /* 아직 안 붙인 것이 기본 상태다 */
+    forProject: "어느 작품에",
+    unassigned: "아직 안 정함",
+    filterAll: "전체",
+    filterUnassigned: "안 정한 것",
+    count: "{n}개",
+    received: "{n}개를 보관함에 넣었어요",
+    receivedNone: "받은 내용이 없어요",
+    receiving: "받는 중…",
+    openExternal: "원래 자리에서 열기",
+    deleteConfirm: "이 영감을 지울까요?",
+    /* 프로젝트 상세의 무드보드 */
+    projectSection: "이 작품의 영감",
+    projectEmpty: "이 작품에 붙인 영감이 없어요",
+  },
   patternDoc: {
     add: "PDF 도안",
     title: "PDF 도안",

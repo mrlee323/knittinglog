@@ -213,6 +213,7 @@ export async function deleteProject(id: Id) {
       db.projectPhotos,
       db.projectLogs,
       db.patternDocs,
+      db.inspirations,
       db.froggingLogs,
       db.pauseEvents,
       db.counters,
@@ -235,6 +236,12 @@ export async function deleteProject(id: Id) {
       await db.pauseEvents.where("projectId").equals(id).delete();
       // PDF 도안은 용량이 크다 — 남겨두면 지운 프로젝트가 저장 공간을 계속 쥔다
       await db.patternDocs.where("projectId").equals(id).delete();
+      // 영감은 지우지 않고 보관함으로 돌려보낸다. 프로젝트를 접었다고 그
+      // 아이디어가 없어지는 건 아니고, 대개 다음 작품에서 다시 꺼낸다.
+      await db.inspirations
+        .where("projectId")
+        .equals(id)
+        .modify({ projectId: undefined, updatedAt: new Date() });
       await db.projects.delete(id);
     }
   );

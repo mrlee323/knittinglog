@@ -5,6 +5,7 @@ import { Page } from "@/components/ui/page";
 import { ProjectTabs } from "@/features/project/components/project-tabs";
 import { getProject } from "@/features/project/repository";
 import { Workbench } from "@/features/reference/components/workbench";
+import { ProjectInspiration } from "@/features/inspiration/components/project-inspiration";
 import { useStrings } from "@/i18n";
 
 export const Route = createFileRoute("/projects/$projectId/refs")({
@@ -30,6 +31,8 @@ function ProjectWorkbench() {
 
       <ProjectTabs projectId={projectId} />
       <Workbench projectId={projectId} />
+      {/* 뜨기 전에 모은 것은 작업대 트레이가 아니라 아래에 따로 둔다 */}
+      <ProjectInspiration projectId={projectId} />
     </Page>
   );
 }
