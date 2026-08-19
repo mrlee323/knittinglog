@@ -7,6 +7,12 @@ import { ConfirmSheet } from "@/components/ui/confirm-sheet";
 import { Columns, Page } from "@/components/ui/page";
 import { PauseSheet } from "@/features/project/components/pause-sheet";
 import { StatusBadge } from "@/features/project/components/status-badge";
+import { ShareCardButton } from "@/features/card/components/share-card-button";
+import { listCounters } from "@/features/counter/repository";
+import { getGauge } from "@/features/gauge/repository";
+import { yarnsForProject } from "@/features/yarn/repository";
+import { aggregateSessions } from "@/domain/stats";
+import { db } from "@/lib/db";
 import { DerivedFrom } from "@/features/project/components/derived-from";
 import { ProgressCard } from "@/features/project/components/progress-card";
 import { ProjectTabs } from "@/features/project/components/project-tabs";
@@ -72,6 +78,9 @@ function ProjectOverview() {
 
   // 도안과 참고 이미지는 작업대에서 나란히 놓고 보는 한 묶음이다
   const material = [...(patterns ?? []), ...(references ?? [])];
+  // 카드에 넣을 대표 사진 — 목록 카드와 같은 장이어야 한다
+  const cover =
+    photos?.find((photo) => photo.id === project.coverPhotoId) ?? photos?.[0];
 
   async function handleEvent(type: ProjectEventType) {
     if (type === "PAUSE") {
@@ -99,7 +108,79 @@ function ProjectOverview() {
     <Page
       wide
       title={project.name}
-      action={<StatusBadge status={project.status} />}
+      action={
+        <div className="flex items-center gap-2">
+          {/* 완성한 작품을 보여주는 것이 카드의 첫 쓸모다. 진행 중에도
+              "여기까지 떴다"를 내보낼 수 있게 상태를 가리지 않는다. */}
+          <ShareCardButton
+            build={async () => {
+              const [sessions, counters, gauge, yarns] = await Promise.all([
+                db.counterSessions.where("projectId").equals(projectId).toArray(),
+                listCounters(projectId),
+                project.gaugeId ? getGauge(project.gaugeId) : undefined,
+                yarnsForProject(projectId),
+              ]);
+              const worked = aggregateSessions(sessions);
+              // 세션 기록이 없던 시절의 프로젝트도 있으므로 카운터 값으로 받친다
+              const rows =
+                worked.rows > 0
+                  ? worked.rows
+                  : counters.reduce((sum, c) => Math.max(sum, c.value), 0);
+              const since = project.startedAt ?? project.createdAt;
+              const days =
+                Math.floor(
+                  (Date.now() - since.getTime()) / (1000 * 60 * 60 * 24)
+                ) + 1;
+
+              return {
+                title: project.name,
+                subtitle: [t.status[project.status], t.category[project.category]]
+                  .filter(Boolean)
+                  .join(" · "),
+                image: cover?.blob,
+                facts: [
+                  { label: t.card.projectRows, value: String(rows) },
+                  { label: t.card.projectDays, value: String(days) },
+                  ...(gauge
+                    ? [
+                        {
+                          label: t.card.gaugeLabel,
+                          // 블로킹 후 값이 있으면 그쪽이다. 남이 옮겨 쓸 값은
+                          // 완성품의 게이지이고, 문양 카드도 같은 기준을 쓴다.
+                          value: t.gauge.summary
+                            .replace(
+                              "{sts}",
+                              String(
+                                gauge.blockedStitchesPer10cm ??
+                                  gauge.stitchesPer10cm
+                              )
+                            )
+                            .replace(
+                              "{rows}",
+                              String(
+                                gauge.blockedRowsPer10cm ?? gauge.rowsPer10cm
+                              )
+                            ),
+                        },
+                      ]
+                    : []),
+                  ...(yarns.length > 0
+                    ? [
+                        {
+                          label: t.card.yarnLabel,
+                          value: yarns.map((y) => y.name).join(", "),
+                        },
+                      ]
+                    : []),
+                ],
+                note: project.notes,
+                footer: formatDate(since),
+              };
+            }}
+          />
+          <StatusBadge status={project.status} />
+        </div>
+      }
     >
       <Link
         to="/projects"

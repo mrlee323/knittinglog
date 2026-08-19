@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { SelectField, TextField } from "@/components/ui/field";
 import { BackLink, Page } from "@/components/ui/page";
 import { SegmentedControl } from "@/components/ui/segmented";
+import { ShareCardButton } from "@/features/card/components/share-card-button";
 import {
   SymbolCanvas,
   SymbolSwatch,
@@ -42,6 +43,7 @@ import {
 } from "@/domain/stitchChart";
 import type { Construction } from "@/domain/construction";
 import { chartOps } from "@/domain/stitches";
+import { paintStitchChart } from "@/features/stitchChart/paint";
 import {
   DEFAULT_SELVEDGE,
   equivalentTotal,
@@ -149,6 +151,28 @@ function Editor({
   const badRows = balance.rows.filter((r) => !r.ok).map((r) => r.row - 1);
   const counts = opCounts(chart);
   const legend = usedOps(chart);
+
+  /**
+   * 카드에 넣을 격자 그림.
+   *
+   * 화면과 같은 `paintStitchChart`를 쓴다 — 카드가 화면과 다른 그림을 내보내면
+   * 공유한 뒤에야 그걸 알게 된다. 색은 카드가 늘 밝으므로 종이 색을 넘긴다.
+   */
+  const chartImage = () => {
+    const canvas = document.createElement("canvas");
+    // 카드 그림 자리가 936×702이므로 그보다 크게 그려 축소되게 둔다
+    const cell = Math.max(
+      12,
+      Math.min(64, Math.floor(900 / Math.max(chart.width, chart.height)))
+    );
+    paintStitchChart(canvas, {
+      chart,
+      cellWidth: cell,
+      cellHeight: cell,
+      colors: { ink: "#1b1a18", muted: "#d8d5d0" },
+    });
+    return canvas;
+  };
 
   const resize = (width: number, height: number) => {
     if (width < 1 || height < 1) return;
@@ -525,6 +549,43 @@ function Editor({
             onChange={(e) => setName(e.target.value)}
           />
         </div>
+        <ShareCardButton
+          build={() => ({
+            title: name || record.name,
+            subtitle: t.card.motifSize
+              .replace("{w}", String(chart.width))
+              .replace("{h}", String(chart.height)),
+            image: chartImage(),
+            // 차트는 자르면 무늬가 달라진다
+            containImage: true,
+            facts: [
+              { label: t.card.stitchesLabel, value: String(chart.width) },
+              { label: t.card.rowsLabel, value: String(chart.height) },
+              ...(size
+                ? [
+                    {
+                      label: t.card.sizeLabel,
+                      value: `${units.formatLength(size.width, 1)} × ${units.formatLength(size.height, 1)}`,
+                    },
+                  ]
+                : []),
+              ...(gaugeValues
+                ? [
+                    {
+                      label: t.card.gaugeLabel,
+                      value: t.gauge.summary
+                        .replace("{sts}", String(gaugeValues.stitchesPer10cm))
+                        .replace("{rows}", String(gaugeValues.rowsPer10cm)),
+                    },
+                  ]
+                : []),
+            ],
+            // 범례가 없으면 남이 이 카드를 읽을 수 없다 — 겉뜨기는 빈 칸이다
+            note: legend
+              .map((code) => stitchLabel(code, locale, "long"))
+              .join(" · "),
+          })}
+        />
         <Button
           variant="secondary"
           onClick={() => navigate({ to: "/patterns" })}
