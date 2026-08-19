@@ -101,7 +101,7 @@ function PatternCard({
   const chart = toStitchChart(record);
   // 심볼은 색과 달리 작으면 못 읽는다. 최소 크기를 색상 차트보다 높게 잡는다.
   const cell = Math.max(7, Math.min(14, Math.floor(220 / record.width)));
-  const balance = verifyChart(chart, record.castOn);
+  const balance = verifyChart(chart);
 
   return (
     <div className="border-line bg-surface flex flex-col gap-2 rounded-md border p-3">

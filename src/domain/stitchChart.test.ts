@@ -204,7 +204,7 @@ describe("코수 검산", () => {
     const c = createStitchChart(10, 3);
     const b = verifyChart(c);
     expect(b.ok).toBe(true);
-    expect(b.castOn).toBe(10);
+    expect(b.startStitches).toBe(10);
     expect(b.finalCount).toBe(10);
   });
 
@@ -223,7 +223,7 @@ describe("코수 검산", () => {
     const c = chartFromRows([["knit", "knit", "knit", "yo"]]);
     // 4칸 중 yo는 전단 코를 먹지 않으므로 3코를 먹고 4코를 낸다
     const b = verifyChart(c);
-    expect(b.castOn).toBe(3);
+    expect(b.startStitches).toBe(3);
     expect(b.finalCount).toBe(4);
   });
 
@@ -247,43 +247,37 @@ describe("코수 검산", () => {
       ["k2tog", "knit", "k2tog", "none", "none"],
     ]);
     const b = verifyChart(c);
-    expect(b.castOn).toBe(5);
+    expect(b.startStitches).toBe(5);
     expect(b.rows[0]).toMatchObject({ consumes: 5, produces: 3, ok: true });
     expect(b.rows[1]).toMatchObject({ consumes: 3, produces: 3, ok: true });
     expect(b.ok).toBe(true);
   });
 
-  it("시작 코수를 주지 않으면 1단을 기준으로 삼는다", () => {
+  it("1단은 늘 기준이 된다 — 무늬 1회 안쪽만 보므로", () => {
     // 그리는 중인 차트에 "1단이 틀렸다"고 말하는 건 도움이 안 된다
     const c = createStitchChart(7, 1);
     expect(verifyChart(c).rows[0].ok).toBe(true);
+    expect(verifyChart(c).startStitches).toBe(7);
   });
 
-  it("실제 시작 코수를 주면 1단도 검사한다", () => {
+  it("실제 시작 코수는 검산의 관심사가 아니다", () => {
+    // 격자는 대개 무늬 한 번이다. 7코 무늬에 60코를 들이대면 "60코가 있어야
+    // 하는데 7코를 쓴다"는 틀린 경고가 난다. 그 질문은 construction이 맡는다.
     const c = createStitchChart(7, 1);
-    const b = verifyChart(c, 60);
-    expect(b.rows[0]).toMatchObject({ expected: 60, consumes: 7, ok: false });
-    expect(b.ok).toBe(false);
-  });
-
-  it("반복 무늬는 시작 코수가 배수로 맞아야 한다", () => {
-    // 7코 무늬를 60코에 얹으면 맞지 않는다 (60 / 7 = 8.57)
-    const c = createStitchChart(7, 1);
-    expect(verifyChart(c, 63).ok).toBe(false); // 검산은 반복을 모른다
-    expect(verifyChart(c, 7).ok).toBe(true);
+    expect(verifyChart(c).ok).toBe(true);
   });
 
   it("늘림도 코수에 반영된다", () => {
     const c = chartFromRows([["knit", "m1l", "knit", "m1r", "knit"]]);
     const b = verifyChart(c);
-    expect(b.castOn).toBe(3);
+    expect(b.startStitches).toBe(3);
     expect(b.finalCount).toBe(5);
   });
 
   it("한 코에 두 코 뜨기는 먹는 코보다 내는 코가 많다", () => {
     const c = chartFromRows([["kfb", "knit"]]);
     const b = verifyChart(c);
-    expect(b.castOn).toBe(2);
+    expect(b.startStitches).toBe(2);
     expect(b.finalCount).toBe(3);
   });
 
