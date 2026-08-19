@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useLiveQuery } from "dexie-react-hooks";
-import { ChevronLeft, FlipHorizontal2, Plus } from "lucide-react";
+import { ChevronLeft, FlipHorizontal2, ImagePlus, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SelectField, TextField } from "@/components/ui/field";
 import { BackLink, Page } from "@/components/ui/page";
 import { ChartCanvas } from "@/features/chart/components/chart-canvas";
+import { PhotoToChart } from "@/features/chart/components/photo-to-chart";
 import {
   getChart,
   renameChart,
@@ -79,6 +80,7 @@ function Editor({
   // 기본 선택은 1번 색이다. 0번은 배경이라 그걸 골라두면 새 문양을 열고
   // 처음 드래그했을 때 아무 일도 일어나지 않는다.
   const [color, setColor] = useState(() => (record.palette.length > 1 ? 1 : 0));
+  const [fromPhoto, setFromPhoto] = useState(false);
   const [row, setRow] = useState(0);
 
   useEffect(() => {
@@ -171,6 +173,40 @@ function Editor({
           </Button>
         </div>
       </section>
+
+      {/* 사진에서 옮기기 — 칸을 하나씩 칠하는 대신 사진을 통째로 옮긴다.
+          팔레트를 스태시 색으로 고정할 수 있는 게 이 기능의 요점이다. */}
+      {fromPhoto ? (
+        <section className="border-line mb-5 rounded-md border p-3">
+          <h2 className="text-micro text-text-3 mb-2">{t.photoChart.title}</h2>
+          <PhotoToChart
+            width={chart.width}
+            height={chart.height}
+            // 사진 쪽에서 칸 수를 바꿀 수 있으므로 차트를 통째로 갈아끼운다.
+            // palette·cells만 받으면 width×height와 cells.length가 어긋난다.
+            onApply={(next) => {
+              setChart(next);
+              setFromPhoto(false);
+            }}
+          />
+          <Button
+            variant="ghost"
+            className="mt-2"
+            onClick={() => setFromPhoto(false)}
+          >
+            {t.action.cancel}
+          </Button>
+        </section>
+      ) : (
+        <Button
+          variant="secondary"
+          className="mb-5"
+          onClick={() => setFromPhoto(true)}
+        >
+          <ImagePlus size={16} />
+          {t.photoChart.open}
+        </Button>
+      )}
 
       {/* 크기·반전 */}
       <section className="mb-5">
