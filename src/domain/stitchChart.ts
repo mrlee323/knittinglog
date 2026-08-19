@@ -16,7 +16,7 @@
  * 행 순서 규약은 색상 차트와 같다 — `y = 0`이 첫 단(맨 아래)이다.
  */
 
-import { mirrorOp, stitchDelta } from "./stitches";
+import { mirrorOp, stitchDelta, workedOnWs } from "./stitches";
 export type { ChartGauge } from "./colorChart";
 export { cellAspect } from "./colorChart";
 
@@ -92,21 +92,60 @@ export function mirrorStitchChart(chart: StitchChart): StitchChart {
   return { ...chart, ops };
 }
 
+/** 이 단을 어느 면에서 뜨는가. 겉면(rs) · 안면(ws). */
+export type Side = "rs" | "ws";
+
 /**
- * 한 단을 읽는 순서로 늘어놓는다.
+ * 도안을 어떻게 뜨는가.
+ *
+ * 원형 뜨기는 뒤집지 않으므로 모든 단이 겉면이다. 평면 뜨기는 매 단 뒤집어서
+ * 겉·안면이 번갈아 나온다. 1단을 어느 면에서 시작하는지는 도안마다 다르다
+ * (대개 겉면이지만, 안면부터 시작하는 도안도 있다).
+ */
+export interface Reading {
+  flat: boolean;
+  firstSide: Side;
+}
+
+/** 원형 뜨기 — 모든 단이 겉면이다 */
+export const IN_ROUND: Reading = { flat: false, firstSide: "rs" };
+
+export const other = (side: Side): Side => (side === "rs" ? "ws" : "rs");
+
+/**
+ * y단(0부터)을 어느 면에서 뜨는지.
+ *
+ * 원형이면 뒤집는 일이 없으므로 항상 겉면이다.
+ */
+export function rowSide(y: number, reading: Reading = IN_ROUND): Side {
+  if (!reading.flat) return "rs";
+  return y % 2 === 0 ? reading.firstSide : other(reading.firstSide);
+}
+
+/**
+ * 한 단을 읽는 순서로 늘어놓는다. 기호를 그대로 돌려준다(기법 변환 없음).
  *
  * 겉면 단은 오른쪽에서 왼쪽으로 뜬다. 차트는 완성된 천의 모습으로 그려지므로
- * 읽는 순서는 그리는 순서와 반대다.
+ * 읽는 순서는 그리는 순서와 반대다. 안면 단은 뒤집어서 뜨므로 왼쪽에서
+ * 오른쪽이다 — 방향은 면이 정하는 사실이라 따로 받는 값이 아니다.
  */
 export function rowOps(
   chart: StitchChart,
   y: number,
-  rightToLeft = true
+  side: Side = "rs"
 ): string[] {
   if (y < 0 || y >= chart.height) return [];
   const row: string[] = [];
   for (let x = 0; x < chart.width; x += 1) row.push(getOp(chart, x, y));
-  return rightToLeft ? row.reverse() : row;
+  return side === "rs" ? row.reverse() : row;
+}
+
+/** 그린 순서 그대로. 격자를 들여다볼 때 쓴다(뜨는 순서가 아니다). */
+export function drawnRow(chart: StitchChart, y: number): string[] {
+  if (y < 0 || y >= chart.height) return [];
+  const row: string[] = [];
+  for (let x = 0; x < chart.width; x += 1) row.push(getOp(chart, x, y));
+  return row;
 }
 
 export interface OpRun {
@@ -123,11 +162,14 @@ export interface OpRun {
 export function opRuns(
   chart: StitchChart,
   y: number,
-  rightToLeft = true
+  side: Side = "rs"
 ): OpRun[] {
   const runs: OpRun[] = [];
-  for (const op of rowOps(chart, y, rightToLeft)) {
-    if (op === "none") continue;
+  for (const symbol of rowOps(chart, y, side)) {
+    if (symbol === "none") continue;
+    // 안면 단에서는 그려진 기호를 그대로 뜨지 않는다 — 도안은 겉에서 본
+    // 모습이므로, 겉뜨기 기호는 안뜨기로 떠야 겉에서 겉뜨기로 보인다.
+    const op = side === "ws" ? workedOnWs(symbol) : symbol;
     const last = runs[runs.length - 1];
     if (last && last.op === op) last.count += 1;
     else runs.push({ op, count: 1 });

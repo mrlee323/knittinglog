@@ -1,18 +1,22 @@
 import { describe, expect, it } from "vitest";
 import { formatRow, formatRun, hasStitchLabel } from "@/i18n/stitches";
-import { mirrorOp, stitchDelta, stitchOps } from "./stitches";
+import { chartOps, findStitch, mirrorOp, stitchDelta, stitchOps } from "./stitches";
 import {
   createStitchChart,
+  drawnRow,
   getOp,
+  IN_ROUND,
   mirrorStitchChart,
   opCounts,
   opRuns,
   resizeStitchChart,
   rowOps,
+  rowSide,
   setOp,
   stitchChartSizeCm,
   usedOps,
   verifyChart,
+  type Reading,
   type StitchChart,
 } from "./stitchChart";
 
@@ -115,15 +119,21 @@ describe("단 읽기", () => {
   it("겉면 단은 오른쪽에서 왼쪽으로 읽는다", () => {
     const c = chartFromRows([["knit", "purl", "purl"]]);
     // 그림 순서는 겉·안·안, 읽는 순서는 안·안·겉
+    expect(drawnRow(c, 0)).toEqual(["knit", "purl", "purl"]);
     expect(rowOps(c, 0)).toEqual(["purl", "purl", "knit"]);
-    expect(rowOps(c, 0, false)).toEqual(["knit", "purl", "purl"]);
+  });
+
+  it("안면 단은 왼쪽에서 오른쪽으로 읽는다 — 뒤집어서 뜨므로", () => {
+    const c = chartFromRows([["knit", "purl", "purl"]]);
+    expect(rowOps(c, 0, "ws")).toEqual(["knit", "purl", "purl"]);
   });
 
   it("같은 기법을 묶는다", () => {
     const c = chartFromRows([["knit", "knit", "knit", "purl", "purl"]]);
-    expect(opRuns(c, 0, false)).toEqual([
-      { op: "knit", count: 3 },
+    // 읽는 순서(오른쪽부터)로 묶이므로 안뜨기가 먼저 나온다
+    expect(opRuns(c, 0)).toEqual([
       { op: "purl", count: 2 },
+      { op: "knit", count: 3 },
     ]);
   });
 
@@ -152,13 +162,13 @@ describe("좌우 반전", () => {
     // 격자만 뒤집으면 기울기가 반대인 무늬가 나온다
     const c = chartFromRows([["k2tog", "knit", "knit", "ssk"]]);
     const m = mirrorStitchChart(c);
-    expect(rowOps(m, 0, false)).toEqual(["k2tog", "knit", "knit", "ssk"]);
+    expect(drawnRow(m, 0)).toEqual(["k2tog", "knit", "knit", "ssk"]);
   });
 
   it("위치가 실제로 뒤집힌다", () => {
     const c = chartFromRows([["yo", "knit", "knit", "knit"]]);
     const m = mirrorStitchChart(c);
-    expect(rowOps(m, 0, false)).toEqual(["knit", "knit", "knit", "yo"]);
+    expect(drawnRow(m, 0)).toEqual(["knit", "knit", "knit", "yo"]);
   });
 
   it("두 번 반전하면 원본으로 돌아온다", () => {
@@ -283,6 +293,62 @@ describe("코수 검산", () => {
   });
 });
 
+describe("평면 · 원형", () => {
+  it("원형은 모든 단이 겉면이다 — 뒤집는 일이 없으므로", () => {
+    for (const y of [0, 1, 2, 7]) expect(rowSide(y, IN_ROUND)).toBe("rs");
+  });
+
+  it("기본값은 원형이다", () => {
+    expect(rowSide(1)).toBe("rs");
+  });
+
+  it("평면은 겉·안면이 번갈아 나온다", () => {
+    const flat: Reading = { flat: true, firstSide: "rs" };
+    expect([0, 1, 2, 3].map((y) => rowSide(y, flat))).toEqual([
+      "rs",
+      "ws",
+      "rs",
+      "ws",
+    ]);
+  });
+
+  it("안면부터 시작하는 도안도 있다", () => {
+    const flat: Reading = { flat: true, firstSide: "ws" };
+    expect([0, 1, 2].map((y) => rowSide(y, flat))).toEqual(["ws", "rs", "ws"]);
+  });
+
+  it("도안에 그릴 수 있는 기법에는 안면 전용이 섞이지 않는다", () => {
+    // 도안은 겉에서 본 모습이므로 안면 기법이 격자에 들어갈 자리가 없다
+    expect(chartOps("knit")).toContain("k2tog");
+    expect(chartOps("knit")).not.toContain("p2tog");
+  });
+
+  it("그릴 수 있는 모든 기법에 안면 대응이 정해져 있다", () => {
+    // 새 기호를 더할 때 안면 동작을 정하지 않으면 여기서 걸린다.
+    // 정하지 않으면 평면 서술형이 조용히 겉면 기법을 내보낸다.
+    for (const op of chartOps("knit")) {
+      expect(findStitch(op)?.ws, op).toBeDefined();
+    }
+  });
+
+  it("안면 대응은 코수가 기호와 같다", () => {
+    // 안면에서 뜨는 방법이 다를 뿐 먹고 내는 코수는 같다. 여기가 어긋나면
+    // 평면 도안의 코수 검산이 조용히 틀린 값을 낸다.
+    for (const op of chartOps("knit")) {
+      const def = findStitch(op);
+      expect(stitchDelta(def!.ws!), op).toEqual(def!.delta);
+    }
+  });
+
+  it("코수 검산은 뜨는 방식과 무관하다 — 코수는 면을 가리지 않는다", () => {
+    const c = chartFromRows([
+      ["knit", "yo", "k2tog", "knit"],
+      ["knit", "knit", "knit", "knit"],
+    ]);
+    expect(verifyChart(c).ok).toBe(true);
+  });
+});
+
 describe("집계", () => {
   it("기법마다 몇 칸인지 센다", () => {
     const c = chartFromRows([
@@ -348,6 +414,33 @@ describe("서술형 변환 (한 ↔ 영)", () => {
   it("전부 코 없음인 단은 빈 문장이다", () => {
     const c = chartFromRows([["none", "none"]]);
     expect(formatRow(opRuns(c, 0), "ko")).toBe("");
+  });
+
+  it("평면 뜨기 안면 단은 방향과 기법이 함께 바뀐다", () => {
+    // 레이스 1단을 안면에서 뜨면: 왼쪽부터 읽고, 기호마다 안면 기법으로 바꾼다
+    const c = chartFromRows([
+      ["knit", "yo", "ssk", "knit", "knit", "knit", "k2tog", "yo", "knit"],
+    ]);
+    expect(formatRow(opRuns(c, 0, "rs"), "en")).toBe("k1, yo, k2tog, k3, ssk, yo, k1");
+    expect(formatRow(opRuns(c, 0, "ws"), "en")).toBe("p1, yo, ssp, p3, p2tog, yo, p1");
+  });
+
+  it("안면 단에서 기울기가 뒤바뀌지 않는다", () => {
+    // 겉면 오른코모아(k2tog)는 안면에서 p2tog다. ssp로 나오면 완성품의
+    // 기울기가 반대가 되는데, delta가 같아서 코수 검산으로는 잡히지 않는다.
+    const c = chartFromRows([["k2tog", "ssk"]]);
+    // 읽는 순서: 안면은 왼쪽부터이므로 k2tog가 먼저다
+    expect(opRuns(c, 0, "ws")).toEqual([
+      { op: "p2tog", count: 1 },
+      { op: "ssp", count: 1 },
+    ]);
+  });
+
+  it("전부 겉뜨기 기호인 도안을 평면으로 뜨면 겉·안이 번갈아 나온다", () => {
+    // 메리야스가 평면에서 만들어지는 방식이다
+    const c = createStitchChart(6, 2);
+    expect(formatRow(opRuns(c, 0, "rs"), "ko")).toBe("겉 6코");
+    expect(formatRow(opRuns(c, 1, "ws"), "ko")).toBe("안 6코");
   });
 
   it("두 언어 모두 모든 기법에 이름이 있다", () => {
