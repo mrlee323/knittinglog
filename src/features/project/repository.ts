@@ -212,6 +212,7 @@ export async function deleteProject(id: Id) {
       db.projectLinks,
       db.projectPhotos,
       db.projectLogs,
+      db.patternDocs,
       db.froggingLogs,
       db.pauseEvents,
       db.counters,
@@ -232,6 +233,8 @@ export async function deleteProject(id: Id) {
       await db.projectLogs.where("projectId").equals(id).delete();
       await db.froggingLogs.where("projectId").equals(id).delete();
       await db.pauseEvents.where("projectId").equals(id).delete();
+      // PDF 도안은 용량이 크다 — 남겨두면 지운 프로젝트가 저장 공간을 계속 쥔다
+      await db.patternDocs.where("projectId").equals(id).delete();
       await db.projects.delete(id);
     }
   );

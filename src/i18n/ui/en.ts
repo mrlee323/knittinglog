@@ -277,6 +277,21 @@ export const en: UIStrings = {
       "Chart a motif in symbols to have the stitch counts checked automatically and turned into a written pattern in Korean or English",
     deleteConfirm: "Delete this chart?",
   },
+  patternDoc: {
+    add: "PDF pattern",
+    title: "PDF pattern",
+    pageOf: "{page}/{total}",
+    prevPage: "Previous page",
+    nextPage: "Next page",
+    pages: "{n} pages",
+    notPdf: "Only PDF files can be added",
+    failed: "This PDF can't be opened — it may be password protected or damaged.",
+    adding: "Reading…",
+    firstUseNote:
+      "The PDF reader downloads once on first use. After that it works offline.",
+    resumed: "Picking up on page {page}",
+    deleteConfirm: "Delete this PDF pattern?",
+  },
   photoChart: {
     open: "From a photo",
     title: "Turn a photo into a chart",
@@ -471,6 +486,7 @@ export const en: UIStrings = {
   },
   workbench: {
     all: "All",
+    pdf: "PDF",
     pattern: "Pattern",
     reference: "Reference",
     video: "Video",

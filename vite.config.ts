@@ -1,9 +1,11 @@
 import { defineConfig } from "vitest/config";
 import { fileURLToPath, URL } from "node:url";
+import { cpSync } from "node:fs";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import { tanstackRouter } from "@tanstack/router-plugin/vite";
 import { VitePWA } from "vite-plugin-pwa";
+import type { PluginOption } from "vite";
 
 /**
  * GitHub Pages는 프로젝트 사이트를 /<repo>/ 아래에 얹는다.
@@ -14,9 +16,35 @@ import { VitePWA } from "vite-plugin-pwa";
  */
 const BASE = "/knittinglog/";
 
+/**
+ * pdf.js가 필요할 때 받아가는 정적 자료를 빌드에 넣는다.
+ *
+ * 표준 14폰트(Helvetica·Times 등)는 PDF에 내장되지 않는 경우가 많고, 그때
+ * pdf.js는 폰트 데이터를 따로 받는다. 없으면 시스템 서체로 어림잡아 대체되어
+ * 자간·줄바꿈이 원본과 달라진다. cmaps는 CJK 인코딩용이다.
+ *
+ * node_modules 내용이므로 저장소에 커밋하지 않고 빌드·개발 시작 때 복사한다.
+ * pdf.js가 필요한 파일만 골라 받으므로(폰트 하나 ~50KB) 전부 얹혀 있어도
+ * 실제로 오가는 양은 작다. 프리캐시에서는 빼둔다.
+ */
+function pdfjsAssets(): PluginOption {
+  const at = (path: string) => fileURLToPath(new URL(path, import.meta.url));
+  return {
+    name: "knittinglog:pdfjs-assets",
+    buildStart() {
+      for (const dir of ["standard_fonts", "cmaps"]) {
+        cpSync(at(`./node_modules/pdfjs-dist/${dir}`), at(`./public/pdfjs/${dir}`), {
+          recursive: true,
+        });
+      }
+    },
+  };
+}
+
 export default defineConfig({
   base: BASE,
   plugins: [
+    pdfjsAssets(),
     tanstackRouter({ target: "react", autoCodeSplitting: true }),
     react(),
     tailwindcss(),
@@ -24,6 +52,11 @@ export default defineConfig({
       registerType: "autoUpdate",
       includeAssets: ["icon.svg", "apple-touch-icon.png"],
       workbox: {
+        // pdf.js(본체 ~420KB + 워커 ~1MB)는 프리캐시에서 뺀다. PDF 도안을
+        // 넣지 않는 사람에게 설치할 때 받게 할 이유가 없다. 아래
+        // runtimeCaching이 처음 쓸 때 받아 남긴다 — PDF를 읽으려면 먼저
+        // 넣어야 하고, 넣는 순간 캐시에 들어오므로 오프라인은 그대로 된다.
+        globIgnores: ["**/pdfjs-*.js", "**/pdf.worker*.mjs", "pdfjs/**"],
         // 서브패스 배포에서 딥링크(예: /knittinglog/projects)로 처음 들어오면
         // Pages가 404를 준다. 그래서 빌드 때 404.html을 index.html 사본으로
         // 만들고(아래 스크립트), 설치 후에는 이 navigateFallback이 받는다.
@@ -33,6 +66,24 @@ export default defineConfig({
         // 오프라인에서도 같은 글자가 같은 서체로 나오게 한다.
         // 못 받은 조각은 시스템 한글 서체로 떨어질 뿐 앱은 그대로 동작한다.
         runtimeCaching: [
+          {
+            urlPattern: /\/pdfjs\/(standard_fonts|cmaps)\//,
+            handler: "CacheFirst",
+            options: {
+              cacheName: "knittinglog-pdf-fonts",
+              expiration: { maxEntries: 40, maxAgeSeconds: 60 * 60 * 24 * 365 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+          {
+            urlPattern: /(pdfjs-|pdf\.worker).*\.m?js$/,
+            handler: "CacheFirst",
+            options: {
+              cacheName: "knittinglog-pdfjs",
+              expiration: { maxEntries: 8, maxAgeSeconds: 60 * 60 * 24 * 365 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
           {
             urlPattern: /\.woff2$/,
             handler: "CacheFirst",
@@ -89,6 +140,17 @@ export default defineConfig({
       },
     }),
   ],
+  build: {
+    rollupOptions: {
+      output: {
+        // pdf.js를 이름이 정해진 조각으로 묶는다. 해시만 붙은 이름이면
+        // 위 globIgnores·runtimeCaching 규칙이 어느 파일을 가리키는지
+        // 빌드마다 달라진다.
+        manualChunks: (id) => (id.includes("pdfjs-dist") ? "pdfjs" : undefined),
+      },
+    },
+  },
+
   // Vite는 PORT 환경변수를 스스로 읽지 않는다. 여기서 받아줘야 여러 세션이
   // 각자 다른 포트로 dev 서버를 띄울 수 있다.
   server: { port: Number(process.env.PORT) || 5173 },

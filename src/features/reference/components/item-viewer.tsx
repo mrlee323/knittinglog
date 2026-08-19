@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { ExternalLink, Maximize2, Youtube } from "lucide-react";
+import { ExternalLink, FileText, Maximize2, Youtube } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { PdfStage } from "@/features/patternDoc/components/pdf-stage";
 import { PhotoImage } from "@/features/photo/components/photo-image";
 import { VideoEmbed } from "@/features/reference/components/video-embed";
 import { useStrings } from "@/i18n";
@@ -28,6 +29,10 @@ export function ItemViewer({
         {t.workbench.pickItem}
       </div>
     );
+  }
+
+  if (item.kind === "pdf" && item.doc) {
+    return <PdfStage doc={item.doc} maxHeight={maxHeight} />;
   }
 
   if (item.kind === "video" && item.video) {
@@ -89,13 +94,17 @@ export function ImageStage({
       <div
         style={{ maxHeight }}
         className={cn(
-          "flex h-full min-h-40 justify-center",
+          // justify-center를 쓰지 않는다. 내용이 자리보다 넓으면 넘친 부분이
+          // 시작 쪽으로 밀려나 스크롤로 닿지 않는다 — 확대해도 도안 왼쪽을 볼
+          // 수 없게 된다. auto 마진은 넘칠 때 0으로 풀려서 그 문제가 없다.
+          "flex h-full min-h-40",
           zoom === 1 ? "overflow-hidden" : "overflow-auto"
         )}
       >
         <PhotoImage
           photo={photo}
           className={cn(
+            "m-auto",
             zoom === 1 ? "h-full w-auto object-contain" : "max-w-none"
           )}
         />
@@ -121,6 +130,25 @@ export function ImageStage({
 
 /** 트레이용 작은 그림 */
 export function ItemThumb({ item }: { item: ViewerItem }) {
+  const t = useStrings();
+
+  // PDF는 첫 장을 그려 썸네일로 쓸 수도 있지만, 트레이에 있는 PDF마다 pdf.js가
+  // 페이지를 렌더하면 화면이 열릴 때마다 그 값을 치른다. 이름과 쪽수만으로도
+  // 무엇을 누르는지는 충분히 알 수 있다.
+  if (item.kind === "pdf" && item.doc) {
+    return (
+      <span className="flex size-full flex-col items-center justify-center gap-1 px-1">
+        <FileText size={18} className="text-text-2" aria-hidden />
+        <span className="text-micro text-text-2 line-clamp-2 text-center break-all">
+          {item.doc.name}
+        </span>
+        <span className="text-micro text-text-3">
+          {t.patternDoc.pages.replace("{n}", String(item.doc.pageCount))}
+        </span>
+      </span>
+    );
+  }
+
   if (item.kind === "video" && item.video) {
     return (
       <span className="relative block size-full">

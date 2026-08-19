@@ -117,6 +117,35 @@ export interface ProjectPhoto extends Base {
   kind?: "progress" | "reference" | "pattern";
 }
 
+/**
+ * PDF 도안.
+ *
+ * 상용 도안은 대개 PDF로 온다. 이미지 도안(`ProjectPhoto.kind = "pattern"`)과
+ * 같은 자리에 쓰이지만 테이블을 나눴다 — 사진은 압축·썸네일·단수 스냅샷이
+ * 붙고, PDF는 페이지 수와 읽던 자리가 붙는다. 한 테이블에 넣으면 조회할
+ * 때마다 종류를 확인해야 하고 쓰지 않는 필드가 절반이 된다.
+ *
+ * 구조화된 도안 모델(`Pattern`·sizeLabels·IR)과도 별개다. 이건 **읽는 문서**고,
+ * 그쪽은 앱이 계산에 쓰는 구조다.
+ */
+export interface PatternDoc extends Base {
+  projectId: Id;
+  name: string;
+  /** 로컬 전용 동안에는 Blob, 동기화 후에는 원격 URL */
+  blob?: Blob;
+  remoteUrl?: string;
+  pageCount: number;
+  /**
+   * 읽던 자리.
+   *
+   * 이 앱의 전제가 "언제 멈췄든 그 자리에서 이어 뜨기"이므로, 도안도 덮어둔
+   * 페이지에서 다시 열려야 한다. 40쪽짜리 도안에서 매번 찾아 들어가는 것은
+   * 중단의 비용을 그대로 물리는 일이다.
+   */
+  lastPage?: number;
+  lastZoom?: number;
+}
+
 export interface ProjectLog extends Base {
   projectId: Id;
   date: Date;

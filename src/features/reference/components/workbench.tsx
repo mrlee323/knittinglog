@@ -19,6 +19,8 @@ import {
   deleteLink,
   markEmbedBlocked,
 } from "@/features/reference/repository";
+import { AddPdfButton } from "@/features/patternDoc/components/add-pdf-button";
+import { deletePatternDoc } from "@/features/patternDoc/repository";
 import { useStrings } from "@/i18n";
 import { cn } from "@/lib/utils";
 import type { Id } from "@/types/entities";
@@ -37,7 +39,7 @@ import type { Id } from "@/types/entities";
  * 들어간다 — 자리를 누르면 그 자리가 선택된다. 두 자리에 각각 무엇을 넣을지
  * 매번 묻지 않고, 편집기의 분할 창과 같은 규칙을 쓴다.
  */
-type Filter = "all" | "pattern" | "reference" | "video";
+type Filter = "all" | "pdf" | "pattern" | "reference" | "video";
 
 export function Workbench({ projectId }: { projectId: Id }) {
   const t = useStrings();
@@ -82,6 +84,7 @@ export function Workbench({ projectId }: { projectId: Id }) {
 
   async function handleDelete(item: ViewerItem) {
     if (item.kind === "video") await deleteLink(item.id);
+    else if (item.kind === "pdf") await deletePatternDoc(item.id);
     else await deletePhoto(item.id);
     setPendingDelete(undefined);
   }
@@ -89,6 +92,11 @@ export function Workbench({ projectId }: { projectId: Id }) {
   return (
     <div>
       <div className="mb-3 flex flex-wrap items-center gap-2">
+        {/* 상용 도안이 PDF로 오므로 PDF를 먼저 둔다 */}
+        <AddPdfButton
+          projectId={projectId}
+          onAdded={(id) => pick({ id, kind: "pdf" })}
+        />
         <AddPhotoButton
           projectId={projectId}
           kind="pattern"
@@ -137,7 +145,7 @@ export function Workbench({ projectId }: { projectId: Id }) {
 
           {/* 트레이 — 종류로 걸러 훑는다 */}
           <div className="no-scrollbar mt-4 flex gap-1.5 overflow-x-auto">
-            {(["all", "pattern", "reference", "video"] as Filter[]).map(
+            {(["all", "pdf", "pattern", "reference", "video"] as Filter[]).map(
               (value) => (
                 <button
                   key={value}
@@ -208,8 +216,11 @@ export function Workbench({ projectId }: { projectId: Id }) {
           title={
             pendingDelete.kind === "video"
               ? t.workbench.deleteVideoConfirm
-              : t.workbench.deleteImageConfirm
+              : pendingDelete.kind === "pdf"
+                ? t.patternDoc.deleteConfirm
+                : t.workbench.deleteImageConfirm
           }
+          description={pendingDelete.doc?.name}
           confirmLabel={t.action.delete}
           onCancel={() => setPendingDelete(undefined)}
           onConfirm={() => void handleDelete(pendingDelete)}
