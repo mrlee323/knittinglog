@@ -266,13 +266,14 @@ export const ko = {
     mirrorHint: "기운 코는 반대 방향 코로 바뀌어요 (오른코모아 ↔ 왼코모아)",
     /* 코수 자동 검산 — 도안을 구조로 저장하는 가장 실용적인 이유 */
     verify: "코수 검산",
-    verifyHint: "각 단이 쓰는 코수가 전단이 남긴 코수와 맞는지 봐요",
-    verifyOk: "코수가 맞아요 · 시작 {start}코 → 끝 {end}코",
+    verifyHint:
+      "무늬 1회 안에서 각 단이 쓰는 코수가 전단이 남긴 코수와 맞는지 봐요",
+    verifyOk: "코수가 맞아요 · 무늬 1회 {start}코 → {end}코",
     verifyBad: "코수가 맞지 않는 단이 {n}개 있어요",
     verifyRow: "{row}단 — {expected}코가 있어야 하는데 {consumes}코를 써요",
     castOn: "시작 코수",
     castOnHint:
-      "실제로 시작하는 코수를 넣으면 1단부터 검산해요. 비우면 무늬 안쪽만 봐요.",
+      "이 무늬를 몇 코에 얹을지 넣어요. 시접과 반복 횟수를 함께 계산해요.",
     /* 뜨는 방식 — 서술형 변환에만 영향이 있다. 격자는 늘 겉에서 본 모습이다. */
     reading: "뜨는 방식",
     readingRound: "원형",
@@ -290,6 +291,33 @@ export const ko = {
     proseWsNote:
       "도안은 겉에서 본 모습이라, 안면 단에서는 겉뜨기 기호를 안뜨기로 떠요. 기울어진 코도 안면 기법으로 바뀌어요.",
     proseLocale: "도안 언어",
+    /* 평면 ↔ 원형 — 차트는 그대로고 코수와 양끝 처리가 달라진다 */
+    construction: "평면 ↔ 원형",
+    constructionHint:
+      "격자는 어느 쪽이든 그대로예요. 달라지는 건 시작 코수와 양끝 처리예요.",
+    selvedge: "시접 코 (한쪽)",
+    selvedgeHint: "평면은 이음선이 생기므로 양쪽에 시접 코를 둬요",
+    needCastOn: "시작 코수를 넣으면 무늬가 맞는지 계산해요",
+    fitsExact: "{repeats}회 딱 맞아요 · {repeat}코 무늬 × {repeats}회",
+    fitsShort: "{remainder}코가 남아요 · {repeat}코 무늬 {repeats}회 + {remainder}코",
+    fitsNone: "{repeat}코 무늬가 한 번도 들어가지 않아요",
+    fitsWithSelvedge: "시접 {edges}코를 뺀 {motif}코 기준이에요",
+    nearestDown: "{n}코로 줄이면 맞아요",
+    nearestUp: "{n}코로 늘리면 맞아요",
+    switchTo: "{mode}으로 뜨면",
+    switchTotal: "{n}코로 시작해요",
+    /* 무엇이 달라지는지 — 사유는 도메인이 정하고 문장은 여기서 만든다 */
+    noteEveryRowRs: "모든 단을 겉면에서 떠요",
+    noteAlternatingSides: "겉면과 안면이 번갈아 나와요",
+    noteMustDivide: "코수가 무늬 반복의 배수여야 무늬가 원을 돌아 이어져요",
+    noteAddSelvedge: "양쪽에 시접 코를 더해요",
+    noteDropSelvedge: "시접 코를 빼요",
+    noteSeam: "이음선이 생겨요",
+    noteMotifBreaks: "원을 돌아 이어지던 무늬가 양끝에서 끊겨요",
+    noteJog: "단 경계에서 무늬가 한 코 어긋나 보일 수 있어요",
+    /* 늘어놓기 — 숫자로 "몇 코 남는다"를 듣는 것과 어디서 잘리는지 보는 건 다르다 */
+    tiled: "늘어놓아 보기",
+    tiledHint: "시작 코수만큼 무늬를 늘어놓은 모습이에요. 끊기는 자리가 보여요.",
     counts: "기법별 칸 수",
     countsValue: "{n}칸",
     rowLabel: "{n}단",

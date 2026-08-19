@@ -40,7 +40,15 @@ import {
   type Side,
   type StitchChart,
 } from "@/domain/stitchChart";
+import type { Construction } from "@/domain/construction";
 import { chartOps } from "@/domain/stitches";
+import {
+  DEFAULT_SELVEDGE,
+  equivalentTotal,
+  planConversion,
+  tileChart,
+  type ConversionNote,
+} from "@/domain/construction";
 import { formatRow, stitchLabel } from "@/i18n/stitches";
 import { useUnits } from "@/app/units";
 import {
@@ -60,6 +68,8 @@ export const Route = createFileRoute("/patterns/$patternId")({
 /** 심볼은 색과 달리 형태를 읽어야 하므로 편집 격자를 색상 차트보다 크게 둔다 */
 const EDIT_CELL = 26;
 const PREVIEW_CELL = 12;
+/** 늘어놓기는 코수가 많아 칸을 작게 둔다 — 끊기는 자리만 보이면 된다 */
+const TILE_CELL = 14;
 const SAVE_DELAY = 400;
 
 function PatternEditor() {
@@ -97,6 +107,9 @@ function Editor({
   // 서술형은 앱 언어와 따로 고른다 — 한국어로 쓰면서 영문 도안을 뽑는 것이
   // 이 기능의 목적이다(기획 §4).
   const [proseLocale, setProseLocale] = useState<Locale>(locale);
+  // 시접 코수는 화면의 값으로 둔다 — 무늬가 아니라 이 옷을 어떻게 마무리할지의
+  // 문제이고, 코수 계산을 해보는 동안 이리저리 바꿔보게 된다.
+  const [selvedge, setSelvedge] = useState(DEFAULT_SELVEDGE);
 
   useEffect(() => {
     const timer = setTimeout(
@@ -132,7 +145,7 @@ function Editor({
 
   const aspect = gaugeValues ? cellAspect(gaugeValues) : 1;
   const size = gaugeValues ? stitchChartSizeCm(chart, gaugeValues) : null;
-  const balance = verifyChart(chart, record.castOn);
+  const balance = verifyChart(chart);
   const badRows = balance.rows.filter((r) => !r.ok).map((r) => r.row - 1);
   const counts = opCounts(chart);
   const legend = usedOps(chart);
@@ -313,23 +326,11 @@ function Editor({
         <h2 className="text-micro text-text-3 mb-1">{t.pattern.verify}</h2>
         <p className="text-text-3 text-caption mb-2">{t.pattern.verifyHint}</p>
 
-        <div className="max-w-40">
-          <TextField
-            label={t.pattern.castOn}
-            inputMode="numeric"
-            value={castOn}
-            onChange={(e) => commitCastOn(e.target.value)}
-          />
-        </div>
-        <p className="text-text-3 text-caption -mt-2 mb-3">
-          {t.pattern.castOnHint}
-        </p>
-
         {balance.ok ? (
           <p className="text-finished text-small flex items-center gap-1.5">
             <Check size={15} className="shrink-0" />
             {t.pattern.verifyOk
-              .replace("{start}", String(balance.castOn))
+              .replace("{start}", String(balance.startStitches))
               .replace("{end}", String(balance.finalCount))}
           </p>
         ) : (
@@ -436,6 +437,58 @@ function Editor({
         </ol>
       </section>
 
+      {/* 평면 ↔ 원형 — 격자는 그대로고 코수와 양끝 처리가 달라진다(기획 §4) */}
+      <section className="mt-6">
+        <h2 className="text-micro text-text-3 mb-1">{t.pattern.construction}</h2>
+        <p className="text-text-3 text-caption mb-3">
+          {t.pattern.constructionHint}
+        </p>
+
+        {reading.flat && (
+          <>
+            <div className="max-w-40">
+              <TextField
+                label={t.pattern.selvedge}
+                inputMode="numeric"
+                value={selvedge}
+                onChange={(e) =>
+                  setSelvedge(Math.max(0, Math.floor(Number(e.target.value) || 0)))
+                }
+              />
+            </div>
+            <p className="text-text-3 text-caption -mt-2 mb-3">
+              {t.pattern.selvedgeHint}
+            </p>
+          </>
+        )}
+
+        {/* 시작 코수는 여기 있어야 한다. 검산 옆에 두면 "무늬 1회 코수"와
+            "이 옷의 코수"가 같은 칸처럼 보인다 — 실제로 그 착각 때문에 12코
+            무늬에 146코를 넣으면 검산이 틀린 경고를 냈다. */}
+        <div className="max-w-40">
+          <TextField
+            label={t.pattern.castOn}
+            inputMode="numeric"
+            value={castOn}
+            onChange={(e) => commitCastOn(e.target.value)}
+          />
+        </div>
+        <p className="text-text-3 text-caption -mt-2 mb-3">
+          {t.pattern.castOnHint}
+        </p>
+
+        {record.castOn === undefined ? (
+          <p className="text-text-3 text-small">{t.pattern.needCastOn}</p>
+        ) : (
+          <ConstructionPlan
+            chart={chart}
+            castOn={record.castOn}
+            flat={reading.flat}
+            selvedge={selvedge}
+          />
+        )}
+      </section>
+
       {/* 범례 — 겉뜨기가 빈 칸이고 심볼에 이름이 없으므로 도안에 반드시 붙는다 */}
       <section className="mt-6">
         <h2 className="text-micro text-text-3 mb-1">{t.pattern.legend}</h2>
@@ -480,5 +533,142 @@ function Editor({
         </Button>
       </div>
     </Page>
+  );
+}
+
+/** 도메인이 정한 사유를 문장으로 옮긴다 */
+function useNoteText() {
+  const t = useStrings();
+  const map: Record<ConversionNote, string> = {
+    everyRowRs: t.pattern.noteEveryRowRs,
+    alternatingSides: t.pattern.noteAlternatingSides,
+    mustDivide: t.pattern.noteMustDivide,
+    addSelvedge: t.pattern.noteAddSelvedge,
+    dropSelvedge: t.pattern.noteDropSelvedge,
+    seam: t.pattern.noteSeam,
+    motifBreaks: t.pattern.noteMotifBreaks,
+    jog: t.pattern.noteJog,
+  };
+  return (note: ConversionNote) => map[note];
+}
+
+/**
+ * 코수가 무늬에 맞는지, 반대로 뜨면 어떻게 되는지.
+ *
+ * 무늬 1회 코수는 차트 폭으로 본다 — 격자 하나가 무늬 한 번이라는 것이 기호
+ * 도안의 기본 약속이다.
+ */
+function ConstructionPlan({
+  chart,
+  castOn,
+  flat,
+  selvedge,
+}: {
+  chart: StitchChart;
+  castOn: number;
+  flat: boolean;
+  selvedge: number;
+}) {
+  const t = useStrings();
+  const noteText = useNoteText();
+  const here: Construction = flat ? "flat" : "round";
+  const there: Construction = flat ? "round" : "flat";
+
+  const now = planConversion({
+    from: here,
+    to: here,
+    repeat: chart.width,
+    total: castOn,
+    selvedge,
+  });
+  const switched = equivalentTotal({
+    repeats: now.fit.repeats,
+    repeat: chart.width,
+    to: there,
+    selvedge,
+  });
+  const plan = planConversion({
+    from: here,
+    to: there,
+    repeat: chart.width,
+    total: switched,
+    selvedge,
+  });
+
+  const fill = (template: string) =>
+    template
+      .replace("{repeat}", String(now.fit.repeat))
+      .replace(/\{repeats\}/g, String(now.fit.repeats))
+      .replace(/\{remainder\}/g, String(now.fit.remainder))
+      .replace("{motif}", String(now.fit.motifStitches))
+      .replace("{edges}", String(now.selvedge * 2));
+
+  return (
+    <div className="space-y-4">
+      {/* 지금 방식에서 맞는가 */}
+      <div>
+        <p
+          className={cn(
+            "text-small font-medium",
+            now.fit.fits ? "text-finished" : "text-frogged"
+          )}
+        >
+          {fill(
+            now.fit.repeats === 0
+              ? t.pattern.fitsNone
+              : now.fit.fits
+                ? t.pattern.fitsExact
+                : t.pattern.fitsShort
+          )}
+        </p>
+        {now.selvedge > 0 && (
+          <p className="text-text-3 text-caption">
+            {fill(t.pattern.fitsWithSelvedge)}
+          </p>
+        )}
+        {/* 안 맞으면 "안 맞아요"로 끝내지 않는다 — 고를 수 있는 값을 준다 */}
+        {!now.fit.fits && (
+          <p className="text-text-2 text-caption mt-1 flex flex-wrap gap-x-3">
+            {now.nearest.down !== null && (
+              <span>
+                {t.pattern.nearestDown.replace("{n}", String(now.nearest.down))}
+              </span>
+            )}
+            <span>
+              {t.pattern.nearestUp.replace("{n}", String(now.nearest.up))}
+            </span>
+          </p>
+        )}
+      </div>
+
+      {/* 반대로 뜨면 */}
+      <div className="border-line bg-surface rounded-md border p-3">
+        <p className="text-small font-medium">
+          {t.pattern.switchTo.replace(
+            "{mode}",
+            there === "flat" ? t.pattern.readingFlat : t.pattern.readingRound
+          )}{" "}
+          · {t.pattern.switchTotal.replace("{n}", String(switched))}
+        </p>
+        <ul className="text-text-2 text-caption mt-2 space-y-1">
+          {plan.notes.map((note) => (
+            <li key={note}>· {noteText(note)}</li>
+          ))}
+        </ul>
+      </div>
+
+      {/* 늘어놓아 보기 — 어디서 끊기는지는 눈으로만 보인다 */}
+      <div>
+        <h3 className="text-micro text-text-3 mb-1">{t.pattern.tiled}</h3>
+        <p className="text-text-3 text-caption mb-2">{t.pattern.tiledHint}</p>
+        <div className="border-line overflow-auto rounded-md border p-2">
+          <SymbolCanvas
+            chart={tileChart(chart, castOn, now.selvedge)}
+            cellWidth={TILE_CELL}
+            cellHeight={TILE_CELL}
+          />
+        </div>
+      </div>
+    </div>
   );
 }

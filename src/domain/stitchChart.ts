@@ -202,8 +202,8 @@ export interface RowBalance {
 
 export interface ChartBalance {
   rows: RowBalance[];
-  /** 시작 코수 */
-  castOn: number;
+  /** 1단이 시작될 때 바늘에 있어야 하는 코수 (무늬 1회 기준) */
+  startStitches: number;
   /** 다 뜨고 나면 바늘에 남는 코수 */
   finalCount: number;
   ok: boolean;
@@ -215,14 +215,15 @@ export interface ChartBalance {
  * 각 단이 먹는 코수가 전단이 내놓은 코수와 맞는지 확인한다. 어긋나면 무늬가
  * 틀린 것이고, 이걸 손으로 세다 놓치면 몇 시간 뜬 뒤에 알게 된다.
  *
- * `castOn`을 주지 않으면 1단이 먹는 코수를 시작 코수로 본다 — 새로 그리는
- * 중인 차트에 "1단이 틀렸다"고 말하는 건 도움이 안 되기 때문이다. 실제
- * 프로젝트의 시작 코수를 넣으면 그것과 맞는지도 함께 본다.
+ * **무늬 1회 안쪽만 본다.** 실제 시작 코수와 맞는지는 다른 질문이다 — 기호
+ * 도안의 격자는 대개 무늬 한 번이고, 그러면 12코 무늬에 시작 코수 146을 넣었을
+ * 때 "146코가 있어야 하는데 12코를 쓴다"는 틀린 경고가 난다. 시작 코수가 무늬에
+ * 들어맞는지는 `domain/construction.ts`가 맡는다(시접·방식까지 함께 봐야 하므로).
+ * 한 질문에 주인을 둘 두면 둘이 서로 다른 말을 한다.
  */
-export function verifyChart(chart: StitchChart, castOn?: number): ChartBalance {
+export function verifyChart(chart: StitchChart): ChartBalance {
   const rows: RowBalance[] = [];
-  const first = rowConsumes(chart, 0);
-  const start = castOn ?? first;
+  const start = rowConsumes(chart, 0);
   let available = start;
 
   for (let y = 0; y < chart.height; y += 1) {
@@ -245,7 +246,7 @@ export function verifyChart(chart: StitchChart, castOn?: number): ChartBalance {
 
   return {
     rows,
-    castOn: start,
+    startStitches: start,
     finalCount: available,
     ok: rows.every((r) => r.ok),
   };
