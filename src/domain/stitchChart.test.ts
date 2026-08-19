@@ -1,0 +1,362 @@
+import { describe, expect, it } from "vitest";
+import { formatRow, formatRun, hasStitchLabel } from "@/i18n/stitches";
+import { mirrorOp, stitchDelta, stitchOps } from "./stitches";
+import {
+  createStitchChart,
+  getOp,
+  mirrorStitchChart,
+  opCounts,
+  opRuns,
+  resizeStitchChart,
+  rowOps,
+  setOp,
+  stitchChartSizeCm,
+  usedOps,
+  verifyChart,
+  type StitchChart,
+} from "./stitchChart";
+
+/** 격자를 위에서 아래로 읽히는 순서로 적고 저장 순서(아래가 0단)로 바꾼다. */
+const chartFromRows = (rows: string[][]): StitchChart => ({
+  width: rows[0].length,
+  height: rows.length,
+  ops: rows.slice().reverse().flat(),
+});
+
+describe("기법 표", () => {
+  it("모아뜨기는 여러 코를 먹고 한 코를 낸다", () => {
+    expect(stitchDelta("k2tog")).toEqual({ consumes: 2, produces: 1 });
+    expect(stitchDelta("cdd")).toEqual({ consumes: 3, produces: 1 });
+  });
+
+  it("바늘비우기는 아무것도 먹지 않고 한 코를 낸다", () => {
+    expect(stitchDelta("yo")).toEqual({ consumes: 0, produces: 1 });
+  });
+
+  it("코 없음은 코수에 영향이 없다 — 격자를 채우기 위한 칸일 뿐이다", () => {
+    expect(stitchDelta("none")).toEqual({ consumes: 0, produces: 0 });
+  });
+
+  it("모르는 기법은 검산에서 빠진다 — 기호 하나 때문에 통째로 틀리지 않게", () => {
+    expect(stitchDelta("존재하지않는기법")).toEqual({
+      consumes: 0,
+      produces: 0,
+    });
+  });
+
+  it("기울기가 있는 코는 반전 대응이 있다", () => {
+    expect(mirrorOp("k2tog")).toBe("ssk");
+    expect(mirrorOp("ssk")).toBe("k2tog");
+    expect(mirrorOp("m1l")).toBe("m1r");
+  });
+
+  it("대칭인 코는 반전해도 그대로다", () => {
+    expect(mirrorOp("knit")).toBe("knit");
+    expect(mirrorOp("yo")).toBe("yo");
+    expect(mirrorOp("cdd")).toBe("cdd");
+  });
+
+  it("반전 대응은 서로를 가리킨다 — 두 번 반전하면 원본", () => {
+    for (const op of stitchOps("knit")) {
+      expect(mirrorOp(mirrorOp(op))).toBe(op);
+    }
+  });
+
+  it("대바늘 목록에 코바늘 기법이 섞이지 않는다", () => {
+    expect(stitchOps("knit")).not.toContain("sc");
+    expect(stitchOps("crochet")).toContain("sc");
+  });
+});
+
+describe("격자", () => {
+  it("기본은 메리야스로 채운다", () => {
+    const c = createStitchChart(3, 2);
+    expect(c.ops).toEqual(new Array(6).fill("knit"));
+  });
+
+  it("칸을 바꿔도 원본은 그대로다", () => {
+    const a = createStitchChart(2, 2);
+    const b = setOp(a, 0, 0, "purl");
+    expect(getOp(a, 0, 0)).toBe("knit");
+    expect(getOp(b, 0, 0)).toBe("purl");
+  });
+
+  it("같은 기법을 다시 찍으면 새 객체를 만들지 않는다", () => {
+    const a = createStitchChart(2, 2);
+    expect(setOp(a, 0, 0, "knit")).toBe(a);
+  });
+
+  it("격자 밖은 무시한다", () => {
+    const a = createStitchChart(2, 2);
+    expect(setOp(a, 5, 0, "purl")).toBe(a);
+    expect(getOp(a, -1, 0)).toBe("knit");
+  });
+
+  it("y = 0이 첫 단(맨 아래)이다", () => {
+    // 아래 단은 안뜨기, 위 단은 겉뜨기
+    const c = chartFromRows([
+      ["knit", "knit"],
+      ["purl", "purl"],
+    ]);
+    expect(getOp(c, 0, 0)).toBe("purl");
+    expect(getOp(c, 0, 1)).toBe("knit");
+  });
+
+  it("크기를 바꿔도 아래쪽 무늬는 좌표가 유지된다", () => {
+    const c = setOp(createStitchChart(2, 2), 0, 0, "purl");
+    const bigger = resizeStitchChart(c, 4, 4);
+    expect(getOp(bigger, 0, 0)).toBe("purl");
+    expect(bigger.width).toBe(4);
+    expect(bigger.ops).toHaveLength(16);
+  });
+});
+
+describe("단 읽기", () => {
+  it("겉면 단은 오른쪽에서 왼쪽으로 읽는다", () => {
+    const c = chartFromRows([["knit", "purl", "purl"]]);
+    // 그림 순서는 겉·안·안, 읽는 순서는 안·안·겉
+    expect(rowOps(c, 0)).toEqual(["purl", "purl", "knit"]);
+    expect(rowOps(c, 0, false)).toEqual(["knit", "purl", "purl"]);
+  });
+
+  it("같은 기법을 묶는다", () => {
+    const c = chartFromRows([["knit", "knit", "knit", "purl", "purl"]]);
+    expect(opRuns(c, 0, false)).toEqual([
+      { op: "knit", count: 3 },
+      { op: "purl", count: 2 },
+    ]);
+  });
+
+  it("코 없음 칸은 서술에서 빠진다 — 뜰 수 없는 지시이므로", () => {
+    const c = chartFromRows([["none", "knit", "knit", "none"]]);
+    expect(opRuns(c, 0)).toEqual([{ op: "knit", count: 2 }]);
+  });
+
+  it("코 없음을 사이에 둔 양쪽은 하나로 묶인다", () => {
+    // 코 없음은 "이 열은 이 단에 존재하지 않는다"는 뜻이므로, 양옆 코는 바늘
+    // 위에서 실제로 맞닿아 있다. 나눠서 "겉 1코, 겉 1코"로 적으면 도안을 읽는
+    // 사람에게 없는 경계를 만들어 보여준다.
+    const c = chartFromRows([["knit", "none", "knit"]]);
+    expect(opRuns(c, 0)).toEqual([{ op: "knit", count: 2 }]);
+  });
+
+  it("격자 밖 단은 빈 배열이다", () => {
+    const c = createStitchChart(2, 2);
+    expect(rowOps(c, 9)).toEqual([]);
+    expect(opRuns(c, -1)).toEqual([]);
+  });
+});
+
+describe("좌우 반전", () => {
+  it("기울기가 있는 코는 대응되는 코로 바뀐다", () => {
+    // 격자만 뒤집으면 기울기가 반대인 무늬가 나온다
+    const c = chartFromRows([["k2tog", "knit", "knit", "ssk"]]);
+    const m = mirrorStitchChart(c);
+    expect(rowOps(m, 0, false)).toEqual(["k2tog", "knit", "knit", "ssk"]);
+  });
+
+  it("위치가 실제로 뒤집힌다", () => {
+    const c = chartFromRows([["yo", "knit", "knit", "knit"]]);
+    const m = mirrorStitchChart(c);
+    expect(rowOps(m, 0, false)).toEqual(["knit", "knit", "knit", "yo"]);
+  });
+
+  it("두 번 반전하면 원본으로 돌아온다", () => {
+    const c = chartFromRows([
+      ["k2tog", "yo", "m1l", "purl"],
+      ["knit", "ssk", "knit", "m1r"],
+    ]);
+    expect(mirrorStitchChart(mirrorStitchChart(c))).toEqual(c);
+  });
+
+  it("단 순서(위아래)는 바뀌지 않는다", () => {
+    const c = chartFromRows([
+      ["purl", "purl"],
+      ["knit", "knit"],
+    ]);
+    const m = mirrorStitchChart(c);
+    expect(getOp(m, 0, 0)).toBe("knit");
+    expect(getOp(m, 0, 1)).toBe("purl");
+  });
+
+  it("반전한 차트도 코수 검산을 통과한다", () => {
+    const c = chartFromRows([
+      ["knit", "yo", "k2tog", "knit"],
+      ["knit", "knit", "knit", "knit"],
+    ]);
+    expect(verifyChart(c).ok).toBe(true);
+    expect(verifyChart(mirrorStitchChart(c)).ok).toBe(true);
+  });
+});
+
+describe("코수 검산", () => {
+  it("메리야스는 코수가 유지된다", () => {
+    const c = createStitchChart(10, 3);
+    const b = verifyChart(c);
+    expect(b.ok).toBe(true);
+    expect(b.castOn).toBe(10);
+    expect(b.finalCount).toBe(10);
+  });
+
+  it("바늘비우기와 모아뜨기가 짝이면 코수가 유지된다", () => {
+    // 레이스 무늬의 기본 구조 — yo 하나에 감소 하나
+    const c = chartFromRows([
+      ["knit", "yo", "k2tog", "knit", "knit"],
+      ["knit", "knit", "knit", "knit", "knit"],
+    ]);
+    const b = verifyChart(c);
+    expect(b.ok).toBe(true);
+    expect(b.rows[1]).toMatchObject({ row: 2, consumes: 5, produces: 5 });
+  });
+
+  it("한쪽만 있으면 코수가 변한다", () => {
+    const c = chartFromRows([["knit", "knit", "knit", "yo"]]);
+    // 4칸 중 yo는 전단 코를 먹지 않으므로 3코를 먹고 4코를 낸다
+    const b = verifyChart(c);
+    expect(b.castOn).toBe(3);
+    expect(b.finalCount).toBe(4);
+  });
+
+  it("전단이 낸 코수와 다음 단이 먹는 코수가 어긋나면 잡아낸다", () => {
+    // 1단이 4코를 내는데 2단이 5코를 먹으려 한다
+    const c = chartFromRows([
+      ["knit", "knit", "knit", "knit", "knit"],
+      ["knit", "knit", "k2tog", "none", "none"],
+    ]);
+    const b = verifyChart(c);
+    expect(b.rows[0]).toMatchObject({ row: 1, produces: 3, ok: true });
+    expect(b.rows[1]).toMatchObject({ row: 2, consumes: 5, expected: 3 });
+    expect(b.rows[1].ok).toBe(false);
+    expect(b.ok).toBe(false);
+  });
+
+  it("코 없음으로 자리를 메우면 줄어드는 무늬가 검산을 통과한다", () => {
+    // 아래 5코 → 위 3코. 격자는 5칸을 유지하고 남는 자리는 코 없음.
+    const c = chartFromRows([
+      ["none", "knit", "knit", "knit", "none"],
+      ["k2tog", "knit", "k2tog", "none", "none"],
+    ]);
+    const b = verifyChart(c);
+    expect(b.castOn).toBe(5);
+    expect(b.rows[0]).toMatchObject({ consumes: 5, produces: 3, ok: true });
+    expect(b.rows[1]).toMatchObject({ consumes: 3, produces: 3, ok: true });
+    expect(b.ok).toBe(true);
+  });
+
+  it("시작 코수를 주지 않으면 1단을 기준으로 삼는다", () => {
+    // 그리는 중인 차트에 "1단이 틀렸다"고 말하는 건 도움이 안 된다
+    const c = createStitchChart(7, 1);
+    expect(verifyChart(c).rows[0].ok).toBe(true);
+  });
+
+  it("실제 시작 코수를 주면 1단도 검사한다", () => {
+    const c = createStitchChart(7, 1);
+    const b = verifyChart(c, 60);
+    expect(b.rows[0]).toMatchObject({ expected: 60, consumes: 7, ok: false });
+    expect(b.ok).toBe(false);
+  });
+
+  it("반복 무늬는 시작 코수가 배수로 맞아야 한다", () => {
+    // 7코 무늬를 60코에 얹으면 맞지 않는다 (60 / 7 = 8.57)
+    const c = createStitchChart(7, 1);
+    expect(verifyChart(c, 63).ok).toBe(false); // 검산은 반복을 모른다
+    expect(verifyChart(c, 7).ok).toBe(true);
+  });
+
+  it("늘림도 코수에 반영된다", () => {
+    const c = chartFromRows([["knit", "m1l", "knit", "m1r", "knit"]]);
+    const b = verifyChart(c);
+    expect(b.castOn).toBe(3);
+    expect(b.finalCount).toBe(5);
+  });
+
+  it("한 코에 두 코 뜨기는 먹는 코보다 내는 코가 많다", () => {
+    const c = chartFromRows([["kfb", "knit"]]);
+    const b = verifyChart(c);
+    expect(b.castOn).toBe(2);
+    expect(b.finalCount).toBe(3);
+  });
+
+  it("단마다 1부터 세는 번호가 붙는다 — 맨 아래가 1단", () => {
+    const c = createStitchChart(2, 3);
+    expect(verifyChart(c).rows.map((r) => r.row)).toEqual([1, 2, 3]);
+  });
+});
+
+describe("집계", () => {
+  it("기법마다 몇 칸인지 센다", () => {
+    const c = chartFromRows([
+      ["knit", "purl"],
+      ["knit", "knit"],
+    ]);
+    expect(opCounts(c)).toEqual({ knit: 3, purl: 1 });
+  });
+
+  it("범례에는 실제로 쓴 기법만, 코 없음은 빼고 넣는다", () => {
+    const c = chartFromRows([["knit", "yo", "k2tog", "none"]]);
+    expect(usedOps(c).sort()).toEqual(["k2tog", "knit", "yo"]);
+  });
+
+  it("게이지로 완성 크기를 낸다", () => {
+    const c = createStitchChart(22, 30);
+    const size = stitchChartSizeCm(c, {
+      stitchesPer10cm: 22,
+      rowsPer10cm: 30,
+    });
+    expect(size.width).toBeCloseTo(10);
+    expect(size.height).toBeCloseTo(10);
+  });
+});
+
+describe("서술형 변환 (한 ↔ 영)", () => {
+  const runs = [
+    { op: "knit", count: 5 },
+    { op: "k2tog", count: 1 },
+    { op: "yo", count: 1 },
+    { op: "knit", count: 5 },
+  ];
+
+  it("같은 IR에서 두 언어의 도안이 나온다", () => {
+    expect(formatRow(runs, "ko")).toBe("겉 5코, 오른코모아, 바늘비우기, 겉 5코");
+    expect(formatRow(runs, "en")).toBe("k5, k2tog, yo, k5");
+  });
+
+  it("기본 코는 코수를 붙여 쓴다", () => {
+    expect(formatRun({ op: "knit", count: 5 }, "en")).toBe("k5");
+    expect(formatRun({ op: "purl", count: 2 }, "ko")).toBe("안 2코");
+  });
+
+  it("모아뜨기는 반복 횟수로 적는다 — k2tog5라고 쓰지 않는다", () => {
+    expect(formatRun({ op: "k2tog", count: 3 }, "en")).toBe("k2tog x3");
+    expect(formatRun({ op: "k2tog", count: 3 }, "ko")).toBe("오른코모아 3번");
+  });
+
+  it("한 번이면 횟수를 붙이지 않는다", () => {
+    expect(formatRun({ op: "ssk", count: 1 }, "en")).toBe("ssk");
+    expect(formatRun({ op: "ssk", count: 1 }, "ko")).toBe("왼코모아");
+  });
+
+  it("차트에서 바로 두 언어를 낸다", () => {
+    const c = chartFromRows([["knit", "knit", "yo", "ssk", "knit"]]);
+    // 겉면 단은 오른쪽부터 읽으므로 순서가 뒤집힌다
+    expect(formatRow(opRuns(c, 0), "en")).toBe("k1, ssk, yo, k2");
+    expect(formatRow(opRuns(c, 0), "ko")).toBe(
+      "겉 1코, 왼코모아, 바늘비우기, 겉 2코"
+    );
+  });
+
+  it("전부 코 없음인 단은 빈 문장이다", () => {
+    const c = chartFromRows([["none", "none"]]);
+    expect(formatRow(opRuns(c, 0), "ko")).toBe("");
+  });
+
+  it("두 언어 모두 모든 기법에 이름이 있다", () => {
+    // 로케일을 추가할 때 빠진 기법을 여기서 잡는다. 라벨이 op 이름과 같은
+    // 경우도 정상이므로(en의 knit) 문자열 비교가 아니라 키 존재로 본다.
+    for (const locale of ["ko", "en"] as const) {
+      for (const op of [...stitchOps("knit"), ...stitchOps("crochet")]) {
+        expect(hasStitchLabel(op, locale)).toBe(true);
+      }
+    }
+  });
+});

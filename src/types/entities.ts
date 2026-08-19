@@ -193,6 +193,31 @@ export interface ColorChartRecord extends Base {
   projectId?: Id;
   notes?: string;
 }
+/**
+ * 심볼 차트(무늬 도안) — 칸에 색이 아니라 기법을 담는다.
+ *
+ * 색상 차트와 별도 테이블이다. 한 테이블에 종류 필드로 섞으면 cells(색 번호)와
+ * ops(기법 이름)가 같은 칸에 들어가고, 코수 검산은 심볼에만 있어서 조회할 때마다
+ * 종류를 확인해야 한다.
+ */
+export interface StitchChartRecord extends Base {
+  name: string;
+  width: number;
+  height: number;
+  /** row-major, y = 0이 첫 단(맨 아래). 값은 기법 op. */
+  ops: string[];
+  /**
+   * 실제 시작 코수.
+   *
+   * 넣으면 1단도 검산 대상이 된다 — 7코 무늬를 60코에 얹으면 맞지 않는다는
+   * 것을 뜨기 전에 알려준다. 없으면 무늬 자체의 앞뒤만 본다.
+   */
+  castOn?: number;
+  gaugeId?: Id;
+  projectId?: Id;
+  notes?: string;
+}
+
 /* --- 카운터 --------------------------------------------------------------- */
 
 export interface Counter extends Base {

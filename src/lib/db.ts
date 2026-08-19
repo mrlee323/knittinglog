@@ -10,6 +10,7 @@ import Dexie, { type EntityTable } from "dexie";
 import type {
   BodyProfile,
   ColorChartRecord,
+  StitchChartRecord,
   Counter,
   CounterMark,
   CounterSession,
@@ -36,6 +37,7 @@ export class KnittinglogDB extends Dexie {
   froggingLogs!: EntityTable<FroggingLog, "id">;
   pauseEvents!: EntityTable<PauseEvent, "id">;
   colorCharts!: EntityTable<ColorChartRecord, "id">;
+  stitchCharts!: EntityTable<StitchChartRecord, "id">;
 
   counters!: EntityTable<Counter, "id">;
   counterMarks!: EntityTable<CounterMark, "id">;
@@ -102,6 +104,11 @@ export class KnittinglogDB extends Dexie {
     // 필요하다(orderBy는 sortBy와 달리 인덱스를 요구한다).
     this.version(5).stores({
       colorCharts: "id, updatedAt, projectId",
+    });
+
+    // v6 — 심볼 차트(무늬). 색상 차트와 인덱스 구성이 같다.
+    this.version(6).stores({
+      stitchCharts: "id, updatedAt, projectId",
     });
   }
 }

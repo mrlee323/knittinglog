@@ -16,6 +16,17 @@ import { ko, type UIStrings } from "./ui/ko";
 export const LOCALES = ["ko", "en"] as const;
 export type Locale = (typeof LOCALES)[number];
 
+/**
+ * 언어 이름은 그 언어 자신으로 적는다.
+ *
+ * 앱이 한국어일 때 "영어"라고 쓰면 영어만 읽는 사람은 자기 언어를 못 찾는다.
+ * 언어 선택은 아직 언어가 안 맞는 사람이 쓰는 컨트롤이므로 번들 밖에 둔다.
+ */
+export const LOCALE_NAMES: Record<Locale, string> = {
+  ko: "한국어",
+  en: "English",
+};
+
 const BUNDLES: Record<Locale, UIStrings> = { ko, en };
 
 export const localeAtom = atomWithStorage<Locale>("knittinglog:locale", "ko");

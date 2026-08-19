@@ -198,8 +198,8 @@ export const ko = {
     calcTitle: "게이지 계산기",
   },
   chart: {
-    title: "문양",
-    add: "문양 만들기",
+    title: "배색 도안",
+    add: "배색 도안 만들기",
     name: "이름",
     namePlaceholder: "눈송이 페어아일",
     size: "크기",
@@ -228,11 +228,66 @@ export const ko = {
     readRowHint: "겉면 단은 오른쪽에서 왼쪽으로 읽어요",
     rowLabel: "{n}단",
     runOf: "{color} {n}코",
-    empty: "만든 문양이 없어요",
+    empty: "만든 배색 도안이 없어요",
     emptyHint:
       "페어아일이나 인타르시아 무늬를 칸으로 그려두면 완성 모양까지 볼 수 있어요",
-    deleteConfirm: "이 문양을 지울까요?",
+    deleteConfirm: "이 배색 도안을 지울까요?",
     colorName: "{n}번 색",
+  },
+  /**
+   * 기호 도안(무늬) — 칸에 색이 아니라 기법을 담는다.
+   *
+   * 배색 도안과 나란히 놓이므로 이름이 갈려야 한다. 한국 뜨개에서 쓰는
+   * 용어를 그대로 따랐다 — 색으로 무늬를 만드는 것이 배색, 뜨는 방법으로
+   * 만드는 것이 기호 도안이다.
+   */
+  pattern: {
+    title: "기호 도안",
+    add: "기호 도안 만들기",
+    name: "이름",
+    namePlaceholder: "물결 레이스",
+    widthLabel: "코수",
+    heightLabel: "단수",
+    stitches: "기법",
+    stitchesHint: "고른 다음 칸을 끌어서 찍어요. 겉뜨기는 빈 칸이에요.",
+    legend: "범례",
+    legendHint: "이 도안에 쓴 기법이에요",
+    editing: "격자",
+    editingHint: "아래가 첫 단이에요. 겉면 단은 오른쪽에서 왼쪽으로 떠요.",
+    preview: "완성 모양",
+    previewHint:
+      "게이지 비율을 넣어 그린 거예요. 뜨개 코는 정사각형이 아니라서 격자와 모양이 달라요.",
+    needGauge: "게이지를 고르면 완성 모양을 볼 수 있어요",
+    gauge: "게이지",
+    gaugeNone: "고르지 않음",
+    finishedSize: "완성 {w} × {h}",
+    mirror: "좌우 반전",
+    /* 격자만 뒤집으면 기울기가 반대인 무늬가 나온다 */
+    mirrorHint: "기운 코는 반대 방향 코로 바뀌어요 (오른코모아 ↔ 왼코모아)",
+    /* 코수 자동 검산 — 도안을 구조로 저장하는 가장 실용적인 이유 */
+    verify: "코수 검산",
+    verifyHint: "각 단이 쓰는 코수가 전단이 남긴 코수와 맞는지 봐요",
+    verifyOk: "코수가 맞아요 · 시작 {start}코 → 끝 {end}코",
+    verifyBad: "코수가 맞지 않는 단이 {n}개 있어요",
+    verifyRow: "{row}단 — {expected}코가 있어야 하는데 {consumes}코를 써요",
+    castOn: "시작 코수",
+    castOnHint:
+      "실제로 시작하는 코수를 넣으면 1단부터 검산해요. 비우면 무늬 안쪽만 봐요.",
+    /* 서술형 변환 — 같은 구조에서 두 언어의 도안이 나온다 (기획 §4) */
+    prose: "서술형 도안",
+    proseHint:
+      "같은 도안을 글로 옮긴 거예요. 원형 뜨기 기준이라 모든 단을 오른쪽에서 왼쪽으로 읽어요.",
+    /* 반만 맞는 변환을 내보내면 틀린 도안이 된다 */
+    proseFlatNote:
+      "평면 뜨기는 안면 단에서 기호와 실제로 뜨는 기법이 달라져서 아직 서술형으로 바꾸지 않아요.",
+    proseLocale: "도안 언어",
+    counts: "기법별 칸 수",
+    countsValue: "{n}칸",
+    rowLabel: "{n}단",
+    empty: "만든 기호 도안이 없어요",
+    emptyHint:
+      "무늬를 기호로 그려두면 코수가 맞는지 자동으로 검산하고, 한국어·영문 서술형 도안으로 바꿔줘요",
+    deleteConfirm: "이 도안을 지울까요?",
   },
   photoChart: {
     open: "사진에서 옮기기",
