@@ -21,6 +21,7 @@ import {
   saveStitchChart,
   setStitchChartCastOn,
   setStitchChartGauge,
+  setStitchChartReading,
   toStitchChart,
 } from "@/features/stitchChart/repository";
 import { listGauges } from "@/features/gauge/repository";
@@ -30,13 +31,16 @@ import {
   opCounts,
   opRuns,
   resizeStitchChart,
+  rowSide,
   setOp,
   stitchChartSizeCm,
   usedOps,
   verifyChart,
+  type Reading,
+  type Side,
   type StitchChart,
 } from "@/domain/stitchChart";
-import { stitchOps } from "@/domain/stitches";
+import { chartOps } from "@/domain/stitches";
 import { formatRow, stitchLabel } from "@/i18n/stitches";
 import { useUnits } from "@/app/units";
 import {
@@ -111,6 +115,13 @@ function Editor({
     return () => clearTimeout(timer);
   }, [name, record.name, chartId]);
 
+  const reading: Reading = {
+    flat: record.flat ?? false,
+    firstSide: record.firstRowSide ?? "rs",
+  };
+  const sideLabel = (side: Side) =>
+    side === "rs" ? t.pattern.sideRs : t.pattern.sideWs;
+
   const gauge = gauges.find((g) => g.id === record.gaugeId);
   const gaugeValues = gauge
     ? {
@@ -164,7 +175,7 @@ function Editor({
           {t.pattern.stitchesHint}
         </p>
         <div className="flex flex-wrap gap-1.5">
-          {stitchOps("knit").map((candidate) => (
+          {chartOps("knit").map((candidate) => (
             <button
               key={candidate}
               type="button"
@@ -348,9 +359,46 @@ function Editor({
       <section className="mt-6">
         <h2 className="text-micro text-text-3 mb-1">{t.pattern.prose}</h2>
         <p className="text-text-3 text-caption mb-1">{t.pattern.proseHint}</p>
-        <p className="text-text-3 text-caption mb-3">
-          {t.pattern.proseFlatNote}
-        </p>
+        {/* 안면 변환이 무슨 일을 하는지는 평면일 때만 알려주면 된다 */}
+        {reading.flat && (
+          <p className="text-text-3 text-caption mb-1">
+            {t.pattern.proseWsNote}
+          </p>
+        )}
+
+        <div className="mt-3 flex flex-wrap gap-x-6">
+          <SegmentedControl<"round" | "flat">
+            className="mb-2 max-w-xs grow basis-48"
+            label={t.pattern.reading}
+            value={reading.flat ? "flat" : "round"}
+            onChange={(value) =>
+              void setStitchChartReading(chartId, {
+                ...reading,
+                flat: value === "flat",
+              })
+            }
+            options={[
+              { value: "round", label: t.pattern.readingRound },
+              { value: "flat", label: t.pattern.readingFlat },
+            ]}
+          />
+          {/* 원형에는 시작 면이라는 개념이 없다 — 뒤집는 일이 없으므로 */}
+          {reading.flat && (
+            <SegmentedControl<Side>
+              className="mb-2 max-w-xs grow basis-48"
+              label={t.pattern.firstSide}
+              value={reading.firstSide}
+              onChange={(firstSide) =>
+                void setStitchChartReading(chartId, { ...reading, firstSide })
+              }
+              options={[
+                { value: "rs", label: t.pattern.sideRs },
+                { value: "ws", label: t.pattern.sideWs },
+              ]}
+            />
+          )}
+        </div>
+        <p className="text-text-3 text-caption mb-3">{t.pattern.readingHint}</p>
 
         <SegmentedControl<Locale>
           className="max-w-xs"
@@ -365,16 +413,26 @@ function Editor({
 
         {/* 위 단부터 읽지 않는다 — 도안은 1단부터 뜨므로 아래에서 위로 적는다 */}
         <ol className="text-small space-y-1">
-          {Array.from({ length: chart.height }, (_, y) => (
-            <li key={y} className="flex gap-2">
-              <span className="text-text-3 w-12 shrink-0 tabular-nums">
-                {t.pattern.rowLabel.replace("{n}", String(y + 1))}
-              </span>
-              <span className="min-w-0">
-                {formatRow(opRuns(chart, y), proseLocale)}
-              </span>
-            </li>
-          ))}
+          {Array.from({ length: chart.height }, (_, y) => {
+            const side = rowSide(y, reading);
+            return (
+              <li key={y} className="flex gap-2">
+                <span className="text-text-3 w-12 shrink-0 tabular-nums">
+                  {t.pattern.rowLabel.replace("{n}", String(y + 1))}
+                </span>
+                {/* 어느 면에서 뜨는 단인지 모르면 안면 지시를 겉면에서
+                    뜨게 된다. 원형에서는 전부 겉면이라 군더더기다. */}
+                {reading.flat && (
+                  <span className="text-text-3 text-caption w-10 shrink-0 pt-0.5">
+                    {sideLabel(side)}
+                  </span>
+                )}
+                <span className="min-w-0">
+                  {formatRow(opRuns(chart, y, side), proseLocale)}
+                </span>
+              </li>
+            );
+          })}
         </ol>
       </section>
 

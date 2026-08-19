@@ -7,6 +7,7 @@
  */
 
 import type { Craft, YarnWeightClass } from "@/domain/units";
+import type { Side } from "@/domain/stitchChart";
 import type { Measurements } from "@/domain/body";
 
 export type Id = string;
@@ -213,6 +214,14 @@ export interface StitchChartRecord extends Base {
    * 것을 뜨기 전에 알려준다. 없으면 무늬 자체의 앞뒤만 본다.
    */
   castOn?: number;
+  /**
+   * 평면 뜨기인가. 기본은 원형(false)이다.
+   *
+   * 서술형 변환에만 쓴다 — 격자는 어느 쪽이든 겉에서 본 모습으로 그린다.
+   */
+  flat?: boolean;
+  /** 1단을 어느 면에서 시작하는가. 기본은 겉면. */
+  firstRowSide?: Side;
   gaugeId?: Id;
   projectId?: Id;
   notes?: string;

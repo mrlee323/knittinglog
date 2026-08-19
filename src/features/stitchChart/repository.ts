@@ -1,5 +1,9 @@
 import { db, stamp, touch } from "@/lib/db";
-import { createStitchChart, type StitchChart } from "@/domain/stitchChart";
+import {
+  createStitchChart,
+  type Side,
+  type StitchChart,
+} from "@/domain/stitchChart";
 import type { Id, StitchChartRecord } from "@/types/entities";
 
 /* --- 조회 ----------------------------------------------------------------- */
@@ -60,6 +64,22 @@ export async function renameStitchChart(id: Id, name: string) {
 
 export async function setStitchChartGauge(id: Id, gaugeId?: Id) {
   await db.stitchCharts.update(id, touch({ gaugeId }));
+}
+
+/**
+ * 뜨는 방식(원형·평면과 시작 면).
+ *
+ * 격자에는 영향이 없다 — 도안은 어느 쪽이든 겉에서 본 모습으로 그린다.
+ * 서술형 변환에서만 갈린다.
+ */
+export async function setStitchChartReading(
+  id: Id,
+  reading: { flat: boolean; firstSide: Side }
+) {
+  await db.stitchCharts.update(
+    id,
+    touch({ flat: reading.flat, firstRowSide: reading.firstSide })
+  );
 }
 
 /** 시작 코수. 비우면 무늬 자체의 앞뒤만 검산한다. */

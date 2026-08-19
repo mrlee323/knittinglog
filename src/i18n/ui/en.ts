@@ -255,11 +255,19 @@ export const en: UIStrings = {
     castOn: "Cast-on count",
     castOnHint:
       "Enter your real cast-on to check from row 1. Leave empty to check the motif only.",
+    reading: "Worked",
+    readingRound: "In the round",
+    readingFlat: "Flat",
+    readingHint:
+      "In the round you never turn, so every row is a right-side row. Flat alternates right- and wrong-side rows.",
+    firstSide: "Row 1 side",
+    sideRs: "Right side",
+    sideWs: "Wrong side",
     prose: "Written pattern",
     proseHint:
-      "The same chart as text. Written for knitting in the round, so every row reads right to left.",
-    proseFlatNote:
-      "Flat knitting isn't converted yet — on wrong-side rows the symbol and the stitch you actually work differ.",
+      "The same chart as text. Right-side rows read right to left, wrong-side rows left to right.",
+    proseWsNote:
+      "Charts show the right side, so on wrong-side rows a knit symbol is purled — and leaning stitches become their wrong-side equivalents.",
     proseLocale: "Pattern language",
     counts: "Cells per stitch",
     countsValue: "{n} cells",
