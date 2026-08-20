@@ -14,7 +14,9 @@ import {
   widthForStitches,
   type Gauge,
 } from "@/domain/gauge";
+import { isImpossible as isCurveImpossible, planCurve } from "@/domain/curve";
 import { isImpossible, planEvenShaping } from "@/domain/shaping";
+import { CurveDiagram } from "@/features/gauge/components/curve-diagram";
 import { ShapingDiagram } from "@/features/gauge/components/shaping-diagram";
 import {
   applyEase,
@@ -140,6 +142,8 @@ function GaugeCalc() {
       {/* 균등 증감은 게이지를 쓰지 않는다 — 코수만으로 계산된다. 그래서
           스와치를 아직 안 뜬 사람도 쓸 수 있게 게이지 조건 밖에 둔다. */}
       <EvenShaping />
+
+      <NeckAndArmhole />
 
       <p className="text-text-3 text-caption mt-6">
         {units.lengthLabel === "in" ? "게이지는 10cm 기준으로 입력해요." : ""}
@@ -621,6 +625,144 @@ function EvenShaping() {
                 {result.even && ` · ${t.shaping.even}`}
               </p>
             </>
+          )}
+        </Result>
+      )}
+    </Section>
+  );
+}
+
+/* --- 목선 · 암홀 곡선 ------------------------------------------------------ */
+
+/**
+ * 코막음 배분.
+ *
+ * 진동과 목둘레는 한 번에 막지 않는다. 여러 단에 걸쳐 큰 것부터 줄여야 곡선이
+ * 되고, 도안은 그 배분을 코수-단수-횟수로 적는다. 계산은 domain/curve.ts에 있고
+ * 여기서는 도안 표기와 읽는 문장을 나란히 보여준다 — 표기는 옮겨 적기 위한
+ * 것이고 문장은 지금 이해하기 위한 것이다.
+ */
+function NeckAndArmhole() {
+  const t = useStrings();
+
+  const [stitches, setStitches] = useState("13");
+  const [rows, setRows] = useState("14");
+  const [firstBindOff, setFirstBindOff] = useState("4");
+  const [everyOtherRow, setEveryOtherRow] = useState(true);
+
+  const result = planCurve({
+    stitches: num(stitches) ?? 0,
+    rows: num(rows) ?? 0,
+    firstBindOff: num(firstBindOff) ?? 0,
+    everyOtherRow,
+  });
+
+  return (
+    <Section title={t.curve.title} hint={t.curve.hint}>
+      <div className="flex gap-3">
+        <div className="flex-1">
+          <TextField
+            label={t.curve.stitches}
+            inputMode="numeric"
+            value={stitches}
+            onChange={(e) => setStitches(e.target.value)}
+          />
+        </div>
+        <div className="flex-1">
+          <TextField
+            label={t.curve.rows}
+            inputMode="numeric"
+            value={rows}
+            onChange={(e) => setRows(e.target.value)}
+          />
+        </div>
+      </div>
+
+      <div className="flex flex-wrap items-end gap-3">
+        <div className="w-32">
+          <TextField
+            label={t.curve.firstBindOff}
+            className="mb-0"
+            inputMode="numeric"
+            value={firstBindOff}
+            onChange={(e) => setFirstBindOff(e.target.value)}
+          />
+        </div>
+        {/* 평면에서 겉면에서만 줄이면 두 단마다가 된다. 목선은 매 단 줄이는
+            경우도 있어서 고를 수 있게 둔다. */}
+        <div className="mb-4 flex gap-1.5">
+          {[false, true].map((other) => (
+            <button
+              key={String(other)}
+              type="button"
+              aria-pressed={everyOtherRow === other}
+              onClick={() => setEveryOtherRow(other)}
+              className={cn(
+                "text-caption min-h-11 rounded-sm px-3 transition",
+                everyOtherRow === other
+                  ? "bg-accent text-on-accent font-semibold"
+                  : "bg-sunken text-text-2"
+              )}
+            >
+              {other ? t.curve.everyOtherRow : t.curve.everyRow}
+            </button>
+          ))}
+        </div>
+      </div>
+      <p className="text-text-3 text-caption mb-4">
+        {t.curve.firstBindOffHint}
+      </p>
+
+      {isCurveImpossible(result) ? (
+        <Result>
+          <strong className="text-subhead text-frogged font-semibold">
+            {t.curve.impossible.replace("{n}", String(result.neededRows))}
+          </strong>
+        </Result>
+      ) : result.steps.length === 0 ? (
+        <Result>
+          <span className="text-text-2">{t.curve.nothing}</span>
+        </Result>
+      ) : (
+        <Result>
+          {/* 도안 표기가 주인공이다 — 이걸 종이에 옮겨 적고 뜬다 */}
+          <strong className="text-title font-semibold">
+            {result.steps
+              .map((s) => `${s.stitches}-${s.rowInterval}-${s.times}`)
+              .join(" · ")}
+          </strong>
+          <span className="text-text-3 text-caption">
+            {t.curve.notationLegend}
+          </span>
+
+          <p className="text-small mt-1">
+            {result.steps
+              .map((s, i) =>
+                i === 0 && s.rowInterval === 1 && s.times === 1
+                  ? t.curve.stepFirst.replace("{stitches}", String(s.stitches))
+                  : t.curve.step
+                      .replace("{stitches}", String(s.stitches))
+                      .replace("{interval}", String(s.rowInterval))
+                      .replace("{times}", String(s.times))
+              )
+              .join(" · ")}
+          </p>
+
+          <CurveDiagram plan={result} />
+
+          <p className="text-text-2 text-small">
+            {t.curve.result
+              .replace("{stitches}", String(result.stitchesUsed))
+              .replace("{rows}", String(result.rowsUsed))}
+            {result.plainRows > 0 &&
+              ` · ${t.curve.plainRows.replace("{n}", String(result.plainRows))}`}
+          </p>
+
+          {/* 막을 수는 있지만 곡선이 계단이 되는 구간을 알린다 */}
+          {result.maxPerStep >= 4 && (
+            <p className="text-hibernating text-caption">
+              {t.curve.steep.replace("{n}", String(result.maxPerStep))}
+            </p>
           )}
         </Result>
       )}
