@@ -2,6 +2,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { createRouter, RouterProvider } from "@tanstack/react-router";
 import { Providers } from "@/components/providers";
+import { NotFound } from "@/components/not-found";
 import { routeTree } from "./routeTree.gen";
 import "./index.css";
 
@@ -10,6 +11,9 @@ import "./index.css";
 const router = createRouter({
   routeTree,
   basepath: import.meta.env.BASE_URL,
+  // 화면을 없애면 그 주소는 남는다. 라우터 기본 화면은 꾸미지 않은 한 줄이라
+  // 설치된 앱에서는 앱이 깨진 것처럼 보인다.
+  defaultNotFoundComponent: NotFound,
 });
 
 declare module "@tanstack/react-router" {

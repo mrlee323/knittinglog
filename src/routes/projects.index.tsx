@@ -5,6 +5,7 @@ import { z } from "zod";
 import { CardGrid, Page } from "@/components/ui/page";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/features/project/components/status-badge";
+import { PauseReasons } from "@/features/project/components/pause-reasons";
 import { listProjects } from "@/features/project/repository";
 import { pausedLabel } from "@/features/project/format";
 import { projectColors } from "@/features/yarn/repository";
@@ -104,6 +105,10 @@ function Projects() {
           ))}
         </CardGrid>
       )}
+      {/* 멈춘 작품들을 보고 있을 때가 "나는 왜 멈추나"를 물을 자리다.
+          전용 화면을 두면 매일 보지도 않는 통계에 탭 하나를 쓰게 된다. */}
+      {status === "hibernating" && <PauseReasons />}
+
     </Page>
   );
 }

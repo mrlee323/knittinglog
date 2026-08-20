@@ -5,7 +5,7 @@ import {
   useRouterState,
 } from "@tanstack/react-router";
 import {
-  ChartColumn,
+  Bookmark,
   Home,
   Layers,
   Ruler,
@@ -52,7 +52,10 @@ function RootLayout() {
     { to: "/projects", icon: Layers, label: t.nav.projects },
     { to: "/gauge", icon: Ruler, label: t.nav.gauge },
     { to: "/yarn", icon: Spool, label: t.nav.yarn },
-    { to: "/stats", icon: ChartColumn, label: t.nav.stats },
+    // 옛 "기록" 탭 자리다. 전체 합계와 잔디는 자기만족용이었고 방치 목록·활동
+    // 집계는 홈과 겹쳤다. 스크랩은 공유로 계속 쌓이는 것이라 들어갈 길이 늘
+    // 보여야 한다.
+    { to: "/inspiration", icon: Bookmark, label: t.nav.scrap },
     { to: "/settings", icon: Settings, label: t.nav.settings },
   ];
 

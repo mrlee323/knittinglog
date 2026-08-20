@@ -11,7 +11,7 @@ export const ko = {
     projects: "프로젝트",
     gauge: "게이지",
     yarn: "실",
-    stats: "기록",
+    scrap: "스크랩",
     settings: "설정",
   },
   status: {
@@ -87,6 +87,14 @@ export const ko = {
     references: "참고 자료",
     viewWorkbench: "작업대에서 보기",
     resources: "구성",
+    /* 중단 사유별 결말 — 옛 기록 탭에서 옮겨왔다 */
+    reasonTitle: "왜 멈췄나",
+    reasonNote: "지금까지 멈춘 이력을 모아 본 거예요",
+    reasonTop: "가장 많은 사유 — {reason}",
+    medianPause: "보통 {n}일쯤 멈춰 있어요",
+    reasonCount: "{n}번",
+    reasonReturned: "{n}번 돌아옴",
+    reasonOpen: "{n}개 멈춤 중",
   },
   counter: {
     title: "카운터",
@@ -703,42 +711,6 @@ export const ko = {
     deleteImageConfirm: "이 이미지를 지울까요?",
     deleteVideoConfirm: "이 영상 링크를 지울까요?",
   },
-  stats: {
-    title: "기록",
-    /* 방치 리포트 — 이 서비스 컨셉의 핵심 화면 */
-    idle: "멈춰 있는 것",
-    idleEmpty: "지금 멈춘 프로젝트가 없어요",
-    /* 재개하면 사유가 지워지므로 평생 이력이 아니라 현재 단면이다.
-       문구가 그 이상을 주장하면 안 된다. */
-    reasonTitle: "왜 멈췄나",
-    /* 평생 이력을 센다. 프로젝트의 pauseReason은 재개하면 지워지므로
-       중단 이벤트(pauseEvents)를 따로 쌓아 여기서 읽는다. */
-    reasonNote: "지금까지 멈춘 이력을 모아 본 거예요",
-    reasonEmpty: "아직 멈춘 기록이 없어요",
-    reasonTop: "가장 많은 사유 — {reason}",
-    reasonCount: "{n}번",
-    /* 횟수보다 "돌아왔는지"가 더 쓸모 있다 */
-    reasonReturned: "{n}번 돌아옴",
-    reasonOpen: "{n}개 멈춤 중",
-    medianPause: "보통 {n}일쯤 멈춰 있어요",
-    /* 잔디 */
-    activity: "뜬 날",
-    activityNote: "최근 13주 · 진하기는 내 기록 안에서의 상대값이에요",
-    activityEmpty: "아직 뜬 기록이 없어요",
-    /* 누적 */
-    totals: "누적",
-    totalRows: "뜬 단수",
-    totalTime: "뜬 시간",
-    totalDays: "뜬 날",
-    finishedCount: "완성",
-    finishedThisYear: "올해 {n}개",
-    yarnUsed: "쓴 실",
-    yarnUsedNote: "완성한 작품에 배정한 실이에요",
-    yarnUsedValue: "{skeins}타래",
-    yarnUsedDetail: "{grams}g · {meters}m",
-    empty: "보여줄 기록이 아직 없어요",
-    emptyHint: "프로젝트를 만들고 카운터를 세면 여기가 채워져요",
-  },
   action: {
     create: "만들기",
     save: "저장",
@@ -769,7 +741,9 @@ export const ko = {
     themeDark: "다크",
     units: "단위계",
   },
-  common: { empty: "아직 없어요", loading: "불러오는 중" },
+  common: {
+    notFound: "없는 화면이에요",
+    notFoundHint: "주소가 바뀌었거나 지워진 화면일 수 있어요.", empty: "아직 없어요", loading: "불러오는 중" },
 };
 
 export type UIStrings = typeof ko;

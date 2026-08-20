@@ -68,6 +68,9 @@ export function aggregateSessions(sessions: SessionLike[]): SessionTotals {
   return { rows, durationMs, days: days.size };
 }
 
+export const sessionsSince = (sessions: SessionLike[], from: Date) =>
+  sessions.filter((s) => s.startedAt.getTime() >= from.getTime());
+
 /** 날짜별 단수. 잔디 히트맵(P1)과 "이번 주" 집계가 같은 값을 쓴다. */
 export function rowsByDate(sessions: SessionLike[]): Map<string, number> {
   const map = new Map<string, number>();
@@ -77,9 +80,6 @@ export function rowsByDate(sessions: SessionLike[]): Map<string, number> {
   }
   return map;
 }
-
-export const sessionsSince = (sessions: SessionLike[], from: Date) =>
-  sessions.filter((s) => s.startedAt.getTime() >= from.getTime());
 
 /**
  * 연속으로 뜬 일수.
@@ -127,13 +127,6 @@ export function countByStatus(projects: ProjectLike[]): StatusCounts {
   };
   for (const project of projects) counts[project.status] += 1;
   return counts;
-}
-
-/** 올해 완성한 개수. 연간 결산(P2)의 씨앗이기도 하다. */
-export function finishedInYear(projects: ProjectLike[], now: Date): number {
-  return projects.filter(
-    (p) => p.finishedAt && p.finishedAt.getFullYear() === now.getFullYear()
-  ).length;
 }
 
 /**
@@ -192,65 +185,6 @@ export interface HeatCell {
   weekday: number;
 }
 
-/**
- * 날짜별 활동 강도.
- *
- * 강도는 절대 기준이 아니라 **자기 기록 안에서의 상대값**이다. 하루 200단 뜨는
- * 사람과 20단 뜨는 사람에게 같은 눈금을 쓰면 한쪽은 늘 흐리고 한쪽은 늘 진하다.
- * 격자가 말해야 하는 건 "많이 떴나"가 아니라 "꾸준했나"다.
- */
-export function rowsHeatmap(
-  sessions: SessionLike[],
-  now: Date,
-  days = 91
-): HeatCell[] {
-  const byDate = rowsByDate(sessions);
-  const cells: { key: string; rows: number; weekday: number }[] = [];
-
-  for (let offset = days - 1; offset >= 0; offset -= 1) {
-    const date = daysAgo(now, offset);
-    const key = localDateKey(date);
-    cells.push({ key, rows: byDate.get(key) ?? 0, weekday: date.getDay() });
-  }
-
-  const worked = cells
-    .map((c) => c.rows)
-    .filter((r) => r > 0)
-    .sort((a, b) => a - b);
-
-  // 뜬 날이 없으면 전부 0단계. 사분위를 계산할 표본이 없다.
-  if (worked.length === 0) {
-    return cells.map((c) => ({ ...c, level: 0 as const }));
-  }
-
-  // 뜬 날이 모두 같은 양이면 나눌 근거가 없다. 가장 흐린 단계로 두면
-  // 꾸준히 뜬 사람의 격자가 통째로 희미해지므로 중간 단계로 칠한다.
-  if (worked[0] === worked[worked.length - 1]) {
-    return cells.map((c) => ({
-      ...c,
-      level: c.rows > 0 ? (3 as const) : (0 as const),
-    }));
-  }
-
-  // 0-기준 순위로 자른다. worked.length를 곱하면 표본이 적을 때 q3가 최댓값과
-  // 같아져서 4단계에 아무도 닿지 않는다.
-  const quantile = (p: number) => worked[Math.floor((worked.length - 1) * p)];
-  const q1 = quantile(0.25);
-  const q2 = quantile(0.5);
-  const q3 = quantile(0.75);
-
-  return cells.map((c) => {
-    let level: HeatCell["level"] = 0;
-    if (c.rows > 0) {
-      if (c.rows <= q1) level = 1;
-      else if (c.rows <= q2) level = 2;
-      else if (c.rows <= q3) level = 3;
-      else level = 4;
-    }
-    return { ...c, level };
-  });
-}
-
 /* --- 실 소비량 ------------------------------------------------------------ */
 
 export interface YarnUse {
@@ -258,27 +192,6 @@ export interface YarnUse {
   /** 타래 스펙을 아는 것만 합산한다 */
   grams: number;
   meters: number;
-}
-
-/**
- * 쓴 실의 합.
- *
- * 무게·길이를 모르는 실(라벨을 잃어버린 것)은 타래 수만 세고 무게·길이 합계에서
- * 빠진다. 모르는 값을 0으로 넣으면 합계가 조용히 작아진다.
- */
-export function sumYarnUse(
-  entries: { skeins: number; skeinGrams?: number; skeinMeters?: number }[]
-): YarnUse {
-  let skeins = 0;
-  let grams = 0;
-  let meters = 0;
-  for (const entry of entries) {
-    const n = Math.max(0, entry.skeins);
-    skeins += n;
-    if (entry.skeinGrams) grams += n * entry.skeinGrams;
-    if (entry.skeinMeters) meters += n * entry.skeinMeters;
-  }
-  return { skeins, grams, meters };
 }
 
 /* --- 중단 이력 ------------------------------------------------------------ */
