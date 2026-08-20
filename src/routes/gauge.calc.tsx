@@ -1,7 +1,9 @@
 import { useState, type ReactNode } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { z } from "zod";
 import { useLiveQuery } from "dexie-react-hooks";
 import { ChevronLeft } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Page } from "@/components/ui/page";
 import { SelectField, TextField } from "@/components/ui/field";
 import { useUnits } from "@/app/units";
@@ -26,13 +28,26 @@ import {
   type MeasurementKey,
 } from "@/domain/body";
 import { PieceSchematic } from "@/features/gauge/components/piece-schematic";
-import { listGauges } from "@/features/gauge/repository";
+import { listGauges, listGaugesForProject } from "@/features/gauge/repository";
+import { appendProjectNote, getProject } from "@/features/project/repository";
 import { listProfiles } from "@/features/profile/repository";
 import { useStrings } from "@/i18n";
 import { cn } from "@/lib/utils";
 import type { BodyProfile } from "@/types/entities";
 
-export const Route = createFileRoute("/gauge/calc")({ component: GaugeCalc });
+/**
+ * 어느 프로젝트를 위해 계산하는지 URL에 담는다.
+ *
+ * 게이지 계산은 그냥 하기도 하지만, 대개 **특정 도안이 내 사이즈와 달라서**
+ * 한다. 그때 필요한 건 그 프로젝트의 스와치이고, 결과도 그 프로젝트로
+ * 돌아가야 한다. search param에 두면 뒤로가기와 새로고침에서도 맥락이 남는다.
+ */
+const searchSchema = z.object({ projectId: z.string().optional() });
+
+export const Route = createFileRoute("/gauge/calc")({
+  component: GaugeCalc,
+  validateSearch: searchSchema,
+});
 
 const num = (raw: string) => {
   const parsed = Number(raw);
@@ -43,11 +58,23 @@ function GaugeCalc() {
   const t = useStrings();
   const units = useUnits();
 
+  const { projectId } = Route.useSearch();
   const swatches = useLiveQuery(() => listGauges(), []);
   const profiles = useLiveQuery(() => listProfiles(), []);
+  const project = useLiveQuery(
+    async () => (projectId ? await getProject(projectId) : undefined),
+    [projectId]
+  );
+  const projectSwatches = useLiveQuery(
+    async () => (projectId ? await listGaugesForProject(projectId) : []),
+    [projectId]
+  );
 
   /* --- 내 게이지 --- */
-  const [swatchId, setSwatchId] = useState("");
+  // 고른 값이 없으면 이 프로젝트의 스와치를 쓴다. 상태로 밀어넣지 않고
+  // 파생값으로 두는 이유는, 데이터가 늦게 도착해도 선택이 튀지 않게 하려는 것.
+  const [picked, setPicked] = useState<string>();
+  const swatchId = picked ?? projectSwatches?.[0]?.id ?? "";
   const [manualSts, setManualSts] = useState("22");
   const [manualRows, setManualRows] = useState("30");
 
@@ -76,13 +103,30 @@ function GaugeCalc() {
         {t.gauge.title}
       </Link>
 
+      {/* 어느 프로젝트를 위한 계산인지 늘 보이게 둔다. 계산기에 들어오면
+          입력값에 정신이 팔려서 "무엇 때문에 계산하던 건지"를 놓친다. */}
+      {project && (
+        <div className="border-line bg-sunken mb-5 flex items-center justify-between gap-3 rounded-md border p-3">
+          <p className="text-small min-w-0 truncate">
+            {t.calc.forProject.replace("{name}", project.name)}
+          </p>
+          <Link
+            to="/projects/$projectId"
+            params={{ projectId: project.id }}
+            className="text-text-2 text-caption hover:text-text shrink-0 underline"
+          >
+            {t.calc.backToProject}
+          </Link>
+        </div>
+      )}
+
       {/* 내 게이지 — 아래 계산 전부의 입력 */}
       <Section title={t.calc.myGauge}>
         {swatches && swatches.length > 0 && (
           <SelectField
             label={t.calc.pickGauge}
             value={swatchId}
-            onChange={(e) => setSwatchId(e.target.value)}
+            onChange={(e) => setPicked(e.target.value)}
             options={[
               { value: "", label: t.calc.manual },
               ...swatches.map((s) => ({
@@ -130,7 +174,7 @@ function GaugeCalc() {
       {gaugeReady && (
         <>
           <SizeToStitches gauge={myGauge} profiles={profiles ?? []} />
-          <ResizePattern gauge={myGauge} />
+          <ResizePattern gauge={myGauge} projectId={projectId} />
           <NeedleAdvice gauge={myGauge} />
         </>
       )}
@@ -291,9 +335,17 @@ function SizeToStitches({
 
 /* --- 도안 리사이징 -------------------------------------------------------- */
 
-function ResizePattern({ gauge }: { gauge: Gauge }) {
+function ResizePattern({
+  gauge,
+  projectId,
+}: {
+  gauge: Gauge;
+  /** 프로젝트에서 들어왔으면 결과를 그 프로젝트 메모에 남길 수 있다 */
+  projectId?: string;
+}) {
   const t = useStrings();
   const units = useUnits();
+  const [saved, setSaved] = useState(false);
 
   const [patternSts, setPatternSts] = useState("22");
   const [patternRows, setPatternRows] = useState("30");
@@ -386,6 +438,28 @@ function ResizePattern({ gauge }: { gauge: Gauge }) {
               .replace("{sts}", String(result.stitches))
               .replace("{rows}", String(result.rows))}
           </strong>
+
+          {/* 계산해놓고 잊는 게 이 계산의 가장 흔한 결말이다. 프로젝트에서
+              들어왔으면 결과를 그 프로젝트 메모에 남길 수 있게 한다. */}
+          {projectId && (
+            <Button
+              variant="secondary"
+              disabled={saved}
+              onClick={() => {
+                void appendProjectNote(
+                  projectId,
+                  t.calc.savedNote
+                    .replace("{sts}", String(result.stitches))
+                    .replace("{rows}", String(result.rows))
+                    .replace("{gaugeSts}", String(gauge.stitchesPer10cm))
+                    .replace("{gaugeRows}", String(gauge.rowsPer10cm))
+                );
+                setSaved(true);
+              }}
+            >
+              {saved ? t.calc.saveDone : t.calc.saveToProject}
+            </Button>
+          )}
 
           {/* 리사이징은 "완성 치수를 유지한다"가 원리다. 두 도식을 겹쳐
               그리면 같은 사각형이 겹칠 뿐이라, 위아래로 나란히 두고

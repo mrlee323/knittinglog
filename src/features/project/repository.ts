@@ -210,6 +210,20 @@ export async function restartProject(sourceId: Id): Promise<Id> {
   return copy.id;
 }
 
+/**
+ * 프로젝트 메모에 한 줄 덧붙인다.
+ *
+ * 계산 결과를 손으로 옮겨 적게 두면 대개 안 적고, 안 적으면 다음에 또 계산한다.
+ * 메모는 이미 프로젝트에 딸린 자유 서식이라 붙일 자리로 맞다 — 새 테이블을
+ * 만들면 "계산 기록"이라는 볼 일 없는 목록이 하나 더 생긴다.
+ */
+export async function appendProjectNote(id: Id, line: string) {
+  const project = await db.projects.get(id);
+  if (!project) throw new Error(`프로젝트를 찾을 수 없습니다: ${id}`);
+  const notes = [project.notes?.trim(), line.trim()].filter(Boolean).join("\n");
+  await db.projects.update(id, touch({ notes: notes.slice(0, 2000) }));
+}
+
 export async function deleteProject(id: Id) {
   // 프로젝트에 매달린 기록을 함께 지운다. 고아 레코드가 통계를 오염시킨다.
   // 카운터는 마크·세션을 다시 물고 있으므로 두 단계로 내려간다.

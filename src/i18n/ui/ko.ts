@@ -254,6 +254,7 @@ export const ko = {
     summary: "{sts}코 × {rows}단 / 10cm",
     deleteConfirm: "이 스와치 기록을 지울까요?",
     calc: "계산기",
+    calcForThis: "이 프로젝트로 계산하기",
     calcTitle: "게이지 계산기",
   },
   chart: {
@@ -275,6 +276,7 @@ export const ko = {
     gauge: "게이지",
     gaugeNone: "고르지 않음",
     finishedSize: "완성 {w} × {h}",
+    zoomLevel: ["작게", "보통", "크게"],
     repeatedAs: "가로 {x}번 · 세로 {y}번 깔았을 때",
     palette: "색",
     addColor: "색 추가",
@@ -593,6 +595,12 @@ export const ko = {
     goDown: "{mm}mm로 내려보세요",
     needleOk: "측정 오차 범위예요. 그대로 뜨셔도 돼요.",
     /* 도식 */
+    forProject: "{name}을(를) 위한 계산이에요",
+    backToProject: "프로젝트로",
+    saveToProject: "이 결과를 프로젝트 메모에 저장",
+    saveDone: "메모에 저장했어요",
+    savedNote:
+      "도안 리사이징: 내 게이지 {gaugeSts}코×{gaugeRows}단 기준 {sts}코 × {rows}단",
     gridHint:
       "격자 한 칸은 10코 × 10단이에요. 뜨개 코는 정사각형이 아니라서 칸이 납작하거나 길쭉해요 — 그게 완성 모양이에요.",
     /* 몸 치수 연동 */

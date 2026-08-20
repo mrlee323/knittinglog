@@ -30,6 +30,7 @@ import {
   listPhotos,
   listReferencePhotos,
 } from "@/features/photo/repository";
+import { ProjectGauge } from "@/features/gauge/components/project-gauge";
 import { NeedleSection } from "@/features/needle/components/needle-section";
 import { AllocationSection } from "@/features/yarn/components/allocation-section";
 import { allowedEvents, daysSincePaused } from "@/domain/projectStatus";
@@ -297,6 +298,7 @@ function ProjectOverview() {
             {/* 카운터 관리(추가·연동·삭제)와 실 배정은 조작이므로 옆 단에 둔다.
                 읽기용 진행도는 본문 위쪽 ProgressCard가 맡는다. */}
             <CounterSection projectId={projectId} />
+            <ProjectGauge projectId={projectId} />
             <AllocationSection projectId={projectId} />
             <NeedleSection projectId={projectId} />
 
