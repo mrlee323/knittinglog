@@ -274,6 +274,7 @@ export const en: UIStrings = {
     zoomLevel: ["Small", "Medium", "Large"],
     repeatedAs: "shown {x} across, {y} down",
     palette: "Colours",
+    grid: "Grid",
     addColor: "Add colour",
     removeColor: "Remove this colour",
     mirror: "Mirror",

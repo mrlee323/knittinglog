@@ -1,5 +1,7 @@
 import { getCell, type ColorChart } from "@/domain/colorChart";
 import { planRepeats, stitchShades } from "@/domain/fabric";
+import { shade, tint } from "@/domain/color";
+import { stitchSprite } from "./stitch-sprite";
 
 /**
  * 배색 도안을 천처럼 그린다.
@@ -55,9 +57,16 @@ export function paintFabric(
   // 물려 있고, 그래야 옆 코와의 경계가 단마다 끊겨 보인다 — 딱 칸에 맞춰
   // 그리면 밝은 실 가닥이 세로로 이어져 자로 그은 선처럼 보였다.
   const stampHeight = cellHeight * OVERLAP;
-  const stamps = chart.palette.map((hex) =>
-    stitchStamp(hex, cellWidth, stampHeight, dpr)
-  );
+  /**
+   * 색마다 스탬프를 **두 벌** 만든다.
+   *
+   * 섬유 결이 들어간 스탬프 하나를 모든 칸에 찍으면 같은 얼룩이 격자처럼
+   * 반복되어 눈에 걸린다. 두 벌을 번갈아 찍으면 규칙이 흐려진다.
+   */
+  const stamps = chart.palette.map((hex) => [
+    stitchStamp(hex, cellWidth, stampHeight, dpr, 0),
+    stitchStamp(hex, cellWidth, stampHeight, dpr, 1),
+  ]);
 
   const rows = chart.height * plan.y;
   const cols = chart.width * plan.x;
@@ -68,9 +77,10 @@ export function paintFabric(
     const y = height - (row + 1) * cellHeight;
     if (y > height || y + cellHeight < 0) continue;
     for (let col = 0; col < cols; col += 1) {
-      const stamp =
+      const variants =
         stamps[getCell(chart, col % chart.width, row % chart.height)];
-      if (!stamp) continue;
+      if (!variants) continue;
+      const stamp = variants[(col + row) % 2];
       // 아래 단부터 그리므로, 위 단의 넘친 부분이 아래 단의 머리를 덮는다
       ctx.drawImage(stamp, col * cellWidth, y, cellWidth, stampHeight);
     }
@@ -102,9 +112,10 @@ function stitchStamp(
   hex: string,
   cellWidth: number,
   cellHeight: number,
-  dpr: number
+  dpr: number,
+  variant = 0
 ): HTMLCanvasElement {
-  const key = `${hex}|${cellWidth.toFixed(2)}|${cellHeight.toFixed(2)}|${dpr}`;
+  const key = `${hex}|${cellWidth.toFixed(2)}|${cellHeight.toFixed(2)}|${dpr}|${variant}`;
   const hit = cache.get(key);
   if (hit) return hit;
 
@@ -117,39 +128,49 @@ function stitchStamp(
   const ctx = canvas.getContext("2d");
   if (!ctx) return canvas;
 
-  // 바탕 — 칸 사이에 틈이 생기지 않게 꽉 채운다
+  // 1) 실 색을 깐다
   ctx.fillStyle = shades.base;
   ctx.fillRect(0, 0, w, h);
 
-  // 넘친 아래쪽은 그늘로 둔다. 위 단이 아래 단에 드리우는 그림자이고, 이것이
-  // 단 경계를 만든다.
-  const skirt = h * (1 - 1 / OVERLAP);
-  ctx.fillStyle = shades.gap;
-  ctx.globalAlpha = 0.5;
-  ctx.fillRect(0, h - skirt, w, skirt);
-  ctx.globalAlpha = 1;
+  // 2) 명암 스프라이트를 얹는다. 색이 아니라 그늘과 빛만 들어 있으므로
+  //    어떤 실 색에도 그대로 쓰인다(stitch-sprite.ts).
+  const { image } = stitchSprite();
+  if (image) ctx.drawImage(image, 0, 0, w, h);
 
-  // V자 두 가닥
-  ctx.strokeStyle = shades.strand;
-  ctx.lineWidth = Math.max(1, w * 0.3);
+  /**
+   * 3) 섬유 결.
+   *
+   * 스프라이트는 모든 칸에서 같으므로 결까지 넣으면 같은 얼룩이 격자처럼
+   * 반복된다. 결은 여기서 색마다·변형마다 다르게 흩뿌린다. 난수는 색과 변형
+   * 번호로 씨딩해 **같은 색이면 같은 결**이 나오게 한다 — 그러지 않으면 다시
+   * 그릴 때마다 얼룩이 움직인다.
+   */
+  let seed = variant * 7919 + 1;
+  for (let i = 0; i < hex.length; i += 1) {
+    seed = (seed * 31 + hex.charCodeAt(i)) >>> 0;
+  }
+  const random = () => {
+    seed ^= seed << 13;
+    seed ^= seed >>> 17;
+    seed ^= seed << 5;
+    return ((seed >>> 0) % 1000) / 1000;
+  };
+
+  ctx.lineWidth = Math.max(0.5, w * 0.045);
   ctx.lineCap = "round";
-  const cx = w / 2;
-
-  // 팔을 칸 밖까지 뻗는다. 가장자리 안쪽에서 끊으면 옆 코와의 사이에 바탕색
-  // 띠가 남아 **세로 이음선이 규칙적으로 보인다** — 실제 메리야스는 옆 코와
-  // 맞물려 있어서 그런 틈이 없다. 넘친 부분은 스탬프 경계에서 잘린다.
-  // V자는 칸 안쪽(넘친 부분 위)에 그린다. 팔 끝을 위까지 붙이지 않고 조금
-  // 남겨 두면 옆 코와의 경계가 단마다 끊긴다.
-  const foot = h - skirt;
-  ctx.beginPath();
-  ctx.moveTo(cx, foot * 0.98);
-  ctx.quadraticCurveTo(cx - w * 0.4, foot * 0.55, cx - w * 0.5, foot * 0.12);
-  ctx.stroke();
-
-  ctx.beginPath();
-  ctx.moveTo(cx, foot * 0.98);
-  ctx.quadraticCurveTo(cx + w * 0.4, foot * 0.55, cx + w * 0.5, foot * 0.12);
-  ctx.stroke();
+  const fibers = Math.round(w * h * 0.05);
+  for (let i = 0; i < fibers; i += 1) {
+    const fx = random() * w;
+    const fy = random() * h * 0.78;
+    ctx.strokeStyle =
+      random() > 0.45 ? tint(shades.strand, 0.5) : shade(shades.strand, 0.45);
+    ctx.globalAlpha = 0.1 + random() * 0.14;
+    ctx.beginPath();
+    ctx.moveTo(fx, fy);
+    ctx.lineTo(fx + w * 0.09 * (random() > 0.5 ? 1 : -1), fy - h * 0.05);
+    ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
 
   cache.set(key, canvas);
   // 팔레트를 이리저리 바꾸면 스탬프가 쌓인다. 오래된 것부터 버린다.

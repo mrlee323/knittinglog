@@ -239,232 +239,55 @@ function Editor({
         </Link>
       }
     >
-      {/* 팔레트 — 칠할 색을 고른다 */}
-      <section className="mb-5">
-        <h2 className="text-micro text-text-3 mb-2">{t.chart.palette}</h2>
-        <div className="flex flex-wrap items-center gap-2">
-          {chart.palette.map((hex, i) => (
-            <div key={i} className="flex flex-col items-center gap-1">
-              <button
-                type="button"
-                aria-label={t.chart.colorName.replace("{n}", String(i + 1))}
-                aria-pressed={color === i}
-                onClick={() => setColor(i)}
-                className={cn(
-                  "size-9 rounded-sm ring-1 transition ring-inset",
-                  color === i
-                    ? "ring-accent outline-accent outline-2 outline-offset-2"
-                    : "ring-line"
-                )}
-                style={{ background: hex }}
-              />
-              {/* 색을 바꾸는 건 팔레트에서만 한다. 칸마다 색을 넣으면
-                  같은 색을 여러 칸에서 따로 고치는 일이 생긴다. */}
-              <input
-                type="color"
-                aria-label={t.chart.colorName.replace("{n}", String(i + 1))}
-                value={hex}
-                onChange={(e) => {
-                  const palette = chart.palette.slice();
-                  palette[i] = e.target.value;
-                  commit({ ...chart, palette });
-                }}
-                className="border-line size-6 cursor-pointer rounded-sm border bg-transparent p-0.5"
-              />
-            </div>
-          ))}
-          <Button
-            variant="secondary"
-            className="!min-h-9 !px-2"
-            onClick={() =>
-              commit({ ...chart, palette: [...chart.palette, "#b0603c"] })
-            }
-          >
-            <Plus size={14} />
-            {t.chart.addColor}
-          </Button>
-        </div>
-      </section>
-
-      {/* 사진에서 옮기기 — 칸을 하나씩 칠하는 대신 사진을 통째로 옮긴다.
-          팔레트를 스태시 색으로 고정할 수 있는 게 이 기능의 요점이다. */}
-      {fromPhoto ? (
-        <section className="border-line mb-5 rounded-md border p-3">
-          <h2 className="text-micro text-text-3 mb-2">{t.photoChart.title}</h2>
-          <PhotoToChart
-            width={chart.width}
-            height={chart.height}
-            // 사진 쪽에서 칸 수를 바꿀 수 있으므로 차트를 통째로 갈아끼운다.
-            // palette·cells만 받으면 width×height와 cells.length가 어긋난다.
-            onApply={(next) => {
-              commit(next);
-              setFromPhoto(false);
-            }}
-          />
-          <Button
-            variant="ghost"
-            className="mt-2"
-            onClick={() => setFromPhoto(false)}
-          >
-            {t.action.cancel}
-          </Button>
-        </section>
-      ) : (
-        <Button
-          variant="secondary"
-          className="mb-5"
-          onClick={() => setFromPhoto(true)}
-        >
-          <ImagePlus size={16} />
-          {t.photoChart.open}
-        </Button>
-      )}
-
-      {/* 크기·반전 */}
-      <section className="mb-5">
-        <div className="flex flex-wrap items-end gap-3">
-          <div className="w-24">
-            <TextField
-              label={t.chart.widthLabel}
-              className="mb-0"
-              inputMode="numeric"
-              value={chart.width}
-              onChange={(e) =>
-                resize(Number(e.target.value) || 1, chart.height)
-              }
-            />
-          </div>
-          <div className="w-24">
-            <TextField
-              label={t.chart.heightLabel}
-              className="mb-0"
-              inputMode="numeric"
-              value={chart.height}
-              onChange={(e) => resize(chart.width, Number(e.target.value) || 1)}
-            />
-          </div>
-          <Button
-            variant="secondary"
-            onClick={() => commit(mirrorChart(chart))}
-          >
-            <FlipHorizontal2 size={16} />
-            {t.chart.mirror}
-          </Button>
-        </div>
-
-        {/* 완성 크기는 격자 옆에 둔다. 미리보기의 기준이 아니라 이 격자가 실제로
-            몇 cm가 되는지에 대한 답이고, 게이지를 골랐을 때만 말할 수 있다. */}
-        {size && (
-          <p className="text-text-3 text-caption mt-2">
-            {t.chart.finishedSize
-              .replace("{w}", units.formatLength(size.widthCm, 1))
-              .replace("{h}", units.formatLength(size.heightCm, 1))}
-          </p>
-        )}
-      </section>
-
-      <div className="grid gap-6 lg:grid-cols-2">
-        {/* 편집 격자 — 정사각형으로 둔다. 칠하기 쉬워야 한다. */}
-        <section>
-          <h2 className="text-micro text-text-3 mb-1">{t.chart.editing}</h2>
-          <p className="text-text-3 text-caption mb-2">{t.chart.editingHint}</p>
-          <div className="border-line overflow-auto rounded-md border p-2">
-            {/* 도구는 격자 바로 위에 둔다. 칠하다가 채우기로 바꾸는 동작이
-                가장 잦으므로 손이 움직이는 거리가 짧아야 한다. */}
-            <div className="mb-2 flex flex-wrap items-center gap-2">
-              <div className="flex gap-1">
-                {TOOLS.map(({ id, icon: Icon }) => (
-                  <button
-                    key={id}
-                    type="button"
-                    aria-pressed={tool === id}
-                    aria-label={t.chart.tool[id]}
-                    title={t.chart.tool[id]}
-                    onClick={() => setTool(id)}
-                    className={cn(
-                      "inline-flex size-11 items-center justify-center rounded-md transition",
-                      tool === id
-                        ? "bg-accent text-on-accent"
-                        : "bg-sunken text-text-2 hover:text-text"
-                    )}
-                  >
-                    <Icon size={18} />
-                  </button>
-                ))}
+      {/*
+        왼쪽은 정하는 것(격자·게이지·색), 오른쪽은 하는 것(미리보기·그리기).
+        전에는 설정과 작업이 한 줄로 쌓여 있어서 칠하다가 색을 바꾸려면 페이지를
+        거슬러 올라가야 했다. 도구와 색은 격자 바로 위에 있어야 한다.
+      */}
+      <div className="grid gap-6 lg:grid-cols-[18rem_minmax(0,1fr)] lg:items-start">
+        <aside className="order-last space-y-5 lg:sticky lg:top-8 lg:order-none">
+          {/* 격자 크기 */}
+          <section>
+            <h2 className="text-micro text-text-3 mb-2">{t.chart.grid}</h2>
+            <div className="flex items-end gap-2">
+              <div className="w-20">
+                <TextField
+                  label={t.chart.widthLabel}
+                  className="mb-0"
+                  inputMode="numeric"
+                  value={chart.width}
+                  onChange={(e) =>
+                    resize(Number(e.target.value) || 1, chart.height)
+                  }
+                />
               </div>
-
-              <div className="ml-auto flex gap-1">
-                <button
-                  type="button"
-                  onClick={undo}
-                  disabled={past.length === 0}
-                  aria-label={t.chart.undo}
-                  title={t.chart.undo}
-                  className="bg-sunken text-text-2 hover:text-text inline-flex size-11 items-center justify-center rounded-md transition disabled:opacity-30"
-                >
-                  <Undo2 size={18} />
-                </button>
-                <button
-                  type="button"
-                  onClick={redo}
-                  disabled={future.length === 0}
-                  aria-label={t.chart.redo}
-                  title={t.chart.redo}
-                  className="bg-sunken text-text-2 hover:text-text inline-flex size-11 items-center justify-center rounded-md transition disabled:opacity-30"
-                >
-                  <Redo2 size={18} />
-                </button>
+              <div className="w-20">
+                <TextField
+                  label={t.chart.heightLabel}
+                  className="mb-0"
+                  inputMode="numeric"
+                  value={chart.height}
+                  onChange={(e) =>
+                    resize(chart.width, Number(e.target.value) || 1)
+                  }
+                />
               </div>
             </div>
+            {size && (
+              <p className="text-text-3 text-caption mt-2">
+                {t.chart.finishedSize
+                  .replace("{w}", units.formatLength(size.widthCm, 1))
+                  .replace("{h}", units.formatLength(size.heightCm, 1))}
+              </p>
+            )}
+          </section>
 
-            <ChartCanvas
-              chart={chart}
-              cellWidth={EDIT_CELL}
-              cellHeight={EDIT_CELL}
-              // 채우기·스포이드는 한 번만 동작해야 한다
-              continuous={tool === "paint"}
-              onStrokeStart={tool === "pick" ? undefined : remember}
-              onPaint={(x, y) => {
-                if (tool === "pick") {
-                  // 팔레트로 손을 옮기는 왕복을 줄이는 게 목적이므로,
-                  // 색을 집으면 곧바로 칠하기로 돌아온다.
-                  setColor(getCell(chart, x, y));
-                  setTool("paint");
-                  return;
-                }
-                if (tool === "fill") {
-                  setChart((prev) => fillArea(prev, x, y, color));
-                  return;
-                }
-                // 함수형 갱신을 쓴다. 클로저의 chart를 읽으면 같은 tick에 여러
-                // 포인터 이벤트가 오갈 때 앞서 칠한 칸이 덮여 사라진다 —
-                // 빠르게 그을 때 점이 띄엄띄엄 찍히는 증상이 이것이다.
-                setChart((prev) => setCell(prev, x, y, color));
-              }}
-            />
-          </div>
-        </section>
-
-        {/* 완성 모양 — 같은 데이터를 게이지 비율로, 천처럼, 반복해서 그린다.
-            **좁은 화면에서는 위에 붙여둔다.** 칠하는 동안 보이지 않으면
-            "색칠하면 어떻게 보이나"에 답하지 못한다 — 폰에서 격자 아래에 두면
-            칠하는 내내 화면 밖이다. */}
-        <section className="bg-canvas sticky top-0 z-10 order-first pb-2 lg:static lg:order-none lg:pb-0">
-          {/* 좁은 화면에서는 이 자리가 위에 붙어 있으므로 설명을 접는다.
-              붙어 있는 것이 두꺼우면 격자 윗줄을 가려서 칠할 수 없다 —
-              그림이 설명을 대신한다. */}
-          <div className={gaugeValues ? "hidden lg:block" : undefined}>
-            <h2 className="text-micro text-text-3 mb-1">{t.chart.preview}</h2>
-            <p className="text-text-3 text-caption mb-2">
-              {gaugeValues ? t.chart.previewHint : t.chart.needGauge}
-            </p>
-          </div>
-
-          {/* 게이지 선택은 넓은 화면에서만 이 자리에 둔다. 좁은 화면에서는
-              위에 붙는 자리라 셀렉트가 격자를 가린다. */}
-          <div className={gaugeValues ? "hidden lg:block" : undefined}>
+          {/* 게이지 — 완성 모양과 완성 크기의 기준 */}
+          <section>
             <SelectField
               label={t.chart.gauge}
+              hint={gaugeValues ? undefined : t.chart.needGauge}
+              className="mb-0"
               value={record.gaugeId ?? ""}
               onChange={(e) =>
                 void setChartGauge(chartId, e.target.value || undefined)
@@ -481,55 +304,252 @@ function Editor({
                 })),
               ]}
             />
-          </div>
+          </section>
 
-          {gaugeValues && (
-            <>
-              {/* 무늬 한 번이 아니라 **깔린 모습**을 보여준다. 한 번은 예뻐도
-                  여러 번 이으면 줄무늬처럼 보이거나 반복 경계가 눈에 띄는
-                  무늬가 있는데, 그건 옷을 다 뜬 뒤에 알게 된다. */}
-              <div className="border-line bg-surface overflow-hidden rounded-md border">
-                <FabricCanvas
-                  chart={chart}
-                  cellWidth={PREVIEW_ZOOMS[zoom] * aspect}
-                  cellHeight={PREVIEW_ZOOMS[zoom]}
-                  height={wide ? FABRIC_HEIGHT : FABRIC_HEIGHT_NARROW}
-                  onRepeats={setRepeats}
+          {/* 색 — 번호가 격자의 칸 번호와 같다 */}
+          <section>
+            <h2 className="text-micro text-text-3 mb-2">{t.chart.palette}</h2>
+            <ul className="space-y-1.5">
+              {chart.palette.map((hex, i) => (
+                <li key={i} className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    aria-label={t.chart.colorName.replace("{n}", String(i + 1))}
+                    aria-pressed={color === i}
+                    onClick={() => setColor(i)}
+                    className={cn(
+                      "text-small flex min-h-11 flex-1 items-center gap-2 rounded-md px-2 transition",
+                      color === i
+                        ? "bg-sunken ring-accent font-semibold ring-1"
+                        : "hover:bg-sunken"
+                    )}
+                  >
+                    <span
+                      aria-hidden
+                      className="ring-line size-6 shrink-0 rounded-sm ring-1 ring-inset"
+                      style={{ background: hex }}
+                    />
+                    {/* 번호를 크게 둔다. 격자의 칸에 적히는 번호와 같은 것이라
+                        "3번 색을 칠하는 중"이 한눈에 보여야 한다. */}
+                    <span className="tabular-nums">{i + 1}</span>
+                  </button>
+                  <input
+                    type="color"
+                    aria-label={t.chart.colorName.replace("{n}", String(i + 1))}
+                    value={hex}
+                    onChange={(e) => {
+                      const palette = chart.palette.slice();
+                      palette[i] = e.target.value;
+                      commit({ ...chart, palette });
+                    }}
+                    className="border-line size-8 shrink-0 cursor-pointer rounded-sm border bg-transparent p-0.5"
+                  />
+                </li>
+              ))}
+            </ul>
+            <Button
+              variant="secondary"
+              className="mt-2 !min-h-9 !px-2"
+              onClick={() =>
+                commit({ ...chart, palette: [...chart.palette, "#b0603c"] })
+              }
+            >
+              <Plus size={14} />
+              {t.chart.addColor}
+            </Button>
+          </section>
+
+          {/* 사진에서 옮기기 — 칸을 하나씩 칠하는 대신 사진을 통째로 옮긴다 */}
+          <section>
+            {fromPhoto ? (
+              <div className="border-line rounded-md border p-3">
+                <h2 className="text-micro text-text-3 mb-2">
+                  {t.photoChart.title}
+                </h2>
+                <PhotoToChart
+                  width={chart.width}
+                  height={chart.height}
+                  onApply={(next) => {
+                    commit(next);
+                    setFromPhoto(false);
+                  }}
                 />
+                <Button
+                  variant="ghost"
+                  className="mt-2"
+                  onClick={() => setFromPhoto(false)}
+                >
+                  {t.action.cancel}
+                </Button>
               </div>
+            ) : (
+              <Button variant="secondary" onClick={() => setFromPhoto(true)}>
+                <ImagePlus size={16} />
+                {t.photoChart.open}
+              </Button>
+            )}
+          </section>
+        </aside>
 
-              {/* 크기 기준은 줌이다. 크게 보면 코가 보이고, 작게 보면 무늬가
-                  여러 번 이어진 모습이 보인다 — 둘 다 필요한 시야다. */}
-              <div className="mt-2 flex items-center justify-between gap-3">
-                <p className="text-text-2 text-small">
+        <div className="space-y-5">
+          {/* 완성 모양 — 같은 데이터를 게이지 비율로, 천처럼, 반복해서 그린다 */}
+          <section>
+            <div className="mb-2 flex items-baseline justify-between gap-3">
+              <h2 className="text-micro text-text-3">{t.chart.preview}</h2>
+              <div className="flex gap-1">
+                {PREVIEW_ZOOMS.map((_, level) => (
+                  <button
+                    key={level}
+                    type="button"
+                    aria-pressed={zoom === level}
+                    onClick={() => setZoom(level)}
+                    className={cn(
+                      "text-caption min-h-9 rounded-sm px-2 transition",
+                      zoom === level
+                        ? "bg-accent text-on-accent font-semibold"
+                        : "bg-sunken text-text-2"
+                    )}
+                  >
+                    {t.chart.zoomLevel[level]}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {gaugeValues ? (
+              <>
+                <div className="border-line bg-surface overflow-hidden rounded-md border">
+                  <FabricCanvas
+                    chart={chart}
+                    cellWidth={PREVIEW_ZOOMS[zoom] * aspect}
+                    cellHeight={PREVIEW_ZOOMS[zoom]}
+                    height={wide ? FABRIC_HEIGHT : FABRIC_HEIGHT_NARROW}
+                    onRepeats={setRepeats}
+                  />
+                </div>
+                <p className="text-text-2 text-small mt-2">
                   {repeats &&
                     t.chart.repeatedAs
                       .replace("{x}", String(repeats.x))
                       .replace("{y}", String(repeats.y))}
                 </p>
-                <div className="flex gap-1">
-                  {PREVIEW_ZOOMS.map((_, level) => (
-                    <button
-                      key={level}
-                      type="button"
-                      aria-pressed={zoom === level}
-                      aria-label={t.chart.zoomLevel[level]}
-                      onClick={() => setZoom(level)}
-                      className={cn(
-                        "text-caption min-h-11 rounded-sm px-2.5 transition",
-                        zoom === level
-                          ? "bg-accent text-on-accent font-semibold"
-                          : "bg-sunken text-text-2"
-                      )}
-                    >
-                      {t.chart.zoomLevel[level]}
-                    </button>
-                  ))}
-                </div>
+              </>
+            ) : (
+              <p className="border-line text-text-3 text-caption rounded-md border border-dashed px-4 py-6 text-center">
+                {t.chart.needGauge}
+              </p>
+            )}
+          </section>
+
+          {/* 그리기 — 도구와 색이 격자 바로 위에 있다 */}
+          <section>
+            <div className="mb-2 flex flex-wrap items-center gap-2">
+              <div className="flex gap-1">
+                {TOOLS.map(({ id, icon: Icon }) => (
+                  <button
+                    key={id}
+                    type="button"
+                    aria-pressed={tool === id}
+                    aria-label={t.chart.tool[id]}
+                    onClick={() => setTool(id)}
+                    className={cn(
+                      "text-caption inline-flex min-h-11 items-center gap-1.5 rounded-md px-2.5 transition",
+                      tool === id
+                        ? "bg-accent text-on-accent font-semibold"
+                        : "bg-sunken text-text-2 hover:text-text"
+                    )}
+                  >
+                    <Icon size={16} />
+                    {t.chart.tool[id]}
+                  </button>
+                ))}
               </div>
-            </>
-          )}
-        </section>
+
+              {/* 지금 칠하는 색을 도구 옆에 둔다. 색을 바꾸려고 페이지를
+                  거슬러 올라가야 했던 게 이 화면의 가장 큰 불편이었다. */}
+              <div className="border-line flex items-center gap-1 rounded-md border px-1.5">
+                {chart.palette.map((hex, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    aria-label={t.chart.colorName.replace("{n}", String(i + 1))}
+                    aria-pressed={color === i}
+                    onClick={() => setColor(i)}
+                    className={cn(
+                      "my-1 size-8 rounded-sm ring-1 transition ring-inset",
+                      color === i
+                        ? "ring-accent outline-accent outline-2 outline-offset-1"
+                        : "ring-line"
+                    )}
+                    style={{ background: hex }}
+                  />
+                ))}
+              </div>
+
+              <div className="ml-auto flex gap-1">
+                <Button
+                  icon
+                  variant="secondary"
+                  onClick={() => commit(mirrorChart(chart))}
+                  aria-label={t.chart.mirror}
+                  title={t.chart.mirror}
+                >
+                  <FlipHorizontal2 size={16} />
+                </Button>
+                <Button
+                  icon
+                  variant="secondary"
+                  onClick={undo}
+                  disabled={past.length === 0}
+                  aria-label={t.chart.undo}
+                  title={t.chart.undo}
+                >
+                  <Undo2 size={16} />
+                </Button>
+                <Button
+                  icon
+                  variant="secondary"
+                  onClick={redo}
+                  disabled={future.length === 0}
+                  aria-label={t.chart.redo}
+                  title={t.chart.redo}
+                >
+                  <Redo2 size={16} />
+                </Button>
+              </div>
+            </div>
+
+            <p className="text-text-3 text-caption mb-2">
+              {t.chart.editingHint}
+            </p>
+
+            <div className="border-line overflow-auto rounded-md border p-2">
+              <ChartCanvas
+                chart={chart}
+                cellWidth={EDIT_CELL}
+                cellHeight={EDIT_CELL}
+                labels
+                continuous={tool === "paint"}
+                onStrokeStart={tool === "pick" ? undefined : remember}
+                onPaint={(x, y) => {
+                  if (tool === "pick") {
+                    // 색을 집는 이유는 그 색으로 칠하려는 것이다
+                    setColor(getCell(chart, x, y));
+                    setTool("paint");
+                    return;
+                  }
+                  if (tool === "fill") {
+                    setChart((prev) => fillArea(prev, x, y, color));
+                    return;
+                  }
+                  // 함수형 갱신을 쓴다. 클로저의 chart를 읽으면 같은 tick에
+                  // 여러 포인터 이벤트가 오갈 때 앞서 칠한 칸이 덮여 사라진다.
+                  setChart((prev) => setCell(prev, x, y, color));
+                }}
+              />
+            </div>
+          </section>
+        </div>
       </div>
 
       {/* 색별 코수 — 실을 몇 타래 살지 가늠하는 근거 */}

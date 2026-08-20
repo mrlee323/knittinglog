@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { paintFabric } from "@/features/chart/fabric";
+import { stitchSprite } from "@/features/chart/stitch-sprite";
 import type { ColorChart } from "@/domain/colorChart";
 
 /**
@@ -25,6 +26,15 @@ export function FabricCanvas({
   const wrapRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [width, setWidth] = useState(0);
+  /**
+   * 명암 스프라이트 준비 여부.
+   *
+   * 디코딩은 비동기다. 준비되기 전 프레임은 실 색만 칠하고, 준비되면 이 값이
+   * 바뀌어 한 번 더 그린다 — 빈 화면을 보여주지 않고 색이 먼저 나오는 편이 낫다.
+   */
+  const [spriteReady, setSpriteReady] = useState(
+    () => stitchSprite().image !== null
+  );
 
   useEffect(() => {
     const el = wrapRef.current;
@@ -51,7 +61,24 @@ export function FabricCanvas({
       height,
     });
     onRepeats?.(result.repeats);
-  }, [chart, cellWidth, cellHeight, width, height, onRepeats]);
+    // spriteReady를 의존성에 넣어, 스프라이트가 늦게 도착하면 한 번 더 그린다
+  }, [chart, cellWidth, cellHeight, width, height, onRepeats, spriteReady]);
+
+  // 스프라이트 준비를 기다린다. 이미 준비됐으면 아무 일도 하지 않는다.
+  useEffect(() => {
+    if (spriteReady) return;
+    let alive = true;
+    void stitchSprite()
+      .ready.then(() => {
+        if (alive) setSpriteReady(true);
+      })
+      .catch(() => {
+        // 스프라이트가 없어도 색만으로 그려진다 — 화면이 비지는 않는다
+      });
+    return () => {
+      alive = false;
+    };
+  }, [spriteReady]);
 
   return (
     <div ref={wrapRef} className="w-full overflow-hidden" style={{ height }}>

@@ -1,5 +1,6 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { getCell, type ColorChart } from "@/domain/colorChart";
+import { isLight } from "@/domain/color";
 
 export interface ChartCanvasProps {
   chart: ColorChart;
@@ -29,7 +30,21 @@ export interface ChartCanvasProps {
    * 넘어 번지고, 스포이드는 마지막에 지나간 칸의 색이 잡힌다.
    */
   continuous?: boolean;
+  /**
+   * 좌표 번호와 칸 번호를 함께 그릴지.
+   *
+   * 도안은 "17단 3코"처럼 좌표로 말한다. 번호가 없으면 지금 어디를 칠하는지도,
+   * 종이 도안과 대조도 할 수 없다. 코 번호는 **오른쪽이 1번**이고 단 번호는
+   * **아래가 1단**이다 — 뜨는 순서가 그렇기 때문이고, 모든 도안이 그렇게 적는다.
+   *
+   * 칸 번호(몇 번 색인지)도 함께 넣는다. 색맹인 사람에게도, 흑백으로 인쇄한
+   * 사람에게도 도안이 읽혀야 한다.
+   */
+  labels?: boolean;
 }
+
+/** 좌표 번호가 들어갈 여백(px) */
+const GUTTER = 20;
 
 /**
  * 차트를 캔버스에 그린다.
@@ -48,12 +63,24 @@ export function ChartCanvas({
   onPaint,
   onStrokeStart,
   continuous = true,
+  labels = false,
 }: ChartCanvasProps) {
   const ref = useRef<HTMLCanvasElement>(null);
+  const overlayRef = useRef<HTMLCanvasElement>(null);
   const painting = useRef(false);
+  /**
+   * 커서가 있는 칸.
+   *
+   * 좌표를 알려주는 것이 목적이다 — 도안은 "17단 3코"로 말하는데, 번호만
+   * 있으면 지금 손이 어느 좌표에 있는지는 여전히 세어야 한다.
+   */
+  const [hover, setHover] = useState<{ x: number; y: number } | null>(null);
 
-  const width = Math.round(chart.width * cellWidth);
-  const height = Math.round(chart.height * cellHeight);
+  const gutter = labels ? GUTTER : 0;
+  const gridWidth = Math.round(chart.width * cellWidth);
+  const gridHeight = Math.round(chart.height * cellHeight);
+  const width = gridWidth + gutter;
+  const height = gridHeight + gutter;
 
   useEffect(() => {
     const canvas = ref.current;
@@ -68,11 +95,18 @@ export function ChartCanvas({
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, width, height);
 
+    ctx.save();
+    ctx.translate(gutter, gutter);
+
+    const numbersFit = labels && cellWidth >= 15 && cellHeight >= 15;
+
     for (let y = 0; y < chart.height; y += 1) {
       for (let x = 0; x < chart.width; x += 1) {
         // 첫 단(y=0)이 맨 아래에 오도록 뒤집는다
         const screenY = (chart.height - 1 - y) * cellHeight;
-        ctx.fillStyle = chart.palette[getCell(chart, x, y)] ?? "#000";
+        const index = getCell(chart, x, y);
+        const hex = chart.palette[index] ?? "#000";
+        ctx.fillStyle = hex;
         // 칸 사이에 반픽셀 틈이 생기지 않게 올림한다
         ctx.fillRect(
           x * cellWidth,
@@ -80,27 +114,140 @@ export function ChartCanvas({
           Math.ceil(cellWidth),
           Math.ceil(cellHeight)
         );
+
+        // 칸이 작으면 번호를 넣지 않는다. 읽히지 않는 글자는 격자만 흐린다.
+        if (!numbersFit) continue;
+        // 밝은 색 위에는 검정, 어두운 색 위에는 흰색 — 어떤 팔레트에서도 읽힌다
+        ctx.fillStyle = isLight(hex)
+          ? "rgb(0 0 0 / 0.55)"
+          : "rgb(255 255 255 / 0.7)";
+        ctx.font = `${Math.round(Math.min(cellWidth, cellHeight) * 0.5)}px sans-serif`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(
+          String(index + 1),
+          x * cellWidth + cellWidth / 2,
+          screenY + cellHeight / 2
+        );
       }
     }
 
-    if (!grid) return;
-    ctx.strokeStyle = "rgb(0 0 0 / 0.12)";
-    ctx.lineWidth = 1;
-    for (let x = 0; x <= chart.width; x += 1) {
-      const px = Math.round(x * cellWidth) + 0.5;
-      ctx.beginPath();
-      ctx.moveTo(px, 0);
-      ctx.lineTo(px, height);
-      ctx.stroke();
+    if (grid) {
+      ctx.strokeStyle = "rgb(0 0 0 / 0.12)";
+      ctx.lineWidth = 1;
+      for (let x = 0; x <= chart.width; x += 1) {
+        const px = Math.round(x * cellWidth) + 0.5;
+        ctx.beginPath();
+        ctx.moveTo(px, 0);
+        ctx.lineTo(px, gridHeight);
+        // 10코마다 진하게 — 도안의 관습이고, 좌표를 세지 않고도 위치를 잡는다
+        ctx.strokeStyle =
+          x % 10 === 0 ? "rgb(0 0 0 / 0.35)" : "rgb(0 0 0 / 0.12)";
+        ctx.stroke();
+      }
+      for (let y = 0; y <= chart.height; y += 1) {
+        const py = Math.round(y * cellHeight) + 0.5;
+        ctx.beginPath();
+        ctx.moveTo(0, py);
+        ctx.lineTo(gridWidth, py);
+        ctx.strokeStyle =
+          (chart.height - y) % 10 === 0
+            ? "rgb(0 0 0 / 0.35)"
+            : "rgb(0 0 0 / 0.12)";
+        ctx.stroke();
+      }
     }
-    for (let y = 0; y <= chart.height; y += 1) {
-      const py = Math.round(y * cellHeight) + 0.5;
-      ctx.beginPath();
-      ctx.moveTo(0, py);
-      ctx.lineTo(width, py);
-      ctx.stroke();
+
+    ctx.restore();
+
+    if (!labels) return;
+
+    // 좌표 번호. 코는 오른쪽이 1번, 단은 아래가 1단이다.
+    const step = cellWidth >= 15 ? 1 : 5;
+    ctx.fillStyle = "rgb(0 0 0 / 0.5)";
+    ctx.font = "10px sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    for (let x = 0; x < chart.width; x += 1) {
+      const number = chart.width - x;
+      if (number % step !== 0 && number !== 1) continue;
+      ctx.fillText(
+        String(number),
+        gutter + x * cellWidth + cellWidth / 2,
+        gutter / 2
+      );
     }
-  }, [chart, cellWidth, cellHeight, grid, width, height]);
+    ctx.textAlign = "right";
+    for (let y = 0; y < chart.height; y += 1) {
+      const number = y + 1;
+      if (number % step !== 0 && number !== 1) continue;
+      const screenY = (chart.height - 1 - y) * cellHeight;
+      ctx.fillText(
+        String(number),
+        gutter - 4,
+        gutter + screenY + cellHeight / 2
+      );
+    }
+  }, [
+    chart,
+    cellWidth,
+    cellHeight,
+    grid,
+    labels,
+    gutter,
+    gridWidth,
+    gridHeight,
+    width,
+    height,
+  ]);
+
+  /**
+   * 커서 표시는 **별도 캔버스**에 그린다.
+   *
+   * 본 캔버스에 함께 그리면 포인터가 움직일 때마다 칸 전체를 다시 그려야 한다.
+   * 120×200 도안이면 24,000칸이라 손이 끊긴다. 위에 얹은 얇은 캔버스에
+   * 사각형 몇 개만 그리면 움직임이 붙는다.
+   */
+  useEffect(() => {
+    const canvas = overlayRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    canvas.width = Math.round(width * dpr);
+    canvas.height = Math.round(height * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, width, height);
+
+    if (!hover || !labels) return;
+
+    const screenY = (chart.height - 1 - hover.y) * cellHeight;
+
+    // 좌표 번호 쪽을 강조한다. 격자 위에 색을 얹으면 칠한 색을 가린다.
+    ctx.fillStyle = "rgb(0 0 0 / 0.1)";
+    ctx.fillRect(gutter + hover.x * cellWidth, 0, cellWidth, gutter);
+    ctx.fillRect(0, gutter + screenY, gutter, cellHeight);
+
+    // 칸에는 테두리만 — 색을 가리지 않으면서 위치는 분명하다
+    ctx.strokeStyle = "rgb(0 0 0 / 0.6)";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(
+      gutter + hover.x * cellWidth + 1,
+      gutter + screenY + 1,
+      cellWidth - 2,
+      cellHeight - 2
+    );
+  }, [
+    hover,
+    labels,
+    chart.height,
+    cellWidth,
+    cellHeight,
+    gutter,
+    width,
+    height,
+  ]);
 
   /** 화면 좌표를 칸 좌표로. y는 뒤집어 되돌린다. */
   function toCell(event: React.PointerEvent<HTMLCanvasElement>) {
@@ -108,12 +255,13 @@ export function ChartCanvas({
     if (!canvas) return null;
     const rect = canvas.getBoundingClientRect();
     if (rect.width === 0 || rect.height === 0) return null;
-    const x = Math.floor(
-      ((event.clientX - rect.left) / rect.width) * chart.width
-    );
-    const screenRow = Math.floor(
-      ((event.clientY - rect.top) / rect.height) * chart.height
-    );
+    // 여백(좌표 번호) 안쪽만 격자다. 번호를 눌러도 칸이 칠해지면 안 된다.
+    const scale = rect.width / width;
+    const localX = (event.clientX - rect.left) / scale - gutter;
+    const localY = (event.clientY - rect.top) / scale - gutter;
+    if (localX < 0 || localY < 0) return null;
+    const x = Math.floor(localX / cellWidth);
+    const screenRow = Math.floor(localY / cellHeight);
     const y = chart.height - 1 - screenRow;
     if (x < 0 || y < 0 || x >= chart.width || y >= chart.height) return null;
     return { x, y };
@@ -145,8 +293,10 @@ export function ChartCanvas({
         paint(e);
       }}
       onPointerMove={(e) => {
+        if (labels) setHover(toCell(e));
         if (continuous && painting.current) paint(e);
       }}
+      onPointerLeave={() => setHover(null)}
       onPointerUp={() => {
         painting.current = false;
       }}
