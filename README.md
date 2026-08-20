@@ -11,8 +11,9 @@
 
 전체 기획은 [docs/PLAN.md](docs/PLAN.md),
 디자인 시스템은 [docs/DESIGN.md](docs/DESIGN.md)를 참고하세요.
-아직 만들지 않은 라운지(공개 피드) 기획은 [docs/LOUNGE.md](docs/LOUNGE.md)에
-따로 있습니다.
+아직 만들지 않은 것의 기획은 따로 있습니다 —
+계정·동기화는 [docs/ACCOUNT.md](docs/ACCOUNT.md),
+라운지(공개 피드)는 [docs/LOUNGE.md](docs/LOUNGE.md).
 
 ## 시작하기
 
@@ -110,8 +111,11 @@ src/
 
 1. **실기기 검증** — 태블릿에서 도안 보며 뜨기, 안드로이드 공유 시트, 카드 공유,
    백업 파일 내보내기. `docs/DEVICE-TEST.md`에 항목이 정리돼 있다.
-2. **라운지** — 어떻게 떴는지가 붙어 있는 피드. 계정·서버·모더레이션이 붙는 별도
-   단계이고 기획만 잡아뒀다: [docs/LOUNGE.md](docs/LOUNGE.md). 코드는 아직 없다.
+2. **계정 · 동기화** — 기기를 바꿔도 안 잃게, 태블릿과 폰에서 같이. 기획만
+   잡아뒀다: [docs/ACCOUNT.md](docs/ACCOUNT.md). 삭제 기록(tombstone)이 없어서
+   동기화 전에 스키마 작업이 먼저 필요하다.
+3. **라운지** — 어떻게 떴는지가 붙어 있는 피드. 계정을 전제로 한다:
+   [docs/LOUNGE.md](docs/LOUNGE.md).
 
 화면 구조와 그 이유는 [docs/DESIGN.md](docs/DESIGN.md) §6·§7, 방향과 결정
 사항은 [docs/PLAN.md](docs/PLAN.md) §13에 적혀 있다.
