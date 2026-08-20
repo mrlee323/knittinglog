@@ -34,8 +34,13 @@ interface NavigatorWithRelated extends Navigator {
   getInstalledRelatedApps?: () => Promise<RelatedApp[]>;
 }
 
-/** 설치된 앱으로 실행 중인지. 렌더 시점에 알 수 있는 값이다. */
-function isStandalone() {
+/**
+ * 설치된 앱으로 실행 중인지. 렌더 시점에 알 수 있는 값이다.
+ *
+ * 공유 시트(Web Share Target)는 설치된 앱에서만 동작하므로, 스크랩 화면이
+ * "공유로 받기"와 "직접 넣기" 중 무엇을 앞세울지 정하는 데도 쓴다.
+ */
+export function isStandalone() {
   return (
     window.matchMedia("(display-mode: standalone)").matches ||
     // iOS Safari는 display-mode 대신 navigator.standalone을 쓴다

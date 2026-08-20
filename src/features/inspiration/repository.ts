@@ -5,7 +5,7 @@ import type { Id, Inspiration } from "@/types/entities";
 
 /* --- 조회 ----------------------------------------------------------------- */
 
-/** 최근에 모은 것이 위에. 영감은 쌓인 순서보다 방금 본 것이 중요하다. */
+/** 최근에 모은 것이 위에. 스크랩은 쌓인 순서보다 방금 본 것이 중요하다. */
 export const listInspirations = () =>
   db.inspirations.orderBy("updatedAt").reverse().toArray();
 

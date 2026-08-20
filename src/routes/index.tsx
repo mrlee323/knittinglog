@@ -166,7 +166,7 @@ function Dashboard() {
               />
             </section>
 
-            {/* 영감 보관함 입구. 하단 탭을 늘리지 않으려고 여기 둔다 —
+            {/* 스크랩 입구. 하단 탭을 늘리지 않으려고 여기 둔다 —
                 공유로 들어온 것은 알림 없이 쌓이므로 들어갈 길이 보여야 한다. */}
             <Link to="/inspiration" search={{ received: 0 }}>
               <div className="border-line bg-surface mb-6 flex items-center justify-between gap-3 rounded-md border p-3">
