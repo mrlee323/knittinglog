@@ -1,8 +1,13 @@
+import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useLiveQuery } from "dexie-react-hooks";
 import { Button } from "@/components/ui/button";
 import { counterView, lastLifelineBelow } from "@/domain/counter";
-import { lifelineRows, listCounters } from "@/features/counter/repository";
+import {
+  createCounter,
+  lifelineRows,
+  listCounters,
+} from "@/features/counter/repository";
 import { useStrings } from "@/i18n";
 import type { Id } from "@/types/entities";
 
@@ -18,6 +23,7 @@ import type { Id } from "@/types/entities";
  */
 export function ProgressCard({ projectId }: { projectId: Id }) {
   const t = useStrings();
+  const [making, setMaking] = useState(false);
   const counters = useLiveQuery(() => listCounters(projectId), [projectId]);
   const main = counters?.find((c) => !c.linkedCounterId) ?? counters?.[0];
   const lifelines = useLiveQuery(
@@ -32,6 +38,22 @@ export function ProgressCard({ projectId }: { projectId: Id }) {
       <section className="border-line mb-6 rounded-md border border-dashed p-5 text-center">
         <p className="text-text-2 text-small">{t.counter.empty}</p>
         <p className="text-text-3 text-caption mt-1">{t.counter.emptyHint}</p>
+        {/* 만드는 화면은 옆 단에 있고 폰에서는 페이지 맨 아래다. 여기서
+            바로 만들 수 있어야 이 카드가 막다른 길이 아니다. */}
+        <Button
+          className="mt-3"
+          disabled={making}
+          onClick={async () => {
+            setMaking(true);
+            try {
+              await createCounter(projectId, { label: t.counter.defaultLabel });
+            } finally {
+              setMaking(false);
+            }
+          }}
+        >
+          {t.counter.createDefault}
+        </Button>
       </section>
     );
   }

@@ -1,7 +1,8 @@
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { Columns2, Trash2, Youtube } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ConfirmSheet } from "@/components/ui/confirm-sheet";
+import { SplitPane } from "@/components/ui/split-pane";
 import { AddPhotoButton } from "@/features/photo/components/add-photo-button";
 import { deletePhoto } from "@/features/photo/repository";
 import {
@@ -246,87 +247,34 @@ function Stage({
   right?: ViewerItem;
 }) {
   const t = useStrings();
-  const container = useRef<HTMLDivElement>(null);
-  const dragging = useRef(false);
-  const [ratio, setRatio] = useState(50);
 
-  const clamp = (value: number) => Math.min(80, Math.max(20, value));
-
-  /**
-   * 경계를 끌어 두 칸의 비율을 바꾼다.
-   *
-   * 도안과 영상이 필요한 폭은 매번 다르다 — 차트 도안은 넓어야 하고, 서술형
-   * 도안은 좁아도 읽힌다. 고정 반반으로 두면 둘 중 하나가 늘 아쉽다.
-   *
-   * 드래그 여부를 ref로 들고 있는다. setPointerCapture는 포인터가 iframe 위를
-   * 지나도 이벤트가 끊기지 않게 해주지만, 그것만 믿으면 캡처가 실패한 환경에서
-   * 경계가 조용히 움직이지 않는다.
-   */
-  function startDrag(event: React.PointerEvent<HTMLDivElement>) {
-    dragging.current = true;
-    event.currentTarget.setPointerCapture?.(event.pointerId);
-  }
-
-  function onDrag(event: React.PointerEvent<HTMLDivElement>) {
-    if (!dragging.current) return;
-    const box = container.current?.getBoundingClientRect();
-    if (!box) return;
-    setRatio(clamp(((event.clientX - box.left) / box.width) * 100));
-  }
-
-  const endDrag = () => {
-    dragging.current = false;
-  };
-
-  if (!split) {
-    return <Slot item={left} />;
-  }
-
+  // 분할 비율 조작은 뜨기 모드와 같은 컴포넌트를 쓴다 — 손에 익은 동작이
+  // 화면마다 다르면 매번 다시 익혀야 한다.
   return (
-    <div
-      ref={container}
-      className="grid gap-0"
-      style={{ gridTemplateColumns: `${ratio}fr 12px ${100 - ratio}fr` }}
-    >
-      <Slot
-        item={left}
-        focused={focus === 0}
-        onFocus={() => onFocus(0)}
-        split
-      />
-      {/* 키보드로도 옮길 수 있어야 한다. 기준 화면이 PC이고, 마우스를 놓고
-          키보드만 쓰는 순간이 실제로 있다. */}
-      <div
-        role="separator"
-        aria-orientation="vertical"
-        aria-valuenow={Math.round(ratio)}
-        aria-valuemin={20}
-        aria-valuemax={80}
-        aria-label={t.workbench.resize}
-        tabIndex={0}
-        onPointerDown={startDrag}
-        onPointerMove={onDrag}
-        onPointerUp={endDrag}
-        onPointerCancel={endDrag}
-        onLostPointerCapture={endDrag}
-        onKeyDown={(e) => {
-          if (e.key === "ArrowLeft") setRatio((r) => clamp(r - 5));
-          if (e.key === "ArrowRight") setRatio((r) => clamp(r + 5));
-        }}
-        className="group flex cursor-col-resize items-center justify-center"
-      >
-        <span className="bg-line group-hover:bg-line-strong h-16 w-[3px] rounded-full transition" />
-      </div>
-      <Slot
-        item={right}
-        focused={focus === 1}
-        onFocus={() => onFocus(1)}
-        split
-      />
-    </div>
+    <SplitPane
+      direction="row"
+      label={t.workbench.resize}
+      first={
+        <Slot
+          item={left}
+          focused={split ? focus === 0 : undefined}
+          onFocus={split ? () => onFocus(0) : undefined}
+          split={split}
+        />
+      }
+      second={
+        split ? (
+          <Slot
+            item={right}
+            focused={focus === 1}
+            onFocus={() => onFocus(1)}
+            split
+          />
+        ) : undefined
+      }
+    />
   );
 }
-
 function Slot({
   item,
   focused,

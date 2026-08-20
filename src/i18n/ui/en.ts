@@ -98,6 +98,8 @@ export const en: UIStrings = {
     linkedHint: "Goes up 1 every {ratio} rows of {main}",
     linkedReadOnly: "Counts up on its own every {ratio} rows of {main}",
     empty: "No counters yet",
+    defaultLabel: "Rows",
+    createDefault: "Create a row counter",
     emptyHint:
       "Make one for each thing you count — body, sleeves, pattern repeats",
     rows: "rows",
