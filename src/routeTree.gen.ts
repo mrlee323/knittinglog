@@ -9,7 +9,6 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as StatsRouteImport } from './routes/stats'
 import { Route as ShareRouteImport } from './routes/share'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as InspirationRouteImport } from './routes/inspiration'
@@ -39,11 +38,6 @@ import { Route as ProjectsProjectIdEditRouteImport } from './routes/projects.$pr
 import { Route as ProfilesProfileIdEditRouteImport } from './routes/profiles.$profileId.edit'
 import { Route as GaugeGaugeIdEditRouteImport } from './routes/gauge.$gaugeId.edit'
 
-const StatsRoute = StatsRouteImport.update({
-  id: '/stats',
-  path: '/stats',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ShareRoute = ShareRouteImport.update({
   id: '/share',
   path: '/share',
@@ -190,7 +184,6 @@ export interface FileRoutesByFullPath {
   '/inspiration': typeof InspirationRoute
   '/settings': typeof SettingsRoute
   '/share': typeof ShareRoute
-  '/stats': typeof StatsRoute
   '/charts/$chartId': typeof ChartsChartIdRoute
   '/charts/new': typeof ChartsNewRoute
   '/gauge/calc': typeof GaugeCalcRoute
@@ -221,7 +214,6 @@ export interface FileRoutesByTo {
   '/inspiration': typeof InspirationRoute
   '/settings': typeof SettingsRoute
   '/share': typeof ShareRoute
-  '/stats': typeof StatsRoute
   '/charts/$chartId': typeof ChartsChartIdRoute
   '/charts/new': typeof ChartsNewRoute
   '/gauge/calc': typeof GaugeCalcRoute
@@ -253,7 +245,6 @@ export interface FileRoutesById {
   '/inspiration': typeof InspirationRoute
   '/settings': typeof SettingsRoute
   '/share': typeof ShareRoute
-  '/stats': typeof StatsRoute
   '/charts/$chartId': typeof ChartsChartIdRoute
   '/charts/new': typeof ChartsNewRoute
   '/gauge/calc': typeof GaugeCalcRoute
@@ -286,7 +277,6 @@ export interface FileRouteTypes {
     | '/inspiration'
     | '/settings'
     | '/share'
-    | '/stats'
     | '/charts/$chartId'
     | '/charts/new'
     | '/gauge/calc'
@@ -317,7 +307,6 @@ export interface FileRouteTypes {
     | '/inspiration'
     | '/settings'
     | '/share'
-    | '/stats'
     | '/charts/$chartId'
     | '/charts/new'
     | '/gauge/calc'
@@ -348,7 +337,6 @@ export interface FileRouteTypes {
     | '/inspiration'
     | '/settings'
     | '/share'
-    | '/stats'
     | '/charts/$chartId'
     | '/charts/new'
     | '/gauge/calc'
@@ -380,7 +368,6 @@ export interface RootRouteChildren {
   InspirationRoute: typeof InspirationRoute
   SettingsRoute: typeof SettingsRoute
   ShareRoute: typeof ShareRoute
-  StatsRoute: typeof StatsRoute
   ChartsChartIdRoute: typeof ChartsChartIdRoute
   ChartsNewRoute: typeof ChartsNewRoute
   GaugeCalcRoute: typeof GaugeCalcRoute
@@ -409,13 +396,6 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/stats': {
-      id: '/stats'
-      path: '/stats'
-      fullPath: '/stats'
-      preLoaderRoute: typeof StatsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/share': {
       id: '/share'
       path: '/share'
@@ -620,7 +600,6 @@ const rootRouteChildren: RootRouteChildren = {
   InspirationRoute: InspirationRoute,
   SettingsRoute: SettingsRoute,
   ShareRoute: ShareRoute,
-  StatsRoute: StatsRoute,
   ChartsChartIdRoute: ChartsChartIdRoute,
   ChartsNewRoute: ChartsNewRoute,
   GaugeCalcRoute: GaugeCalcRoute,

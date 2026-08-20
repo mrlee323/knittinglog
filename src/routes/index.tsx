@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useLiveQuery } from "dexie-react-hooks";
-import { ChevronRight, Plus, Sparkles } from "lucide-react";
+import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Columns, Page } from "@/components/ui/page";
 import { StatusBadge } from "@/features/project/components/status-badge";
@@ -8,7 +8,6 @@ import { pausedLabel } from "@/features/project/format";
 import { YarnStripe } from "@/features/yarn/components/yarn-swatch";
 import { projectColors } from "@/features/yarn/repository";
 import { coverPhotos } from "@/features/photo/repository";
-import { listInspirations } from "@/features/inspiration/repository";
 import { CoverThumb } from "@/features/photo/components/cover-thumb";
 import { daysSincePaused } from "@/domain/projectStatus";
 import { counterView } from "@/domain/counter";
@@ -38,11 +37,6 @@ function Dashboard() {
   const counters = useLiveQuery(() => db.counters.toArray(), []);
   const colors = useLiveQuery(() => projectColors(), []);
   const covers = useLiveQuery(() => coverPhotos(), []);
-  // 개수만 쓴다 — 배열을 받아 memo 밖으로 흘리면 컴파일러 규칙에 걸린다
-  const inspirationCount = useLiveQuery(
-    async () => (await listInspirations()).length,
-    []
-  );
 
   if (!projects || !sessions || !counters) return null;
 
@@ -166,27 +160,6 @@ function Dashboard() {
               />
             </section>
 
-            {/* 스크랩 입구. 하단 탭을 늘리지 않으려고 여기 둔다 —
-                공유로 들어온 것은 알림 없이 쌓이므로 들어갈 길이 보여야 한다. */}
-            <Link to="/inspiration" search={{ received: 0 }}>
-              <div className="border-line bg-surface mb-6 flex items-center justify-between gap-3 rounded-md border p-3">
-                <span className="flex items-center gap-2">
-                  <Sparkles size={16} className="text-text-2" aria-hidden />
-                  <span className="text-small font-medium">
-                    {t.inspiration.open}
-                  </span>
-                  {!!inspirationCount && inspirationCount > 0 && (
-                    <span className="text-text-3 text-caption">
-                      {t.inspiration.count.replace(
-                        "{n}",
-                        String(inspirationCount)
-                      )}
-                    </span>
-                  )}
-                </span>
-                <ChevronRight size={16} className="text-text-3" />
-              </div>
-            </Link>
           </>
         }
       />
