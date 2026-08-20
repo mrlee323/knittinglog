@@ -14,6 +14,8 @@ import {
   widthForStitches,
   type Gauge,
 } from "@/domain/gauge";
+import { isImpossible, planEvenShaping } from "@/domain/shaping";
+import { ShapingDiagram } from "@/features/gauge/components/shaping-diagram";
 import {
   applyEase,
   flatPieceWidth,
@@ -25,6 +27,7 @@ import { PieceSchematic } from "@/features/gauge/components/piece-schematic";
 import { listGauges } from "@/features/gauge/repository";
 import { listProfiles } from "@/features/profile/repository";
 import { useStrings } from "@/i18n";
+import { cn } from "@/lib/utils";
 import type { BodyProfile } from "@/types/entities";
 
 export const Route = createFileRoute("/gauge/calc")({ component: GaugeCalc });
@@ -133,6 +136,10 @@ function GaugeCalc() {
       {!gaugeReady && (
         <p className="text-text-3 text-small">{t.gauge.emptyHint}</p>
       )}
+
+      {/* 균등 증감은 게이지를 쓰지 않는다 — 코수만으로 계산된다. 그래서
+          스와치를 아직 안 뜬 사람도 쓸 수 있게 게이지 조건 밖에 둔다. */}
+      <EvenShaping />
 
       <p className="text-text-3 text-caption mt-6">
         {units.lengthLabel === "in" ? "게이지는 10cm 기준으로 입력해요." : ""}
@@ -460,6 +467,161 @@ function NeedleAdvice({ gauge }: { gauge: Gauge }) {
                   : t.calc.goDown
                 ).replace("{mm}", String(advice.suggestedMm))}
           </strong>
+        </Result>
+      )}
+    </Section>
+  );
+}
+
+/* --- 균등 증감 ------------------------------------------------------------ */
+
+/**
+ * 균등 증감.
+ *
+ * 도안이 가장 자주 요구하는 계산이고("88코를 120코로 균등하게 늘리기") 손으로
+ * 하기 가장 귀찮다. 계산 자체는 domain/shaping.ts에 있고 여기서는 입력을 받아
+ * 도안 문장처럼 읽어준다.
+ */
+function EvenShaping() {
+  const t = useStrings();
+
+  const [from, setFrom] = useState("88");
+  const [to, setTo] = useState("120");
+  const [inRound, setInRound] = useState(false);
+  const [edge, setEdge] = useState("1");
+
+  const fromCount = num(from) ?? 0;
+  const toCount = num(to) ?? 0;
+  const ready = fromCount > 0 && toCount > 0;
+
+  const result = ready
+    ? planEvenShaping({
+        from: Math.round(fromCount),
+        to: Math.round(toCount),
+        inRound,
+        edgeStitches: Math.round(num(edge) ?? 0),
+      })
+    : null;
+
+  return (
+    <Section title={t.shaping.title} hint={t.shaping.hint}>
+      <div className="flex gap-3">
+        <div className="flex-1">
+          <TextField
+            label={t.shaping.from}
+            inputMode="numeric"
+            value={from}
+            onChange={(e) => setFrom(e.target.value)}
+          />
+        </div>
+        <div className="flex-1">
+          <TextField
+            label={t.shaping.to}
+            inputMode="numeric"
+            value={to}
+            onChange={(e) => setTo(e.target.value)}
+          />
+        </div>
+      </div>
+
+      {/* 원형이냐 평면이냐가 배치를 바꾼다. 평면은 끝에 평코가 남아야 하므로
+          구간이 하나 더 필요하다 — 이건 취향이 아니라 계산의 입력이다. */}
+      <div className="mb-4 flex flex-wrap items-end gap-3">
+        <div className="flex gap-1.5">
+          {[false, true].map((round) => (
+            <button
+              key={String(round)}
+              type="button"
+              aria-pressed={inRound === round}
+              onClick={() => setInRound(round)}
+              className={cn(
+                "text-caption min-h-11 rounded-sm px-3 transition",
+                inRound === round
+                  ? "bg-accent text-on-accent font-semibold"
+                  : "bg-sunken text-text-2"
+              )}
+            >
+              {round ? t.shaping.inRound : t.shaping.flat}
+            </button>
+          ))}
+        </div>
+
+        {!inRound && (
+          <div className="w-32">
+            <TextField
+              label={t.shaping.edge}
+              className="mb-0"
+              inputMode="numeric"
+              value={edge}
+              onChange={(e) => setEdge(e.target.value)}
+            />
+          </div>
+        )}
+      </div>
+
+      {result && isImpossible(result) && (
+        <Result>
+          <strong className="text-subhead text-frogged font-semibold">
+            {t.shaping.impossible
+              .replace("{from}", String(result.available))
+              .replace("{n}", String(result.changes))
+              .replace("{needed}", String(result.needed))}
+          </strong>
+        </Result>
+      )}
+
+      {result && !isImpossible(result) && (
+        <Result>
+          {result.changes === 0 ? (
+            <span className="text-text-2">{t.shaping.nothing}</span>
+          ) : (
+            <>
+              <strong className="text-title font-semibold">
+                {(result.kind === "increase"
+                  ? t.shaping.increaseCount
+                  : t.shaping.decreaseCount
+                ).replace("{n}", String(result.changes))}
+              </strong>
+
+              {/* 도안이 적는 방식으로 읽어준다. 이 문장을 그대로 보고 뜰 수
+                  있어야 계산기가 일을 한 것이다. */}
+              <p className="text-small">
+                {[
+                  result.edgeStitches > 0
+                    ? t.shaping.edgeNote.replace(
+                        "{n}",
+                        String(result.edgeStitches)
+                      )
+                    : null,
+                  ...result.runs.map((run) =>
+                    t.shaping.step
+                      .replace("{plain}", String(run.plain))
+                      .replace(
+                        "{action}",
+                        result.kind === "increase"
+                          ? t.shaping.increase
+                          : t.shaping.decrease
+                      )
+                      .replace("{times}", String(run.times))
+                  ),
+                  result.tail > 0
+                    ? t.shaping.tail.replace("{n}", String(result.tail))
+                    : null,
+                ]
+                  .filter(Boolean)
+                  .join(" · ")}
+              </p>
+
+              <ShapingDiagram plan={result} />
+
+              {/* 검산은 숨기지 않는다. 계산기를 믿고 뜬 사람이 몇 시간을 잃는
+                  종류의 실수라, 결과 코수를 되짚어 함께 보여준다. */}
+              <p className="text-text-2 text-small">
+                {t.shaping.result.replace("{n}", String(result.resulting))}
+                {result.even && ` · ${t.shaping.even}`}
+              </p>
+            </>
+          )}
         </Result>
       )}
     </Section>
