@@ -52,7 +52,9 @@ export function useWorkbenchItems(projectId: Id): WorkbenchItems {
     () => [
       // PDF를 맨 앞에 둔다. 상용 도안이 PDF로 오므로, 있으면 그게 이 프로젝트의
       // 도안이다.
-      ...(docs ?? []).map((doc): ViewerItem => ({ id: doc.id, kind: "pdf", doc })),
+      ...(docs ?? []).map(
+        (doc): ViewerItem => ({ id: doc.id, kind: "pdf", doc })
+      ),
       ...(patterns ?? []).map(
         (photo): ViewerItem => ({ id: photo.id, kind: "pattern", photo })
       ),

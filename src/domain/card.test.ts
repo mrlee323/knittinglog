@@ -39,9 +39,9 @@ describe("줄바꿈", () => {
     const lines = wrapText("눈송이 fair isle 요크", 10, measure);
     // 영문 단어는 쪼개지지 않는다
     expect(lines.join("|")).not.toMatch(/fai\||\|r isle/);
-    expect(lines.every((l) => measure(l) <= 10 || Array.from(l).length === 1)).toBe(
-      true
-    );
+    expect(
+      lines.every((l) => measure(l) <= 10 || Array.from(l).length === 1)
+    ).toBe(true);
   });
 
   it("줄 시작에 공백을 남기지 않는다 — 들여쓴 것처럼 보인다", () => {
@@ -160,7 +160,12 @@ describe("사진 자르기", () => {
   });
 
   it("크기가 0이면 계산하지 않는다", () => {
-    expect(coverRect(0, 0, 500, 500)).toEqual({ x: 0, y: 0, width: 0, height: 0 });
+    expect(coverRect(0, 0, 500, 500)).toEqual({
+      x: 0,
+      y: 0,
+      width: 0,
+      height: 0,
+    });
   });
 });
 

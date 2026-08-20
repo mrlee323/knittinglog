@@ -3,6 +3,7 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { Calculator, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CardGrid, Page } from "@/components/ui/page";
+import { MaterialTabs } from "@/features/needle/components/material-tabs";
 import { YarnTile } from "@/features/yarn/components/yarn-swatch";
 import { listYarns } from "@/features/yarn/repository";
 import { freeSkeins, stashTotal } from "@/domain/yarn";
@@ -35,6 +36,8 @@ function YarnIndex() {
         </Button>
       }
     >
+      <MaterialTabs />
+
       {/* 실 계산기는 스태시가 비어 있어도 쓸 수 있다 — 오히려 실을 사기
           전에 필요한 계산이라 목록보다 먼저 닿아야 한다. */}
       <Link to="/yarn/calc" className="mb-5 block sm:max-w-xs">

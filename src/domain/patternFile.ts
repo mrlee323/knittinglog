@@ -134,10 +134,7 @@ export function readSharedChart(value: unknown): SharedChart | null {
 }
 
 /** 내보낼 봉투를 만든다. 파일 쓰기는 화면 계층이 한다. */
-export function patternEnvelope(
-  encodedChart: unknown,
-  at: Date
-): PatternFile {
+export function patternEnvelope(encodedChart: unknown, at: Date): PatternFile {
   return {
     app: BACKUP_APP,
     format: BACKUP_FORMAT,

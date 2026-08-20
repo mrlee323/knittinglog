@@ -22,10 +22,7 @@ export class NotPdfError extends Error {}
  * 무엇보다 **여기서 한 번 읽어보지 않으면 열 수 없는 파일을 넣게 된다** —
  * 뜨려고 앉았을 때가 아니라 넣을 때 알아야 한다.
  */
-export async function addPatternDoc(
-  projectId: Id,
-  file: File
-): Promise<Id> {
+export async function addPatternDoc(projectId: Id, file: File): Promise<Id> {
   if (!isPdf(file)) throw new NotPdfError(file.name);
 
   // 원본 버퍼를 pdf.js에 넘기면 소유권이 옮겨가 Blob 저장에 쓸 수 없게 되므로

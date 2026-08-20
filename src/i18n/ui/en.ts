@@ -305,7 +305,8 @@ export const en: UIStrings = {
     legend: "Legend",
     legendHint: "Stitches used in this chart",
     editing: "Grid",
-    editingHint: "The bottom row is row 1. Right-side rows are worked right to left.",
+    editingHint:
+      "The bottom row is row 1. Right-side rows are worked right to left.",
     preview: "Finished shape",
     previewHint:
       "Drawn at your gauge ratio. Stitches aren't square, so this differs from the grid.",
@@ -342,10 +343,12 @@ export const en: UIStrings = {
     constructionHint:
       "The grid stays the same either way. What changes is the cast-on and the edges.",
     selvedge: "Selvedge sts (each side)",
-    selvedgeHint: "Flat pieces get seamed, so they carry a selvedge stitch on each edge",
+    selvedgeHint:
+      "Flat pieces get seamed, so they carry a selvedge stitch on each edge",
     needCastOn: "Enter a cast-on count to check the repeat",
     fitsExact: "{repeats} repeats, exact · {repeat} sts × {repeats}",
-    fitsShort: "{remainder} sts left over · {repeat} sts × {repeats} + {remainder}",
+    fitsShort:
+      "{remainder} sts left over · {repeat} sts × {repeats} + {remainder}",
     fitsNone: "A {repeat}-stitch repeat doesn't fit even once",
     fitsWithSelvedge: "Measured on {motif} sts, after {edges} selvedge sts",
     nearestDown: "{n} sts would fit",
@@ -354,14 +357,17 @@ export const en: UIStrings = {
     switchTotal: "cast on {n}",
     noteEveryRowRs: "Every row is worked from the right side",
     noteAlternatingSides: "Right- and wrong-side rows alternate",
-    noteMustDivide: "The count must be a multiple of the repeat for the motif to close",
+    noteMustDivide:
+      "The count must be a multiple of the repeat for the motif to close",
     noteAddSelvedge: "Add a selvedge stitch at each edge",
     noteDropSelvedge: "Drop the selvedge stitches",
     noteSeam: "You get a seam",
-    noteMotifBreaks: "A motif that closed around the round now breaks at both edges",
+    noteMotifBreaks:
+      "A motif that closed around the round now breaks at both edges",
     noteJog: "The motif can look offset by one stitch at the round boundary",
     tiled: "Laid out",
-    tiledHint: "The motif repeated across your cast-on. You can see where it breaks.",
+    tiledHint:
+      "The motif repeated across your cast-on. You can see where it breaks.",
     counts: "Cells per stitch",
     countsValue: "{n} cells",
     rowLabel: "Row {n}",
@@ -376,14 +382,16 @@ export const en: UIStrings = {
     exportTitle: "Export",
     exportAll: "Everything, photos included",
     exportRecordsOnly: "Records only (no photos)",
-    exportHint: "Photos and PDFs are nearly all of the size. Records only makes a much smaller file.",
+    exportHint:
+      "Photos and PDFs are nearly all of the size. Records only makes a much smaller file.",
     exporting: "Building…",
     exported: "Exported {n} records · {size}",
     exportFailed: "Export failed",
     recordCount: "{n} records right now",
     importTitle: "Import",
     importPick: "Choose a backup file",
-    importHint: "Merge never overwrites what's on this device. Replace deletes everything here first.",
+    importHint:
+      "Merge never overwrites what's on this device. Replace deletes everything here first.",
     modeMerge: "Merge",
     modeReplace: "Replace",
     reading: "Reading…",
@@ -392,10 +400,12 @@ export const en: UIStrings = {
     importedSkipped: "Restored {n}, skipped {skipped} already here",
     importedNone: "Nothing new to restore",
     notBackup: "That isn't a knittinglog backup file",
-    tooNew: "This file was made by a newer version. Reload the app and try again.",
+    tooNew:
+      "This file was made by a newer version. Reload the app and try again.",
     unknownTables: "Skipped {tables} — this version doesn't know them",
     replaceConfirm: "Delete everything here and restore?",
-    replaceConfirmBody: "{n} records on this device will be gone. This can't be undone.",
+    replaceConfirmBody:
+      "{n} records on this device will be gone. This can't be undone.",
     storageTitle: "Storage",
     storageUsed: "{used} used",
     storageOf: "{used} / {quota}",
@@ -406,7 +416,8 @@ export const en: UIStrings = {
     persistOn: "The browser won't clear these records on its own",
     persistOff: "The browser may clear these records when storage runs low",
     persistAsk: "Ask for protection",
-    persistDenied: "The browser said no. Installing the app usually gets it granted.",
+    persistDenied:
+      "The browser said no. Installing the app usually gets it granted.",
   },
   card: {
     open: "Share as a card",
@@ -439,7 +450,8 @@ export const en: UIStrings = {
     needInstall: "Install the app to appear in the share sheet",
     goInstall: "How to install",
     addManually: "Add by hand",
-    addManuallyHint: "Paste a link where sharing isn't available, or on a computer.",
+    addManuallyHint:
+      "Paste a link where sharing isn't available, or on a computer.",
     iosNote: "iOS can't be a share target yet. Paste the link here instead.",
     addLink: "Paste a link",
     addImage: "Pick an image",
@@ -469,7 +481,8 @@ export const en: UIStrings = {
     nextPage: "Next page",
     pages: "{n} pages",
     notPdf: "Only PDF files can be added",
-    failed: "This PDF can't be opened — it may be password protected or damaged.",
+    failed:
+      "This PDF can't be opened — it may be password protected or damaged.",
     adding: "Reading…",
     firstUseNote:
       "The PDF reader downloads once on first use. After that it works offline.",
@@ -690,6 +703,46 @@ export const en: UIStrings = {
     deleteImageConfirm: "Delete this image?",
     deleteVideoConfirm: "Delete this video link?",
   },
+  needle: {
+    title: "Needles",
+    add: "Add needle",
+    edit: "Edit needle",
+    typeLabel: "Type",
+    type: {
+      circular: "Circular",
+      straight: "Straight",
+      dpn: "DPNs",
+      hook: "Hook",
+    },
+    size: "Size",
+    sizeHint:
+      "Search by the size stamped on the needle — mm, JP and US are all shown.",
+    length: "Cable length (cm)",
+    lengthHint:
+      "For circulars. Same size but a different cable is a different needle.",
+    material: "Material",
+    materialPlaceholder: "Bamboo, metal, plastic",
+    duplicate: "You already have this needle. If you really own two, leave it.",
+    empty: "No needles yet",
+    emptyHint:
+      "Add what you own and we'll tell you when a new project wants a needle that's already in use",
+    tally: "{free} of {total} free",
+    free: "Free",
+    inUse: "In use on {project}",
+    deleteConfirm: "Remove this needle from the drawer?",
+    projectTitle: "Needles in use",
+    assign: "Assign a needle",
+    none: "No needle assigned",
+    noStash: "Add a needle first",
+    pick: "Which needle?",
+    release: "Remove",
+    takenTitle: "That needle is on another project",
+    takenBody:
+      "Take it off {project} and put it on this one? Same as moving the actual needle.",
+    takenConfirm: "Move it here",
+    gaugeSuggest: "Your gauge calls for {mm}mm",
+    gaugeMissing: "No {mm}mm needle in the drawer",
+  },
   action: {
     create: "Create",
     save: "Save",
@@ -722,5 +775,8 @@ export const en: UIStrings = {
   },
   common: {
     notFound: "This screen doesn't exist",
-    notFoundHint: "The address may have changed, or the screen was removed.", empty: "Nothing here yet", loading: "Loading" },
+    notFoundHint: "The address may have changed, or the screen was removed.",
+    empty: "Nothing here yet",
+    loading: "Loading",
+  },
 };

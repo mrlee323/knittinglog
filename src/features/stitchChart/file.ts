@@ -90,7 +90,9 @@ export async function importPatternFile(file: File): Promise<ImportResult> {
   for (const row of rows) {
     const decoded = decodeRecord(row, noBlobs);
     // 파일은 신뢰할 수 없는 입력이다. 모양을 확인하고 받아들인다.
-    const chart = readSharedChart(stripContext(decoded as Record<string, unknown>));
+    const chart = readSharedChart(
+      stripContext(decoded as Record<string, unknown>)
+    );
     if (!chart) continue;
 
     const name = receivedName(chart.name, taken, RECEIVED_SUFFIX);

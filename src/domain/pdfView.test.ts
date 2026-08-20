@@ -119,7 +119,9 @@ describe("렌더 배율", () => {
   it("상한 안에서는 원하는 배율을 그대로 쓴다", () => {
     const s = renderScale({ fit: 1, zoom: 1, dpr: 2, ...a4 });
     expect(s).toBeCloseTo(2);
-    expect(a4.pageWidth * s * a4.pageHeight * s).toBeLessThan(MAX_CANVAS_PIXELS);
+    expect(a4.pageWidth * s * a4.pageHeight * s).toBeLessThan(
+      MAX_CANVAS_PIXELS
+    );
   });
 
   it("큰 페이지는 작은 페이지보다 먼저 상한에 걸린다", () => {

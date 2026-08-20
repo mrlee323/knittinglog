@@ -68,7 +68,8 @@ export function paintFabric(
     const y = height - (row + 1) * cellHeight;
     if (y > height || y + cellHeight < 0) continue;
     for (let col = 0; col < cols; col += 1) {
-      const stamp = stamps[getCell(chart, col % chart.width, row % chart.height)];
+      const stamp =
+        stamps[getCell(chart, col % chart.width, row % chart.height)];
       if (!stamp) continue;
       // 아래 단부터 그리므로, 위 단의 넘친 부분이 아래 단의 머리를 덮는다
       ctx.drawImage(stamp, col * cellWidth, y, cellWidth, stampHeight);

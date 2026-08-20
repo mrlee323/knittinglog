@@ -187,7 +187,10 @@ function AddForm() {
             onChange={(e) => setUrl(e.target.value)}
           />
         </div>
-        <Button type="submit" disabled={saving || (!url.trim() && !note.trim())}>
+        <Button
+          type="submit"
+          disabled={saving || (!url.trim() && !note.trim())}
+        >
           <Link2 size={16} />
           {t.inspiration.save}
         </Button>
@@ -261,7 +264,10 @@ function Card({
     <div className="border-line bg-surface flex flex-col gap-2 rounded-md border p-3">
       {item.blob && (
         <div className="bg-sunken overflow-hidden rounded-sm">
-          <InspirationImage item={item} className="max-h-56 w-full object-cover" />
+          <InspirationImage
+            item={item}
+            className="max-h-56 w-full object-cover"
+          />
         </div>
       )}
 
@@ -269,7 +275,7 @@ function Card({
         <p className="text-subhead font-semibold break-words">{item.title}</p>
       )}
       {item.note && (
-        <p className="text-text-2 text-small whitespace-pre-wrap break-words">
+        <p className="text-text-2 text-small break-words whitespace-pre-wrap">
           {item.note}
         </p>
       )}
@@ -290,7 +296,7 @@ function Card({
       {/* 어느 작품에 쓸지 — 보관함의 핵심 동작이다 */}
       <SelectField
         label={t.inspiration.forProject}
-        className="mb-0 mt-auto"
+        className="mt-auto mb-0"
         value={item.projectId ?? ""}
         onChange={(e) =>
           void assignInspiration(item.id, e.target.value || undefined)
@@ -313,7 +319,7 @@ function Card({
         )}
         <Button
           variant="danger"
-          className="!text-caption !min-h-9 ml-auto !px-2"
+          className="!text-caption ml-auto !min-h-9 !px-2"
           onClick={onDelete}
         >
           <Trash2 size={13} />

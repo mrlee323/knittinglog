@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { formatRow, formatRun, hasStitchLabel } from "@/i18n/stitches";
-import { chartOps, findStitch, mirrorOp, stitchDelta, stitchOps } from "./stitches";
+import {
+  chartOps,
+  findStitch,
+  mirrorOp,
+  stitchDelta,
+  stitchOps,
+} from "./stitches";
 import {
   createStitchChart,
   drawnRow,
@@ -377,7 +383,9 @@ describe("서술형 변환 (한 ↔ 영)", () => {
   ];
 
   it("같은 IR에서 두 언어의 도안이 나온다", () => {
-    expect(formatRow(runs, "ko")).toBe("겉 5코, 오른코모아, 바늘비우기, 겉 5코");
+    expect(formatRow(runs, "ko")).toBe(
+      "겉 5코, 오른코모아, 바늘비우기, 겉 5코"
+    );
     expect(formatRow(runs, "en")).toBe("k5, k2tog, yo, k5");
   });
 
@@ -415,8 +423,12 @@ describe("서술형 변환 (한 ↔ 영)", () => {
     const c = chartFromRows([
       ["knit", "yo", "ssk", "knit", "knit", "knit", "k2tog", "yo", "knit"],
     ]);
-    expect(formatRow(opRuns(c, 0, "rs"), "en")).toBe("k1, yo, k2tog, k3, ssk, yo, k1");
-    expect(formatRow(opRuns(c, 0, "ws"), "en")).toBe("p1, yo, ssp, p3, p2tog, yo, p1");
+    expect(formatRow(opRuns(c, 0, "rs"), "en")).toBe(
+      "k1, yo, k2tog, k3, ssk, yo, k1"
+    );
+    expect(formatRow(opRuns(c, 0, "ws"), "en")).toBe(
+      "p1, yo, ssp, p3, p2tog, yo, p1"
+    );
   });
 
   it("안면 단에서 기울기가 뒤바뀌지 않는다", () => {

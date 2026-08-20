@@ -6,7 +6,9 @@ import { Page } from "@/components/ui/page";
 import { createStitchChartRecord } from "@/features/stitchChart/repository";
 import { useStrings } from "@/i18n";
 
-export const Route = createFileRoute("/patterns/new")({ component: NewPattern });
+export const Route = createFileRoute("/patterns/new")({
+  component: NewPattern,
+});
 
 /**
  * 무늬 반복 단위는 배색 문양보다 작다. 레이스는 흔히 한 자리 코수로 반복되고,

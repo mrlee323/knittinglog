@@ -10,6 +10,7 @@ import {
   createCountersFromBlueprints,
   listCounters,
 } from "@/features/counter/repository";
+import { releaseNeedlesForProject } from "@/features/needle/repository";
 import type { Id, PauseEvent, Project, ProjectStatus } from "@/types/entities";
 
 /* --- 입력 검증 ------------------------------------------------------------ */
@@ -122,6 +123,13 @@ export async function applyEvent(id: Id, event: ProjectEvent) {
     }
   });
 
+  // 끝난 작품은 바늘을 놓는다. 트랜잭션 밖에서 하는 이유는 바늘이 다른
+  // 테이블이고, 여기서 실패해도 상태 전이는 유효하기 때문이다 — 바늘 점유가
+  // 남는 건 사용자가 화면에서 고칠 수 있는 종류의 어긋남이다.
+  if (event.type === "FINISH" || event.type === "FROG") {
+    await releaseNeedlesForProject(id);
+  }
+
   return patch.status;
 }
 
@@ -219,6 +227,7 @@ export async function deleteProject(id: Id) {
       db.counters,
       db.counterMarks,
       db.counterSessions,
+      db.needles,
     ],
     async () => {
       const counterIds = await db.counters
@@ -236,6 +245,12 @@ export async function deleteProject(id: Id) {
       await db.pauseEvents.where("projectId").equals(id).delete();
       // PDF 도안은 용량이 크다 — 남겨두면 지운 프로젝트가 저장 공간을 계속 쥔다
       await db.patternDocs.where("projectId").equals(id).delete();
+      // 바늘은 지우지 않고 놓아준다. 물건은 서랍에 그대로 있고, 프로젝트가
+      // 없어졌으니 물려 있을 이유만 사라진 것이다.
+      await db.needles
+        .where("occupiedByProjectId")
+        .equals(id)
+        .modify({ occupiedByProjectId: undefined, updatedAt: new Date() });
       // 스크랩은 지우지 않고 미지정으로 돌려보낸다. 프로젝트를 접었다고 그
       // 아이디어가 없어지는 건 아니고, 대개 다음 작품에서 다시 꺼낸다.
       await db.inspirations

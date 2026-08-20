@@ -27,7 +27,6 @@ export interface Pixels {
 /** 0~255로 자르고 정수로 만든다 */
 const clamp = (v: number) => Math.max(0, Math.min(255, Math.round(v)));
 
-
 /* --- 색 거리 -------------------------------------------------------------- */
 
 /**

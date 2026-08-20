@@ -36,7 +36,8 @@ export async function shareCard(
     } catch (cause) {
       // 사용자가 시트를 닫은 것은 실패가 아니다. 그때 내려받기로 이어가면
       // 취소한 사람의 다운로드 폴더에 파일이 쌓인다.
-      if ((cause as { name?: string })?.name === "AbortError") return "cancelled";
+      if ((cause as { name?: string })?.name === "AbortError")
+        return "cancelled";
       // 그 밖의 거부(동작 밖에서 불림 등)는 내려받기로 떨어진다
     }
   }

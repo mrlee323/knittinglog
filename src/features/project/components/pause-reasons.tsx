@@ -32,7 +32,10 @@ export function PauseReasons() {
       <p className="text-text-3 text-caption mb-3">{t.project.reasonNote}</p>
 
       <p className="text-subhead font-semibold">
-        {t.project.reasonTop.replace("{reason}", reasonLabel(reasons[0].reason))}
+        {t.project.reasonTop.replace(
+          "{reason}",
+          reasonLabel(reasons[0].reason)
+        )}
       </p>
       {medianDays !== null && (
         <p className="text-text-2 text-small mb-3">
@@ -73,7 +76,9 @@ function ReasonBar({
   // 쓰면 완성한 작품을 방치한 것처럼 말하게 된다.
   const facts = [t.project.reasonCount.replace("{n}", String(outcome.total))];
   if (outcome.resumed > 0) {
-    facts.push(t.project.reasonReturned.replace("{n}", String(outcome.resumed)));
+    facts.push(
+      t.project.reasonReturned.replace("{n}", String(outcome.resumed))
+    );
   }
   if (outcome.open > 0) {
     facts.push(t.project.reasonOpen.replace("{n}", String(outcome.open)));

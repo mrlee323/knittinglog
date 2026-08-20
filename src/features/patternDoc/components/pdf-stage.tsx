@@ -47,8 +47,12 @@ export function PdfStage({
 
   // 마운트할 때 읽던 자리에서 시작한다. 이후로는 화면의 상태가 진실이고
   // DB는 사본이다(차트 편집기와 같은 구조).
-  const [page, setPage] = useState(() => clampPage(doc.lastPage ?? 1, doc.pageCount));
-  const [zoom, setZoom] = useState(() => clampZoom(doc.lastZoom ?? ZOOM_STEPS[0]));
+  const [page, setPage] = useState(() =>
+    clampPage(doc.lastPage ?? 1, doc.pageCount)
+  );
+  const [zoom, setZoom] = useState(() =>
+    clampZoom(doc.lastZoom ?? ZOOM_STEPS[0])
+  );
   const [pdf, setPdf] = useState<PDFDocumentProxy>();
   const [failed, setFailed] = useState(false);
   const [width, setWidth] = useState(0);
@@ -141,7 +145,11 @@ export function PdfStage({
         // 흐릿하게 보이는 것이 작게 보이는 것보다 낫다.
         setSize({ css: [base.width * fit * zoom, base.height * fit * zoom] });
 
-        const render = loaded.render({ canvas, canvasContext: context, viewport });
+        const render = loaded.render({
+          canvas,
+          canvasContext: context,
+          viewport,
+        });
         task = render;
         await render.promise;
       } catch (cause) {

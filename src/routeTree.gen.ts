@@ -17,6 +17,7 @@ import { Route as YarnIndexRouteImport } from './routes/yarn.index'
 import { Route as ProjectsIndexRouteImport } from './routes/projects.index'
 import { Route as ProfilesIndexRouteImport } from './routes/profiles.index'
 import { Route as PatternsIndexRouteImport } from './routes/patterns.index'
+import { Route as NeedlesIndexRouteImport } from './routes/needles.index'
 import { Route as GaugeIndexRouteImport } from './routes/gauge.index'
 import { Route as ChartsIndexRouteImport } from './routes/charts.index'
 import { Route as YarnNewRouteImport } from './routes/yarn.new'
@@ -77,6 +78,11 @@ const ProfilesIndexRoute = ProfilesIndexRouteImport.update({
 const PatternsIndexRoute = PatternsIndexRouteImport.update({
   id: '/patterns/',
   path: '/patterns/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NeedlesIndexRoute = NeedlesIndexRouteImport.update({
+  id: '/needles/',
+  path: '/needles/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const GaugeIndexRoute = GaugeIndexRouteImport.update({
@@ -202,6 +208,7 @@ export interface FileRoutesByFullPath {
   '/yarn/new': typeof YarnNewRoute
   '/charts/': typeof ChartsIndexRoute
   '/gauge/': typeof GaugeIndexRoute
+  '/needles/': typeof NeedlesIndexRoute
   '/patterns/': typeof PatternsIndexRoute
   '/profiles/': typeof ProfilesIndexRoute
   '/projects/': typeof ProjectsIndexRoute
@@ -233,6 +240,7 @@ export interface FileRoutesByTo {
   '/yarn/new': typeof YarnNewRoute
   '/charts': typeof ChartsIndexRoute
   '/gauge': typeof GaugeIndexRoute
+  '/needles': typeof NeedlesIndexRoute
   '/patterns': typeof PatternsIndexRoute
   '/profiles': typeof ProfilesIndexRoute
   '/projects': typeof ProjectsIndexRoute
@@ -265,6 +273,7 @@ export interface FileRoutesById {
   '/yarn/new': typeof YarnNewRoute
   '/charts/': typeof ChartsIndexRoute
   '/gauge/': typeof GaugeIndexRoute
+  '/needles/': typeof NeedlesIndexRoute
   '/patterns/': typeof PatternsIndexRoute
   '/profiles/': typeof ProfilesIndexRoute
   '/projects/': typeof ProjectsIndexRoute
@@ -298,6 +307,7 @@ export interface FileRouteTypes {
     | '/yarn/new'
     | '/charts/'
     | '/gauge/'
+    | '/needles/'
     | '/patterns/'
     | '/profiles/'
     | '/projects/'
@@ -329,6 +339,7 @@ export interface FileRouteTypes {
     | '/yarn/new'
     | '/charts'
     | '/gauge'
+    | '/needles'
     | '/patterns'
     | '/profiles'
     | '/projects'
@@ -360,6 +371,7 @@ export interface FileRouteTypes {
     | '/yarn/new'
     | '/charts/'
     | '/gauge/'
+    | '/needles/'
     | '/patterns/'
     | '/profiles/'
     | '/projects/'
@@ -392,6 +404,7 @@ export interface RootRouteChildren {
   YarnNewRoute: typeof YarnNewRoute
   ChartsIndexRoute: typeof ChartsIndexRoute
   GaugeIndexRoute: typeof GaugeIndexRoute
+  NeedlesIndexRoute: typeof NeedlesIndexRoute
   PatternsIndexRoute: typeof PatternsIndexRoute
   ProfilesIndexRoute: typeof ProfilesIndexRoute
   ProjectsIndexRoute: typeof ProjectsIndexRoute
@@ -463,6 +476,13 @@ declare module '@tanstack/react-router' {
       path: '/patterns'
       fullPath: '/patterns/'
       preLoaderRoute: typeof PatternsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/needles/': {
+      id: '/needles/'
+      path: '/needles'
+      fullPath: '/needles/'
+      preLoaderRoute: typeof NeedlesIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/gauge/': {
@@ -632,6 +652,7 @@ const rootRouteChildren: RootRouteChildren = {
   YarnNewRoute: YarnNewRoute,
   ChartsIndexRoute: ChartsIndexRoute,
   GaugeIndexRoute: GaugeIndexRoute,
+  NeedlesIndexRoute: NeedlesIndexRoute,
   PatternsIndexRoute: PatternsIndexRoute,
   ProfilesIndexRoute: ProfilesIndexRoute,
   ProjectsIndexRoute: ProjectsIndexRoute,

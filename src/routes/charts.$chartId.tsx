@@ -285,24 +285,24 @@ function Editor({
           {/* 게이지 선택은 넓은 화면에서만 이 자리에 둔다. 좁은 화면에서는
               위에 붙는 자리라 셀렉트가 격자를 가린다. */}
           <div className={gaugeValues ? "hidden lg:block" : undefined}>
-          <SelectField
-            label={t.chart.gauge}
-            value={record.gaugeId ?? ""}
-            onChange={(e) =>
-              void setChartGauge(chartId, e.target.value || undefined)
-            }
-            options={[
-              { value: "", label: t.chart.gaugeNone },
-              ...gauges.map((g) => ({
-                value: g.id,
-                label:
-                  g.label ??
-                  t.gauge.summary
-                    .replace("{sts}", String(g.stitchesPer10cm))
-                    .replace("{rows}", String(g.rowsPer10cm)),
-              })),
-            ]}
-          />
+            <SelectField
+              label={t.chart.gauge}
+              value={record.gaugeId ?? ""}
+              onChange={(e) =>
+                void setChartGauge(chartId, e.target.value || undefined)
+              }
+              options={[
+                { value: "", label: t.chart.gaugeNone },
+                ...gauges.map((g) => ({
+                  value: g.id,
+                  label:
+                    g.label ??
+                    t.gauge.summary
+                      .replace("{sts}", String(g.stitchesPer10cm))
+                      .replace("{rows}", String(g.rowsPer10cm)),
+                })),
+              ]}
+            />
           </div>
 
           {gaugeValues && (

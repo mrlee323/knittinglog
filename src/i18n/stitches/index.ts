@@ -40,8 +40,14 @@ const LABELS: Record<Locale, Record<string, StitchLabel>> = {
     cdd: { short: "중심3모아", long: "중심 3코 모아뜨기" },
     none: { short: "코없음", long: "코 없음 (칸 채우기용)" },
     /* 안면 단에서만 나오는 기법 — 도안에 그려지지 않고 서술형에만 등장한다 */
-    p2tog: { short: "안오른코모아", long: "안면에서 뜨는 오른코 모아뜨기 (2코 줄임)" },
-    ssp: { short: "안왼코모아", long: "안면에서 뜨는 왼코 모아뜨기 (2코 줄임)" },
+    p2tog: {
+      short: "안오른코모아",
+      long: "안면에서 뜨는 오른코 모아뜨기 (2코 줄임)",
+    },
+    ssp: {
+      short: "안왼코모아",
+      long: "안면에서 뜨는 왼코 모아뜨기 (2코 줄임)",
+    },
     p3tog: { short: "안오른코3모아", long: "안면에서 뜨는 오른코 3모아뜨기" },
     sssp: { short: "안왼코3모아", long: "안면에서 뜨는 왼코 3모아뜨기" },
     cddp: { short: "안중심3모아", long: "안면에서 뜨는 중심 3코 모아뜨기" },
