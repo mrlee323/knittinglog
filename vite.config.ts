@@ -124,7 +124,15 @@ export default defineConfig({
             title: "title",
             text: "text",
             url: "url",
-            files: [{ name: "images", accept: ["image/*"] }],
+            files: [
+              { name: "images", accept: ["image/*"] },
+              // 도안 파일(LOUNGE.md 0단계). 확장자도 함께 적는다 — 안드로이드
+              // 파일 선택기가 MIME 타입만으로 걸러주지 않는 경우가 있다.
+              {
+                name: "patterns",
+                accept: ["application/json", ".json", ".knit.json"],
+              },
+            ],
           },
         },
         orientation: "portrait",

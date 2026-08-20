@@ -17,10 +17,17 @@ export type ShareOutcome = "shared" | "downloaded" | "cancelled";
 export async function shareCard(
   blob: Blob,
   title: string,
-  at: Date
+  at: Date,
+  /**
+   * 파일 이름을 직접 줄 때 쓴다.
+   *
+   * 카드는 제목과 날짜로 이름을 만들지만, 도안 파일은 자기 이름 규칙이 있다
+   * (`물결 레이스.knit.json`). 보내는 경로는 같으므로 이름만 갈아 끼운다.
+   */
+  fileName?: string
 ): Promise<ShareOutcome> {
-  const name = cardFileName(title, at);
-  const file = new File([blob], name, { type: "image/png" });
+  const name = fileName ?? cardFileName(title, at);
+  const file = new File([blob], name, { type: blob.type || "image/png" });
 
   if (navigator.canShare?.({ files: [file] })) {
     try {

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Page } from "@/components/ui/page";
-import { drainSharedInbox } from "@/features/inspiration/repository";
+import { drainSharedInbox } from "@/features/share/inbox";
 import { useStrings } from "@/i18n";
 
 export const Route = createFileRoute("/share")({ component: ShareLanding });
@@ -23,14 +23,21 @@ function ShareLanding() {
   useEffect(() => {
     let cancelled = false;
     void (async () => {
-      const ids = await drainSharedInbox().catch(() => []);
+      const result = await drainSharedInbox().catch(() => null);
       if (cancelled) return;
-      setStatus(ids.length > 0 ? "done" : "empty");
-      // 결과를 한 번 보여주고 넘긴다. 곧바로 넘기면 무엇이 들어왔는지 모르고,
-      // 안 넘기면 이 통로에 머문다.
+      const scraps = result?.scraps.length ?? 0;
+      const patterns = result?.patterns.length ?? 0;
+      setStatus(scraps + patterns > 0 ? "done" : "empty");
+
+      // 받은 것이 있는 자리로 보낸다. 도안이 왔으면 도안 목록이 맞다 — 스크랩으로
+      // 보내면 방금 받은 도안이 거기 없어서 공유가 실패한 것처럼 보인다.
+      if (patterns > 0) {
+        await navigate({ to: "/patterns", replace: true });
+        return;
+      }
       await navigate({
         to: "/inspiration",
-        search: { received: ids.length },
+        search: { received: scraps },
         replace: true,
       });
     })();

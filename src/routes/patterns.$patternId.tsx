@@ -12,6 +12,7 @@ import { SelectField, TextField } from "@/components/ui/field";
 import { BackLink, Page } from "@/components/ui/page";
 import { SegmentedControl } from "@/components/ui/segmented";
 import { ShareCardButton } from "@/features/card/components/share-card-button";
+import { SendPatternButton } from "@/features/stitchChart/components/pattern-file-buttons";
 import {
   SymbolCanvas,
   SymbolSwatch,
@@ -549,6 +550,9 @@ function Editor({
             onChange={(e) => setName(e.target.value)}
           />
         </div>
+        {/* 도안을 파일로 보낸다 — 받는 사람이 바로 뜰 수 있다(LOUNGE.md 0단계).
+            카드는 보여주기용, 파일은 뜨기용이다. */}
+        <SendPatternButton record={record} />
         <ShareCardButton
           build={() => ({
             title: name || record.name,
