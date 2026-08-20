@@ -128,5 +128,6 @@ src/
    바로 뜰 수 있고 코수 검산도 함께 온다. 계정을 전제로 한다:
    [docs/LOUNGE.md](docs/LOUNGE.md).
 
+배색 차트 에디터 사양은 [docs/CHART-EDITOR.md](docs/CHART-EDITOR.md),
 화면 구조와 그 이유는 [docs/DESIGN.md](docs/DESIGN.md) §6·§7, 방향과 결정
 사항은 [docs/PLAN.md](docs/PLAN.md) §13에 적혀 있다.
