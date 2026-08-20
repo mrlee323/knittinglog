@@ -218,6 +218,7 @@ export const ko = {
     gauge: "게이지",
     gaugeNone: "고르지 않음",
     finishedSize: "완성 {w} × {h}",
+    repeatedAs: "가로 {x}번 · 세로 {y}번 깔았을 때",
     palette: "색",
     addColor: "색 추가",
     removeColor: "이 색 지우기",
