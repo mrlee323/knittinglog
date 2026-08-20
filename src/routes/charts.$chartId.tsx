@@ -1,7 +1,17 @@
 import { useEffect, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useLiveQuery } from "dexie-react-hooks";
-import { ChevronLeft, FlipHorizontal2, ImagePlus, Plus } from "lucide-react";
+import {
+  Brush,
+  ChevronLeft,
+  FlipHorizontal2,
+  ImagePlus,
+  PaintBucket,
+  Pipette,
+  Plus,
+  Redo2,
+  Undo2,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SelectField, TextField } from "@/components/ui/field";
 import { BackLink, Page } from "@/components/ui/page";
@@ -19,6 +29,8 @@ import { listGauges } from "@/features/gauge/repository";
 import {
   cellAspect,
   chartSizeCm,
+  fillArea,
+  getCell,
   mirrorChart,
   resizeChart,
   rowRuns,
@@ -35,6 +47,23 @@ import type { ColorChartRecord, GaugeRecord } from "@/types/entities";
 export const Route = createFileRoute("/charts/$chartId")({
   component: ChartEditor,
 });
+
+/**
+ * 그리기 도구.
+ *
+ * 셋으로 끝낸다. 직선·사각형은 넣지 않았다 — 배색 무늬는 대개 곡선이고,
+ * 대칭 그리기가 들어오면 손이 훨씬 덜 아프다(docs/CHART-EDITOR.md §5.4).
+ */
+type Tool = "paint" | "fill" | "pick";
+
+const TOOLS = [
+  { id: "paint" as const, icon: Brush },
+  { id: "fill" as const, icon: PaintBucket },
+  { id: "pick" as const, icon: Pipette },
+];
+
+/** 되돌리기 스택 상한. 차트가 작아서 이 정도는 20KB를 넘지 않는다. */
+const HISTORY_LIMIT = 50;
 
 /** 편집 격자의 칸 크기. 손가락으로 칠할 수 있는 최소치에서 출발한다. */
 const EDIT_CELL = 18;
@@ -96,12 +125,80 @@ function Editor({
   const [row, setRow] = useState(0);
   const [repeats, setRepeats] = useState<{ x: number; y: number }>();
   const [zoom, setZoom] = useState(1);
+  const [tool, setTool] = useState<Tool>("paint");
+  /**
+   * 되돌리기 · 다시하기.
+   *
+   * 차트는 width × height 정수 배열이라 스냅샷이 싸다(20×20이면 400바이트).
+   * diff를 만들 이유가 없어서 전체 사본을 쌓는다 — 50단계면 한 세션에서
+   * 되돌릴 만큼이고 20KB를 넘지 않는다(docs/CHART-EDITOR.md §3.1).
+   */
+  const [past, setPast] = useState<ColorChart[]>([]);
+  const [future, setFuture] = useState<ColorChart[]>([]);
   const wide = useWideEnough();
 
+  /**
+   * 되돌릴 수 있는 변경.
+   *
+   * 한 획(pointerdown → up)이 한 단위다. 획을 시작할 때 remember()로 지금
+   * 상태를 쌓고, 획 중에는 chart만 갱신한다.
+   */
+  const remember = () => {
+    setPast((prev) => [...prev.slice(-(HISTORY_LIMIT - 1)), chart]);
+    // 새 변경이 들어오면 다시하기 갈래는 버린다 — 분기를 들고 있으면
+    // 어느 쪽으로 돌아갈지 사용자가 알 수 없다.
+    setFuture([]);
+  };
+
+  /** 한 번에 끝나는 변경(채우기·반전·크기·팔레트)은 기억과 적용을 함께 한다 */
+  const commit = (next: ColorChart) => {
+    remember();
+    setChart(next);
+  };
+
+  const undo = () => {
+    setPast((prev) => {
+      if (prev.length === 0) return prev;
+      const last = prev[prev.length - 1];
+      setFuture((f) => [chart, ...f].slice(0, HISTORY_LIMIT));
+      setChart(last);
+      return prev.slice(0, -1);
+    });
+  };
+
+  const redo = () => {
+    setFuture((prev) => {
+      if (prev.length === 0) return prev;
+      const [next, ...rest] = prev;
+      setPast((p) => [...p.slice(-(HISTORY_LIMIT - 1)), chart]);
+      setChart(next);
+      return rest;
+    });
+  };
+
+  // 되돌린 결과도 저장된다 — 되돌리고 나갔다 돌아왔을 때 되돌리기 전 상태가
+  // 남아 있으면 안 된다. 저장은 chart를 보고 있으므로 그대로 성립한다.
   useEffect(() => {
     const timer = setTimeout(() => void saveChart(chartId, chart), SAVE_DELAY);
     return () => clearTimeout(timer);
   }, [chart, chartId]);
+
+  // 데스크톱에서 되돌리기는 단축키가 먼저 손에 온다
+  useEffect(() => {
+    function onKey(event: KeyboardEvent) {
+      if (
+        !(event.metaKey || event.ctrlKey) ||
+        event.key.toLowerCase() !== "z"
+      ) {
+        return;
+      }
+      event.preventDefault();
+      if (event.shiftKey) redo();
+      else undo();
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  });
 
   // 이름도 같은 방식으로 모아 저장한다. 글자마다 쓰면 입력이 밀린다.
   useEffect(() => {
@@ -126,7 +223,7 @@ function Editor({
 
   const resize = (width: number, height: number) => {
     if (width < 1 || height < 1) return;
-    setChart(resizeChart(chart, Math.min(120, width), Math.min(200, height)));
+    commit(resizeChart(chart, Math.min(120, width), Math.min(200, height)));
   };
 
   return (
@@ -170,7 +267,7 @@ function Editor({
                 onChange={(e) => {
                   const palette = chart.palette.slice();
                   palette[i] = e.target.value;
-                  setChart({ ...chart, palette });
+                  commit({ ...chart, palette });
                 }}
                 className="border-line size-6 cursor-pointer rounded-sm border bg-transparent p-0.5"
               />
@@ -180,7 +277,7 @@ function Editor({
             variant="secondary"
             className="!min-h-9 !px-2"
             onClick={() =>
-              setChart({ ...chart, palette: [...chart.palette, "#b0603c"] })
+              commit({ ...chart, palette: [...chart.palette, "#b0603c"] })
             }
           >
             <Plus size={14} />
@@ -200,7 +297,7 @@ function Editor({
             // 사진 쪽에서 칸 수를 바꿀 수 있으므로 차트를 통째로 갈아끼운다.
             // palette·cells만 받으면 width×height와 cells.length가 어긋난다.
             onApply={(next) => {
-              setChart(next);
+              commit(next);
               setFromPhoto(false);
             }}
           />
@@ -248,7 +345,7 @@ function Editor({
           </div>
           <Button
             variant="secondary"
-            onClick={() => setChart(mirrorChart(chart))}
+            onClick={() => commit(mirrorChart(chart))}
           >
             <FlipHorizontal2 size={16} />
             {t.chart.mirror}
@@ -272,14 +369,78 @@ function Editor({
           <h2 className="text-micro text-text-3 mb-1">{t.chart.editing}</h2>
           <p className="text-text-3 text-caption mb-2">{t.chart.editingHint}</p>
           <div className="border-line overflow-auto rounded-md border p-2">
+            {/* 도구는 격자 바로 위에 둔다. 칠하다가 채우기로 바꾸는 동작이
+                가장 잦으므로 손이 움직이는 거리가 짧아야 한다. */}
+            <div className="mb-2 flex flex-wrap items-center gap-2">
+              <div className="flex gap-1">
+                {TOOLS.map(({ id, icon: Icon }) => (
+                  <button
+                    key={id}
+                    type="button"
+                    aria-pressed={tool === id}
+                    aria-label={t.chart.tool[id]}
+                    title={t.chart.tool[id]}
+                    onClick={() => setTool(id)}
+                    className={cn(
+                      "inline-flex size-11 items-center justify-center rounded-md transition",
+                      tool === id
+                        ? "bg-accent text-on-accent"
+                        : "bg-sunken text-text-2 hover:text-text"
+                    )}
+                  >
+                    <Icon size={18} />
+                  </button>
+                ))}
+              </div>
+
+              <div className="ml-auto flex gap-1">
+                <button
+                  type="button"
+                  onClick={undo}
+                  disabled={past.length === 0}
+                  aria-label={t.chart.undo}
+                  title={t.chart.undo}
+                  className="bg-sunken text-text-2 hover:text-text inline-flex size-11 items-center justify-center rounded-md transition disabled:opacity-30"
+                >
+                  <Undo2 size={18} />
+                </button>
+                <button
+                  type="button"
+                  onClick={redo}
+                  disabled={future.length === 0}
+                  aria-label={t.chart.redo}
+                  title={t.chart.redo}
+                  className="bg-sunken text-text-2 hover:text-text inline-flex size-11 items-center justify-center rounded-md transition disabled:opacity-30"
+                >
+                  <Redo2 size={18} />
+                </button>
+              </div>
+            </div>
+
             <ChartCanvas
               chart={chart}
               cellWidth={EDIT_CELL}
               cellHeight={EDIT_CELL}
-              // 함수형 갱신을 쓴다. 클로저의 chart를 읽으면 같은 tick에 여러
-              // 포인터 이벤트가 오갈 때 앞서 칠한 칸이 덮여 사라진다 —
-              // 빠르게 그을 때 점이 띄엄띄엄 찍히는 증상이 이것이다.
-              onPaint={(x, y) => setChart((prev) => setCell(prev, x, y, color))}
+              // 채우기·스포이드는 한 번만 동작해야 한다
+              continuous={tool === "paint"}
+              onStrokeStart={tool === "pick" ? undefined : remember}
+              onPaint={(x, y) => {
+                if (tool === "pick") {
+                  // 팔레트로 손을 옮기는 왕복을 줄이는 게 목적이므로,
+                  // 색을 집으면 곧바로 칠하기로 돌아온다.
+                  setColor(getCell(chart, x, y));
+                  setTool("paint");
+                  return;
+                }
+                if (tool === "fill") {
+                  setChart((prev) => fillArea(prev, x, y, color));
+                  return;
+                }
+                // 함수형 갱신을 쓴다. 클로저의 chart를 읽으면 같은 tick에 여러
+                // 포인터 이벤트가 오갈 때 앞서 칠한 칸이 덮여 사라진다 —
+                // 빠르게 그을 때 점이 띄엄띄엄 찍히는 증상이 이것이다.
+                setChart((prev) => setCell(prev, x, y, color));
+              }}
             />
           </div>
         </section>

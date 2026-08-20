@@ -3,12 +3,14 @@ import {
   cellAspect,
   chartSizeCm,
   createChart,
+  fillArea,
   getCell,
   mirrorChart,
   resizeChart,
   rowRuns,
   setCell,
   stitchCounts,
+  type ColorChart,
 } from "./colorChart";
 
 const DK = { stitchesPer10cm: 22, rowsPer10cm: 30 };
@@ -193,5 +195,60 @@ describe("단별 읽기", () => {
   it("범위 밖 단은 빈 목록", () => {
     expect(rowRuns(createChart(3, 2), 5)).toEqual([]);
     expect(rowRuns(createChart(3, 2), -1)).toEqual([]);
+  });
+});
+
+describe("fillArea", () => {
+  /** 문자열로 도안을 만든다 — 눈으로 확인하기 쉽게 */
+  const from = (rows: string[]): ColorChart => ({
+    width: rows[0].length,
+    height: rows.length,
+    palette: ["#fff", "#000", "#f00"],
+    // 저장은 y=0이 첫 단(아래)이므로 뒤집어 넣는다
+    cells: [...rows]
+      .reverse()
+      .flatMap((row) => [...row].map((ch) => Number(ch))),
+  });
+
+  const draw = (chart: ColorChart) =>
+    Array.from({ length: chart.height }, (_, y) =>
+      Array.from({ length: chart.width }, (_, x) =>
+        String(getCell(chart, x, chart.height - 1 - y))
+      ).join("")
+    );
+
+  it("이어진 같은 색을 한 번에 바꾼다", () => {
+    const chart = from(["0000", "0110", "0110", "0000"]);
+    expect(draw(fillArea(chart, 0, 0, 2))).toEqual([
+      "2222",
+      "2112",
+      "2112",
+      "2222",
+    ]);
+  });
+
+  it("대각선 건너로는 번지지 않는다", () => {
+    // 1이 대각선 벽이다. 아래 왼쪽 영역과 위 오른쪽 영역은 대각으로만 닿는다.
+    const chart = from(["100", "010", "001"]);
+    const filled = fillArea(chart, 0, 0, 2);
+    // 아래 왼쪽 영역(세로로도 이어진 칸까지)만 채워지고, 대각선 위쪽은 그대로다
+    expect(draw(filled)).toEqual(["100", "210", "221"]);
+  });
+
+  it("같은 색으로 채우면 아무 일도 하지 않는다", () => {
+    const chart = from(["11", "11"]);
+    expect(fillArea(chart, 0, 0, 1)).toBe(chart);
+  });
+
+  it("격자 밖을 찍으면 그대로 둔다", () => {
+    const chart = from(["11", "11"]);
+    expect(fillArea(chart, 5, 5, 0)).toBe(chart);
+  });
+
+  it("원본을 바꾸지 않는다", () => {
+    const chart = from(["00", "00"]);
+    const before = [...chart.cells];
+    fillArea(chart, 0, 0, 1);
+    expect(chart.cells).toEqual(before);
   });
 });

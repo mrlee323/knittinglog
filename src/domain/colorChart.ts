@@ -138,6 +138,52 @@ export function chartSizeCm(chart: ColorChart, gauge: ChartGauge) {
   };
 }
 
+/* --- 채우기 --------------------------------------------------------------- */
+
+/**
+ * 같은 색이 이어진 영역을 한 번에 바꾼다.
+ *
+ * 배경색을 갈아치우려면 400칸을 다 칠해야 하는 상황을 없애는 게 목적이다.
+ *
+ * **네 방향(상하좌우)만 잇는다.** 대각선까지 이으면 배색 무늬에서 대각으로
+ * 스친 칸을 타고 의도하지 않은 영역까지 번진다 — 격자무늬에서 한 번 겪으면
+ * 다시 쓰지 않게 되는 종류의 동작이다.
+ *
+ * 반복 경계는 경계가 아니다. 반복은 미리보기의 표시일 뿐이고 데이터는 한 장이다.
+ */
+export function fillArea(
+  chart: ColorChart,
+  startX: number,
+  startY: number,
+  color: number
+): ColorChart {
+  const target = getCell(chart, startX, startY);
+  if (target === color) return chart;
+  if (
+    startX < 0 ||
+    startY < 0 ||
+    startX >= chart.width ||
+    startY >= chart.height
+  ) {
+    return chart;
+  }
+
+  const cells = [...chart.cells];
+  const index = (x: number, y: number) => y * chart.width + x;
+  const stack: [number, number][] = [[startX, startY]];
+
+  while (stack.length > 0) {
+    const [x, y] = stack.pop()!;
+    if (x < 0 || y < 0 || x >= chart.width || y >= chart.height) continue;
+    if (cells[index(x, y)] !== target) continue;
+
+    cells[index(x, y)] = color;
+    stack.push([x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]);
+  }
+
+  return { ...chart, cells };
+}
+
 /* --- 집계 ----------------------------------------------------------------- */
 
 /** 색마다 몇 코가 필요한지. 실을 몇 타래 살지 가늠하는 근거가 된다. */
