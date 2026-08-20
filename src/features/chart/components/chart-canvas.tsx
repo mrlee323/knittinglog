@@ -1,6 +1,16 @@
 import { useEffect, useRef, useState } from "react";
-import { getCell, type ColorChart, type FloatRun } from "@/domain/colorChart";
+import {
+  getCell,
+  linePoints,
+  rectPoints,
+  type ColorChart,
+  type FloatRun,
+  type Point,
+} from "@/domain/colorChart";
 import { isLight } from "@/domain/color";
+
+/** 두 점을 끌어 만드는 도형 */
+export type ChartShape = "line" | "rect";
 
 export interface ChartCanvasProps {
   chart: ColorChart;
@@ -50,6 +60,24 @@ export interface ChartCanvasProps {
    * 무관하게 읽힌다.
    */
   floats?: FloatRun[];
+  /**
+   * 무늬 반복 단위(코수·단수). 경계에 안내선을 얹는다.
+   *
+   * 10코마다 넣는 관습선과 별개다 — 그건 좌표를 세는 눈금이고, 이건 이 무늬가
+   * 어디서 다시 시작하는지다. 무늬가 이어질 때 어긋나는 걸 그리는 중에 안다.
+   */
+  repeatStitches?: number;
+  repeatRows?: number;
+  /**
+   * 두 점을 끌어 도형을 그리는 도구일 때의 모양.
+   *
+   * 이때는 칸마다 알리지 않는다. 끄는 동안 미리보기를 얹고, 손을 뗄 때
+   * `onShape`로 한 번 알린다 — 지나간 칸이 아니라 두 끝이 뜻을 갖는 도구다.
+   */
+  shape?: ChartShape;
+  /** 지금 칠하는 색(팔레트 인덱스). 도형 미리보기를 그 색으로 얹는다. */
+  color?: number;
+  onShape?: (from: Point, to: Point) => void;
 }
 
 /** 좌표 번호가 들어갈 여백(px) */
@@ -72,6 +100,21 @@ function hatchColor(el: Element): string {
 }
 
 /**
+ * 어떤 색 위에서도 읽히는 선.
+ *
+ * 흰 선을 깔고 검은 선을 얹는다. 팔레트는 사용자의 색이라 한 겹으로 그으면
+ * 어느 도안에서는 배색에 묻힌다 — 흰 실 위의 흰 선, 검은 실 위의 검은 선.
+ */
+function strokeTwoTone(ctx: CanvasRenderingContext2D, path: Path2D) {
+  ctx.strokeStyle = "rgb(255 255 255 / 0.75)";
+  ctx.lineWidth = 3;
+  ctx.stroke(path);
+  ctx.strokeStyle = "rgb(0 0 0 / 0.8)";
+  ctx.lineWidth = 1;
+  ctx.stroke(path);
+}
+
+/**
  * 차트를 캔버스에 그린다.
  *
  * DOM 요소를 칸마다 두지 않는다. 40×40이면 1600개인데, 드래그로 칠할 때마다
@@ -90,10 +133,17 @@ export function ChartCanvas({
   continuous = true,
   labels = false,
   floats,
+  repeatStitches,
+  repeatRows,
+  shape,
+  color,
+  onShape,
 }: ChartCanvasProps) {
   const ref = useRef<HTMLCanvasElement>(null);
   const overlayRef = useRef<HTMLCanvasElement>(null);
   const painting = useRef(false);
+  /** 도형을 끄는 중인 두 끝. 손을 뗄 때까지 차트는 건드리지 않는다. */
+  const [drag, setDrag] = useState<{ from: Point; to: Point } | null>(null);
   /**
    * 커서가 있는 칸.
    *
@@ -182,6 +232,37 @@ export function ChartCanvas({
             : "rgb(0 0 0 / 0.12)";
         ctx.stroke();
       }
+
+      /*
+        반복 경계.
+
+        코는 **오른쪽부터** 세고 단은 **아래부터** 센다. 무늬는 1번 코에서
+        시작하므로 왼쪽 끝에서 세면 폭이 반복의 배수가 아닐 때 경계가 전부
+        어긋난다 — 안내선이 틀리면 없는 것보다 나쁘다.
+
+        가장자리에는 긋지 않는다. 차트 테두리가 이미 거기 있다.
+      */
+      const repeat = new Path2D();
+      let marked = false;
+      if (repeatStitches && repeatStitches > 0) {
+        for (let x = 1; x < chart.width; x += 1) {
+          if ((chart.width - x) % repeatStitches !== 0) continue;
+          const px = Math.round(x * cellWidth) + 0.5;
+          repeat.moveTo(px, 0);
+          repeat.lineTo(px, gridHeight);
+          marked = true;
+        }
+      }
+      if (repeatRows && repeatRows > 0) {
+        for (let y = 1; y < chart.height; y += 1) {
+          if (y % repeatRows !== 0) continue;
+          const py = Math.round((chart.height - y) * cellHeight) + 0.5;
+          repeat.moveTo(0, py);
+          repeat.lineTo(gridWidth, py);
+          marked = true;
+        }
+      }
+      if (marked) strokeTwoTone(ctx, repeat);
     }
 
     if (floats && floats.length > 0) {
@@ -252,6 +333,8 @@ export function ChartCanvas({
     grid,
     labels,
     floats,
+    repeatStitches,
+    repeatRows,
     gutter,
     gridWidth,
     gridHeight,
@@ -278,6 +361,38 @@ export function ChartCanvas({
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, width, height);
 
+    /*
+      도형 미리보기.
+
+      실제로 칠할 칸 목록(도메인 함수)을 그대로 얹는다. 화면과 결과가 다른
+      미리보기는 미리보기가 아니다 — 브레젠험 선을 눈대중으로 다시 그리면
+      완만한 기울기에서 한 칸씩 어긋난다.
+    */
+    if (drag && shape) {
+      const points =
+        shape === "line"
+          ? linePoints(drag.from, drag.to)
+          : rectPoints(drag.from, drag.to);
+      const hex = color !== undefined ? (chart.palette[color] ?? null) : null;
+      ctx.save();
+      ctx.translate(gutter, gutter);
+      for (const point of points) {
+        const px = point.x * cellWidth;
+        const py = (chart.height - 1 - point.y) * cellHeight;
+        if (hex) {
+          ctx.globalAlpha = 0.75;
+          ctx.fillStyle = hex;
+          ctx.fillRect(px, py, Math.ceil(cellWidth), Math.ceil(cellHeight));
+          ctx.globalAlpha = 1;
+        }
+        // 테두리를 함께 둘러야 칠할 색이 아래 칸과 같을 때도 어디가 잡혔는지 보인다
+        ctx.strokeStyle = "rgb(0 0 0 / 0.45)";
+        ctx.lineWidth = 1;
+        ctx.strokeRect(px + 0.5, py + 0.5, cellWidth - 1, cellHeight - 1);
+      }
+      ctx.restore();
+    }
+
     if (!hover || !labels) return;
 
     const screenY = (chart.height - 1 - hover.y) * cellHeight;
@@ -299,6 +414,10 @@ export function ChartCanvas({
   }, [
     hover,
     labels,
+    drag,
+    shape,
+    color,
+    chart.palette,
     chart.height,
     cellWidth,
     cellHeight,
@@ -331,6 +450,9 @@ export function ChartCanvas({
     if (cell) onPaint(cell.x, cell.y);
   };
 
+  /** 도형 도구인가 — 이때는 칸마다 칠하지 않는다 */
+  const shaping = Boolean(shape && onShape);
+
   return (
     /*
       두 캔버스를 겹친다. 커서 표시가 위 캔버스에만 그려지므로 포인터가 움직일
@@ -341,31 +463,54 @@ export function ChartCanvas({
       <canvas
         ref={ref}
         style={{ width, height }}
-        className={onPaint ? "cursor-crosshair touch-none" : undefined}
+        className={
+          onPaint || shaping ? "cursor-crosshair touch-none" : undefined
+        }
         onPointerDown={(e) => {
-          onStrokeStart?.();
-          if (!onPaint) return;
-          painting.current = true;
-          // 캔버스 밖으로 손가락이 나가도 이어서 칠하게 잡아둔다.
-          // 실패해도 칠하기는 계속한다 — 붙잡기는 편의이고, 이게 던져서
-          // 칠이 안 되면 화면이 고장난 것처럼 보인다.
+          // 캔버스 밖으로 손가락이 나가도 이어서 잡게 붙잡아둔다.
+          // 실패해도 계속한다 — 붙잡기는 편의이고, 이게 던져서 칠이 안 되면
+          // 화면이 고장난 것처럼 보인다.
           try {
             e.currentTarget.setPointerCapture(e.pointerId);
           } catch {
             // 이 포인터를 붙잡을 수 없는 환경. 캔버스 안에서는 그대로 동작한다.
           }
+          if (shaping) {
+            // 도형은 손을 뗄 때 한 번에 확정된다. 되돌리기 기억도 그때다 —
+            // 여기서 쌓으면 끌다가 취소했을 때 아무것도 안 하는 되돌리기가 남는다.
+            const cell = toCell(e);
+            if (cell) setDrag({ from: cell, to: cell });
+            return;
+          }
+          onStrokeStart?.();
+          if (!onPaint) return;
+          painting.current = true;
           paint(e);
         }}
         onPointerMove={(e) => {
           if (labels) setHover(toCell(e));
+          if (shaping) {
+            if (!drag) return;
+            const cell = toCell(e);
+            // 격자 밖으로 나가면 마지막 칸을 유지한다. 끝점이 사라지면
+            // 미리보기가 깜빡이고, 손을 뗀 자리와 결과가 달라진다.
+            if (cell) setDrag((d) => (d ? { ...d, to: cell } : d));
+            return;
+          }
           if (continuous && painting.current) paint(e);
         }}
         onPointerLeave={() => setHover(null)}
         onPointerUp={() => {
           painting.current = false;
+          if (drag) {
+            onShape?.(drag.from, drag.to);
+            setDrag(null);
+          }
         }}
         onPointerCancel={() => {
           painting.current = false;
+          // 취소는 확정이 아니다 — 차트를 건드리지 않고 미리보기만 지운다
+          setDrag(null);
         }}
       />
       <canvas

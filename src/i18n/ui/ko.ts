@@ -276,9 +276,40 @@ export const ko = {
     gauge: "게이지",
     gaugeNone: "고르지 않음",
     finishedSize: "완성 {w} × {h}",
-    tool: { paint: "칠하기", fill: "채우기", pick: "색 집기" },
+    tool: {
+      paint: "칠하기",
+      fill: "채우기",
+      pick: "색 집기",
+      line: "직선",
+      rect: "사각형",
+    },
     undo: "되돌리기",
     redo: "다시하기",
+    /* 중간에 끼워넣기 — 크기 입력은 끝에서만 자란다 */
+    insertHint: "번호를 넣고 그 자리에 한 단·한 코를 끼우거나 빼요",
+    rowAt: "단",
+    stitchAt: "코",
+    insertRow: "이 자리에 단 넣기",
+    removeRow: "이 단 빼기",
+    insertColumn: "이 자리에 코 넣기",
+    removeColumn: "이 코 빼기",
+    /* 반복 안내선 — 10코 관습선과 달리 이 무늬의 경계다 */
+    repeat: "반복",
+    repeatStitches: "코 반복",
+    repeatRows: "단 반복",
+    repeatChartFits: "격자 {width}코 = {repeat}코 무늬 {repeats}회",
+    repeatChartOff:
+      "격자 {width}코는 {repeat}코 무늬의 배수가 아니에요 · {remainder}코 남아요",
+    castOn: "얹을 코수",
+    castOnHint: "얹을 코수를 넣으면 반복이 맞는지 검산해요",
+    repeatFits: "{total}코에 {repeat}코 무늬 {repeats}회 — 딱 맞아요",
+    repeatShort:
+      "{total}코에 {repeat}코 무늬면 {repeats}회 · {remainder}코 남아요",
+    repeatNone: "{total}코에는 {repeat}코 무늬가 한 번도 안 들어가요",
+    /* 색 일괄 교체 — 팔레트 hex를 고치는 것과 다르다 */
+    swapFrom: "바꿀 색",
+    swapTo: "새 색",
+    swap: "{n}코 바꾸기",
     /* 대칭 그리기 — 무늬 대부분이 좌우 대칭이라 작업량이 절반이 된다 */
     symmetry: "대칭 그리기",
     symmetryHint: "칠할 때 좌우 반대 칸도 함께 칠해요",

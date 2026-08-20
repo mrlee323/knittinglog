@@ -90,4 +90,24 @@ export async function setChartFloats(
   await db.colorCharts.update(id, touch(input));
 }
 
+/**
+ * 반복 단위와 얹을 코수.
+ *
+ * 0이나 빈 값은 "지정 안 함"이라 undefined로 지운다 — 0코 반복은 뜻이 없고,
+ * 남겨두면 안내선이 매 칸마다 그려진다.
+ */
+export async function setChartRepeat(
+  id: Id,
+  input: { repeatStitches?: number; repeatRows?: number; castOn?: number }
+) {
+  const count = (value?: number) =>
+    value && value > 0 ? Math.floor(value) : undefined;
+  const clean: Partial<ColorChartRecord> = {};
+  if ("repeatStitches" in input)
+    clean.repeatStitches = count(input.repeatStitches);
+  if ("repeatRows" in input) clean.repeatRows = count(input.repeatRows);
+  if ("castOn" in input) clean.castOn = count(input.castOn);
+  await db.colorCharts.update(id, touch(clean));
+}
+
 export const deleteChart = (id: Id) => db.colorCharts.delete(id);

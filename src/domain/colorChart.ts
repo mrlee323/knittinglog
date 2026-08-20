@@ -106,6 +106,185 @@ export function mirrorChart(chart: ColorChart): ColorChart {
   return { ...chart, cells };
 }
 
+/* --- 단·코 삽입 · 삭제 ---------------------------------------------------- */
+
+/**
+ * `y` 자리에 빈 단 하나를 끼워넣는다. 원래 그 자리의 단은 위로 올라간다.
+ *
+ * `resizeChart`와 별도 함수인 이유는 하는 일이 다르기 때문이다. 크기 변경은
+ * 끝에서 자라고, 이건 **중간에 끼워넣는다** — 무늬를 그려놓고 "여기 한 단이
+ * 더 필요하다"는 것은 실제 작업이고, 끝에서만 자라면 그 위를 전부 다시 그려야
+ * 한다.
+ *
+ * `y === height`면 맨 위에 붙인다. 범위를 넘으면 그대로 둔다.
+ */
+export function insertRow(chart: ColorChart, y: number): ColorChart {
+  if (y < 0 || y > chart.height) return chart;
+  const at = y * chart.width;
+  return {
+    ...chart,
+    height: chart.height + 1,
+    cells: [
+      ...chart.cells.slice(0, at),
+      ...new Array(chart.width).fill(0),
+      ...chart.cells.slice(at),
+    ],
+  };
+}
+
+/** `y` 단을 뺀다. 마지막 한 단은 뺄 수 없다 — 빈 차트는 차트가 아니다. */
+export function removeRow(chart: ColorChart, y: number): ColorChart {
+  if (chart.height <= 1 || y < 0 || y >= chart.height) return chart;
+  return {
+    ...chart,
+    height: chart.height - 1,
+    cells: [
+      ...chart.cells.slice(0, y * chart.width),
+      ...chart.cells.slice((y + 1) * chart.width),
+    ],
+  };
+}
+
+/**
+ * `x` 자리에 빈 코 하나를 끼워넣는다. 원래 그 자리의 코는 왼쪽으로 밀린다.
+ *
+ * `x === width`면 맨 오른쪽(1번 코 자리)에 붙인다.
+ */
+export function insertColumn(chart: ColorChart, x: number): ColorChart {
+  if (x < 0 || x > chart.width) return chart;
+  const width = chart.width + 1;
+  const cells = new Array(width * chart.height).fill(0);
+  for (let y = 0; y < chart.height; y += 1) {
+    for (let sx = 0; sx < chart.width; sx += 1) {
+      cells[y * width + (sx < x ? sx : sx + 1)] =
+        chart.cells[y * chart.width + sx];
+    }
+  }
+  return { ...chart, width, cells };
+}
+
+/** `x` 코를 뺀다. 마지막 한 코는 뺄 수 없다. */
+export function removeColumn(chart: ColorChart, x: number): ColorChart {
+  if (chart.width <= 1 || x < 0 || x >= chart.width) return chart;
+  const width = chart.width - 1;
+  const cells: number[] = [];
+  for (let y = 0; y < chart.height; y += 1) {
+    for (let sx = 0; sx < chart.width; sx += 1) {
+      if (sx !== x) cells.push(chart.cells[y * chart.width + sx]);
+    }
+  }
+  return { ...chart, width, cells };
+}
+
+/* --- 색 일괄 교체 --------------------------------------------------------- */
+
+/**
+ * `from` 색으로 칠한 칸을 전부 `to` 색으로 바꾼다.
+ *
+ * 스태시 실이 모자랄 때 색을 갈아치우는 작업이다. 팔레트를 고치는 것(그 색의
+ * hex를 바꾸는 것)과는 다르다 — 이건 **칸이 가리키는 색을 옮긴다.**
+ *
+ * 팔레트에서 `from`을 빼지 않는다. 빼면 그 뒤 색들의 인덱스가 하나씩 밀려서
+ * 도안 전체가 엉뚱한 색으로 바뀐다. 비워진 색은 색별 코수에서 0코로 남는다.
+ */
+export function remapColor(
+  chart: ColorChart,
+  from: number,
+  to: number
+): ColorChart {
+  if (from === to) return chart;
+  if (to < 0 || to >= chart.palette.length) return chart;
+  if (!chart.cells.includes(from)) return chart;
+  return { ...chart, cells: chart.cells.map((c) => (c === from ? to : c)) };
+}
+
+/* --- 직선 · 사각형 -------------------------------------------------------- */
+
+export interface Point {
+  x: number;
+  y: number;
+}
+
+/**
+ * 두 칸을 잇는 격자 위의 직선.
+ *
+ * 브레젠험이다. 소수 좌표를 반올림하면 기울기가 완만할 때 같은 칸이 두 번
+ * 나오거나 한 칸이 비는데, 코는 이산적이라 빈 칸이 눈에 보인다.
+ *
+ * 칸 목록을 돌려주고 칠하기는 `paintPoints`가 한다. 미리보기(화면)와 실제
+ * 칠하기가 같은 목록을 봐야 손을 떼기 전에 본 것과 결과가 같다.
+ */
+export function linePoints(from: Point, to: Point): Point[] {
+  let x = Math.round(from.x);
+  let y = Math.round(from.y);
+  const endX = Math.round(to.x);
+  const endY = Math.round(to.y);
+  const dx = Math.abs(endX - x);
+  const dy = Math.abs(endY - y);
+  const stepX = x < endX ? 1 : -1;
+  const stepY = y < endY ? 1 : -1;
+  let error = dx - dy;
+  const points: Point[] = [];
+
+  for (;;) {
+    points.push({ x, y });
+    if (x === endX && y === endY) break;
+    const doubled = error * 2;
+    if (doubled > -dy) {
+      error -= dy;
+      x += stepX;
+    }
+    if (doubled < dx) {
+      error += dx;
+      y += stepY;
+    }
+  }
+  return points;
+}
+
+/**
+ * 두 칸을 대각으로 하는 사각형의 **테두리**.
+ *
+ * 속을 채우지 않는다. 배색에서 사각형은 대개 테두리(가장자리 줄무늬, 액자
+ * 무늬)이고, 속이 필요하면 테두리를 두른 뒤 채우기를 한 번 하면 된다 —
+ * 테두리가 영역을 감싸므로 채우기가 정확히 그 안에서 멈춘다.
+ */
+export function rectPoints(from: Point, to: Point): Point[] {
+  const x0 = Math.min(from.x, to.x);
+  const x1 = Math.max(from.x, to.x);
+  const y0 = Math.min(from.y, to.y);
+  const y1 = Math.max(from.y, to.y);
+  const points: Point[] = [];
+
+  for (let x = x0; x <= x1; x += 1) {
+    points.push({ x, y: y0 });
+    if (y1 !== y0) points.push({ x, y: y1 });
+  }
+  for (let y = y0 + 1; y < y1; y += 1) {
+    points.push({ x: x0, y });
+    if (x1 !== x0) points.push({ x: x1, y });
+  }
+  return points;
+}
+
+/** 칸 목록을 한 색으로 칠한다. 바뀔 것이 없으면 같은 객체를 돌려준다. */
+export function paintPoints(
+  chart: ColorChart,
+  points: Point[],
+  color: number
+): ColorChart {
+  if (color < 0 || color >= chart.palette.length) return chart;
+  let cells: number[] | null = null;
+  for (const point of points) {
+    if (!inside(chart, point.x, point.y)) continue;
+    const index = point.y * chart.width + point.x;
+    if (chart.cells[index] === color) continue;
+    if (!cells) cells = chart.cells.slice();
+    cells[index] = color;
+  }
+  return cells ? { ...chart, cells } : chart;
+}
+
 /* --- 게이지 비율 ---------------------------------------------------------- */
 
 export interface ChartGauge {
