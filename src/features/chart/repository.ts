@@ -77,4 +77,17 @@ export async function setChartGauge(id: Id, gaugeId?: Id) {
   await db.colorCharts.update(id, touch({ gaugeId }));
 }
 
+/**
+ * 뒷실 경고의 조건.
+ *
+ * 인덱스를 걸지 않은 필드라 스키마 변경이 없다. 예전 도안은 값이 비어 있고,
+ * 그때는 평면·기본 기준으로 읽힌다.
+ */
+export async function setChartFloats(
+  id: Id,
+  input: { inRound?: boolean; floatLimit?: number }
+) {
+  await db.colorCharts.update(id, touch(input));
+}
+
 export const deleteChart = (id: Id) => db.colorCharts.delete(id);

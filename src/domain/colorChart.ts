@@ -10,6 +10,8 @@
  * 비대칭 무늬에서는 완성품이 실제로 뒤집혀 나온다.
  */
 
+import { contrastRatio } from "./color";
+
 export interface ColorChart {
   /** 코수 */
   width: number;
@@ -182,6 +184,149 @@ export function fillArea(
   }
 
   return { ...chart, cells };
+}
+
+/* --- 대칭 그리기 ---------------------------------------------------------- */
+
+/**
+ * 세로축 대칭 좌표.
+ *
+ * 배색·레이스 무늬는 대부분 좌우 대칭이라, 칠할 때 반대 칸을 함께 칠하면
+ * 작업량이 절반이 된다. 전체를 뒤집는 `mirrorChart`와는 다른 기능이다.
+ *
+ * **폭이 홀수면 가운데 열은 자기 자신이 짝이다.** 식이 그걸 자연히 만족하므로
+ * 부르는 쪽에서 홀짝을 따질 필요가 없다 — 같은 칸을 두 번 칠해도 결과는 같다.
+ */
+export function mirrorCell(chart: ColorChart, x: number): number {
+  return chart.width - 1 - x;
+}
+
+/* --- 뒷실(부동사) --------------------------------------------------------- */
+
+/**
+ * 기준을 넘는 뒷실 구간.
+ *
+ * `y`·`x`는 구간의 시작 칸(x는 왼쪽 기준), `count`는 연속한 코 수다.
+ */
+export interface FloatRun {
+  y: number;
+  x: number;
+  count: number;
+  color: number;
+  /** 원형에서 단의 끝과 시작을 이어 센 구간인지 */
+  wraps: boolean;
+}
+
+/**
+ * 뒷실 기준 기본값(코).
+ *
+ * 실 굵기와 취향에 따라 다르므로 3~9로 조절할 수 있게 두고, 흔히 쓰는 값을
+ * 기본으로 둔다.
+ */
+export const DEFAULT_FLOAT_LIMIT = 5;
+
+/**
+ * 뒷실이 긴 구간을 찾는다.
+ *
+ * 페어아일에서 같은 색이 여러 코 연속되면 그 뒤로 다른 색 실이 그만큼 길게
+ * 지나간다. 그 실이 길면 손가락에 걸리고 편물이 당긴다. **다 뜨고 뒤집어 봐야**
+ * 아는 실수라서, 그리는 중에 말해주는 것이 이 함수의 존재 이유다.
+ *
+ * 기준을 **넘는**(초과) 구간만 모은다 — 기준이 5코면 5코는 괜찮고 6코부터다.
+ *
+ * **한 색뿐인 단은 세지 않는다.** 그 단은 실을 하나만 들고 뜨므로 뒤로 지나갈
+ * 실이 없다. 이걸 빼지 않으면 배경만 있는 단이 전부 경고로 잡혀서, 정작 봐야
+ * 할 구간이 묻힌다.
+ */
+export function longFloats(
+  chart: ColorChart,
+  options: { threshold?: number; inRound?: boolean } = {}
+): FloatRun[] {
+  const threshold = options.threshold ?? DEFAULT_FLOAT_LIMIT;
+  const inRound = options.inRound ?? false;
+  const found: FloatRun[] = [];
+
+  for (let y = 0; y < chart.height; y += 1) {
+    // 왼쪽에서 오른쪽으로 센다. 뒷실 길이는 읽는 방향과 무관하고, 좌표를
+    // 그대로 쓸 수 있어야 화면에 덮어 그릴 수 있다.
+    const runs = rowRuns(chart, y, false);
+    // 실을 하나만 들고 뜨는 단
+    if (runs.length <= 1) continue;
+
+    let x = 0;
+    const placed: FloatRun[] = runs.map((run) => {
+      const at = x;
+      x += run.count;
+      return { y, x: at, count: run.count, color: run.color, wraps: false };
+    });
+
+    let row = placed;
+    const first = placed[0];
+    const last = placed[placed.length - 1];
+    // 원형은 단의 끝과 시작이 이어진다. 합치지 않으면 원형 도안에서 가장 긴
+    // 뒷실을 놓친다 — 끝 3코 + 시작 4코가 실제로는 7코 하나다.
+    // (구간은 색이 번갈아 나오므로 둘뿐일 때는 색이 같을 수 없다.)
+    if (inRound && first.color === last.color && placed.length > 2) {
+      row = placed.slice(1, -1);
+      row.push({
+        y,
+        x: last.x,
+        count: last.count + first.count,
+        color: last.color,
+        wraps: true,
+      });
+    }
+
+    for (const run of row) {
+      if (run.count > threshold) found.push(run);
+    }
+  }
+
+  // 좌표 순으로 돌려준다. 원형에서 합친 구간이 단의 끝으로 밀리므로 다시 세운다.
+  return found.sort((a, b) => a.y - b.y || a.x - b.x);
+}
+
+/* --- 명도 대비 ------------------------------------------------------------ */
+
+/** 명도가 비슷해 무늬가 뭉쳐 보이는 색 조합. `a`·`b`는 팔레트 인덱스. */
+export interface ContrastWarning {
+  a: number;
+  b: number;
+  ratio: number;
+}
+
+/**
+ * 명도비 임계값.
+ *
+ * 경험값이다. 실제 편물 사진과 비교해 보정해야 한다(docs/CHART-EDITOR.md §8).
+ * 글자 가독성 기준(4.5:1)을 쓰면 안 된다 — 배색은 글자가 아니라 면이라 그보다
+ * 훨씬 낮은 차이에서도 무늬가 읽힌다.
+ */
+export const DEFAULT_CONTRAST_RATIO = 1.5;
+
+/**
+ * 명도차가 부족한 색 조합.
+ *
+ * **색이 달라도 명도가 비슷하면 무늬가 사라진다.** 색상(hue) 차이는 보지 않는다 —
+ * 빨강과 초록은 색상이 정반대지만 명도가 같으면 편물에서 뭉친다.
+ *
+ * 팔레트의 모든 조합을 본다. 어느 색이 어디에 인접하는지는 그리는 중에 계속
+ * 바뀌므로, 지금 붙어 있지 않다고 안심시키는 건 도움이 되지 않는다.
+ *
+ * 나쁜 조합이 먼저 오도록 정렬한다.
+ */
+export function contrastWarnings(
+  palette: string[],
+  threshold = DEFAULT_CONTRAST_RATIO
+): ContrastWarning[] {
+  const warnings: ContrastWarning[] = [];
+  for (let a = 0; a < palette.length; a += 1) {
+    for (let b = a + 1; b < palette.length; b += 1) {
+      const ratio = contrastRatio(palette[a], palette[b]);
+      if (ratio < threshold) warnings.push({ a, b, ratio });
+    }
+  }
+  return warnings.sort((x, y) => x.ratio - y.ratio);
 }
 
 /* --- 집계 ----------------------------------------------------------------- */

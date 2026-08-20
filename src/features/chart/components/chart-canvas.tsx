@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { getCell, type ColorChart } from "@/domain/colorChart";
+import { getCell, type ColorChart, type FloatRun } from "@/domain/colorChart";
 import { isLight } from "@/domain/color";
 
 export interface ChartCanvasProps {
@@ -41,10 +41,35 @@ export interface ChartCanvasProps {
    * 사람에게도 도안이 읽혀야 한다.
    */
   labels?: boolean;
+  /**
+   * 뒷실이 긴 구간. 사선 해칭으로 덮는다.
+   *
+   * 경고를 색으로 하지 않는 이유는 이게 틀린 게 아니기 때문이다 — 알고 하면
+   * 되는 선택이다(docs/DESIGN.md §2). 게다가 팔레트가 사용자의 색이라 어떤
+   * 경고색을 골라도 어느 도안에서는 배색과 구분되지 않는다. 해칭은 색과
+   * 무관하게 읽힌다.
+   */
+  floats?: FloatRun[];
 }
 
 /** 좌표 번호가 들어갈 여백(px) */
 const GUTTER = 20;
+
+/** 해칭 선 간격(px) */
+const HATCH_STEP = 5;
+
+/**
+ * 캔버스가 놓인 자리에서 실제 색을 읽는다.
+ *
+ * 캔버스는 CSS 변수를 모르므로 계산된 값을 꺼내와야 한다. 하드코딩하면
+ * 다크 모드에서 해칭이 배경에 묻힌다.
+ */
+function hatchColor(el: Element): string {
+  return (
+    getComputedStyle(el).getPropertyValue("--status-hibernating").trim() ||
+    "#5a7691"
+  );
+}
 
 /**
  * 차트를 캔버스에 그린다.
@@ -64,6 +89,7 @@ export function ChartCanvas({
   onStrokeStart,
   continuous = true,
   labels = false,
+  floats,
 }: ChartCanvasProps) {
   const ref = useRef<HTMLCanvasElement>(null);
   const overlayRef = useRef<HTMLCanvasElement>(null);
@@ -158,6 +184,37 @@ export function ChartCanvas({
       }
     }
 
+    if (floats && floats.length > 0) {
+      ctx.strokeStyle = hatchColor(canvas);
+      ctx.lineWidth = 1;
+      ctx.globalAlpha = 0.85;
+      for (const run of floats) {
+        // 원형에서 합친 구간은 단의 끝에서 시작으로 넘어가므로 두 조각이다
+        const head = Math.min(run.count, chart.width - run.x);
+        const parts: [number, number][] = [[run.x, head]];
+        if (run.count > head) parts.push([0, run.count - head]);
+        const top = (chart.height - 1 - run.y) * cellHeight;
+
+        for (const [startX, count] of parts) {
+          const left = startX * cellWidth;
+          const span = count * cellWidth;
+          ctx.save();
+          ctx.beginPath();
+          ctx.rect(left, top, span, cellHeight);
+          ctx.clip();
+          ctx.beginPath();
+          // 45도 사선. 왼쪽으로 한 칸 높이만큼 물러나 시작해야 왼쪽 끝이 빈다
+          for (let px = left - cellHeight; px < left + span; px += HATCH_STEP) {
+            ctx.moveTo(px, top + cellHeight);
+            ctx.lineTo(px + cellHeight, top);
+          }
+          ctx.stroke();
+          ctx.restore();
+        }
+      }
+      ctx.globalAlpha = 1;
+    }
+
     ctx.restore();
 
     if (!labels) return;
@@ -194,6 +251,7 @@ export function ChartCanvas({
     cellHeight,
     grid,
     labels,
+    floats,
     gutter,
     gridWidth,
     gridHeight,
@@ -274,35 +332,48 @@ export function ChartCanvas({
   };
 
   return (
-    <canvas
-      ref={ref}
-      style={{ width, height }}
-      className={onPaint ? "cursor-crosshair touch-none" : undefined}
-      onPointerDown={(e) => {
-        onStrokeStart?.();
-        if (!onPaint) return;
-        painting.current = true;
-        // 캔버스 밖으로 손가락이 나가도 이어서 칠하게 잡아둔다.
-        // 실패해도 칠하기는 계속한다 — 붙잡기는 편의이고, 이게 던져서
-        // 칠이 안 되면 화면이 고장난 것처럼 보인다.
-        try {
-          e.currentTarget.setPointerCapture(e.pointerId);
-        } catch {
-          // 이 포인터를 붙잡을 수 없는 환경. 캔버스 안에서는 그대로 동작한다.
-        }
-        paint(e);
-      }}
-      onPointerMove={(e) => {
-        if (labels) setHover(toCell(e));
-        if (continuous && painting.current) paint(e);
-      }}
-      onPointerLeave={() => setHover(null)}
-      onPointerUp={() => {
-        painting.current = false;
-      }}
-      onPointerCancel={() => {
-        painting.current = false;
-      }}
-    />
+    /*
+      두 캔버스를 겹친다. 커서 표시가 위 캔버스에만 그려지므로 포인터가 움직일
+      때 본 캔버스를 다시 그리지 않는다. 위 캔버스는 포인터를 받지 않아야 한다 —
+      받으면 칠하기가 통째로 막힌다.
+    */
+    <div className="relative" style={{ width, height }}>
+      <canvas
+        ref={ref}
+        style={{ width, height }}
+        className={onPaint ? "cursor-crosshair touch-none" : undefined}
+        onPointerDown={(e) => {
+          onStrokeStart?.();
+          if (!onPaint) return;
+          painting.current = true;
+          // 캔버스 밖으로 손가락이 나가도 이어서 칠하게 잡아둔다.
+          // 실패해도 칠하기는 계속한다 — 붙잡기는 편의이고, 이게 던져서
+          // 칠이 안 되면 화면이 고장난 것처럼 보인다.
+          try {
+            e.currentTarget.setPointerCapture(e.pointerId);
+          } catch {
+            // 이 포인터를 붙잡을 수 없는 환경. 캔버스 안에서는 그대로 동작한다.
+          }
+          paint(e);
+        }}
+        onPointerMove={(e) => {
+          if (labels) setHover(toCell(e));
+          if (continuous && painting.current) paint(e);
+        }}
+        onPointerLeave={() => setHover(null)}
+        onPointerUp={() => {
+          painting.current = false;
+        }}
+        onPointerCancel={() => {
+          painting.current = false;
+        }}
+      />
+      <canvas
+        ref={overlayRef}
+        aria-hidden
+        style={{ width, height }}
+        className="pointer-events-none absolute inset-0"
+      />
+    </div>
   );
 }

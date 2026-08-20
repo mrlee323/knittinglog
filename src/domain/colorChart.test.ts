@@ -2,9 +2,12 @@ import { describe, expect, it } from "vitest";
 import {
   cellAspect,
   chartSizeCm,
+  contrastWarnings,
   createChart,
   fillArea,
   getCell,
+  longFloats,
+  mirrorCell,
   mirrorChart,
   resizeChart,
   rowRuns,
@@ -198,25 +201,26 @@ describe("단별 읽기", () => {
   });
 });
 
+/**
+ * 문자열로 도안을 만든다 — 눈으로 확인하기 쉽게.
+ *
+ * 위 줄이 화면의 위(마지막 단)다. 저장은 y=0이 첫 단(아래)이므로 뒤집어 넣는다.
+ */
+const from = (rows: string[]): ColorChart => ({
+  width: rows[0].length,
+  height: rows.length,
+  palette: ["#fff", "#000", "#f00"],
+  cells: [...rows].reverse().flatMap((row) => [...row].map((ch) => Number(ch))),
+});
+
+const draw = (chart: ColorChart) =>
+  Array.from({ length: chart.height }, (_, y) =>
+    Array.from({ length: chart.width }, (_, x) =>
+      String(getCell(chart, x, chart.height - 1 - y))
+    ).join("")
+  );
+
 describe("fillArea", () => {
-  /** 문자열로 도안을 만든다 — 눈으로 확인하기 쉽게 */
-  const from = (rows: string[]): ColorChart => ({
-    width: rows[0].length,
-    height: rows.length,
-    palette: ["#fff", "#000", "#f00"],
-    // 저장은 y=0이 첫 단(아래)이므로 뒤집어 넣는다
-    cells: [...rows]
-      .reverse()
-      .flatMap((row) => [...row].map((ch) => Number(ch))),
-  });
-
-  const draw = (chart: ColorChart) =>
-    Array.from({ length: chart.height }, (_, y) =>
-      Array.from({ length: chart.width }, (_, x) =>
-        String(getCell(chart, x, chart.height - 1 - y))
-      ).join("")
-    );
-
   it("이어진 같은 색을 한 번에 바꾼다", () => {
     const chart = from(["0000", "0110", "0110", "0000"]);
     expect(draw(fillArea(chart, 0, 0, 2))).toEqual([
@@ -250,5 +254,106 @@ describe("fillArea", () => {
     const before = [...chart.cells];
     fillArea(chart, 0, 0, 1);
     expect(chart.cells).toEqual(before);
+  });
+});
+
+describe("mirrorCell — 대칭 그리기", () => {
+  it("폭이 짝수면 양 끝이 짝이다", () => {
+    const chart = createChart(4, 1);
+    expect(mirrorCell(chart, 0)).toBe(3);
+    expect(mirrorCell(chart, 1)).toBe(2);
+  });
+
+  it("폭이 홀수면 가운데 열은 자기 자신이다", () => {
+    // 부르는 쪽에서 홀짝을 따지지 않게 하는 것이 이 함수의 목적이다 —
+    // 같은 칸을 두 번 칠해도 결과가 같아야 한다.
+    const chart = createChart(5, 1);
+    expect(mirrorCell(chart, 2)).toBe(2);
+  });
+
+  it("두 번 부르면 제자리로 돌아온다", () => {
+    const chart = createChart(7, 1);
+    for (let x = 0; x < 7; x += 1) {
+      expect(mirrorCell(chart, mirrorCell(chart, x))).toBe(x);
+    }
+  });
+});
+
+describe("longFloats — 뒷실 경고", () => {
+  it("기준을 넘는 구간만 모은다", () => {
+    // 위 단은 0이 6코 연속(기준 5 초과), 아래 단은 5코라 괜찮다
+    const chart = from(["0000001", "0000011"]);
+    const floats = longFloats(chart, { threshold: 5 });
+    expect(floats).toEqual([{ y: 1, x: 0, count: 6, color: 0, wraps: false }]);
+  });
+
+  it("한 색뿐인 단은 세지 않는다", () => {
+    // 실을 하나만 들고 뜨는 단에는 뒤로 지나갈 실이 없다. 이걸 빼지 않으면
+    // 배경만 있는 단이 전부 경고로 잡혀 정작 봐야 할 구간이 묻힌다.
+    expect(longFloats(from(["0000000"]), { threshold: 3 })).toEqual([]);
+  });
+
+  it("구간의 시작 칸을 왼쪽 기준으로 알려준다", () => {
+    const chart = from(["0011100"]);
+    expect(longFloats(chart, { threshold: 2 })).toEqual([
+      { y: 0, x: 2, count: 3, color: 1, wraps: false },
+    ]);
+  });
+
+  it("원형은 단의 끝과 시작을 하나로 센다", () => {
+    // 끝 2코 + 시작 2코가 실제로는 4코 하나다. 합치지 않으면 원형 도안에서
+    // 가장 긴 뒷실을 놓친다.
+    const chart = from(["0011100"]);
+    expect(longFloats(chart, { threshold: 3, inRound: true })).toEqual([
+      { y: 0, x: 5, count: 4, color: 0, wraps: true },
+    ]);
+  });
+
+  it("평면은 끝과 시작을 합치지 않는다", () => {
+    const chart = from(["0011100"]);
+    expect(longFloats(chart, { threshold: 3 })).toEqual([]);
+  });
+
+  it("기본 기준은 5코다", () => {
+    expect(longFloats(from(["0000011"]))).toEqual([]);
+    expect(longFloats(from(["0000001"])).length).toBe(1);
+  });
+
+  it("아래 단부터 왼쪽부터 돌려준다", () => {
+    const chart = from(["1000000", "0000001"]);
+    const floats = longFloats(chart, { threshold: 5 });
+    expect(floats.map((f) => [f.y, f.x])).toEqual([
+      [0, 0],
+      [1, 1],
+    ]);
+  });
+});
+
+describe("contrastWarnings — 명도 대비", () => {
+  it("명도가 비슷한 조합을 잡는다", () => {
+    const warnings = contrastWarnings(["#808080", "#858585"]);
+    expect(warnings.length).toBe(1);
+    expect(warnings[0]).toMatchObject({ a: 0, b: 1 });
+  });
+
+  it("명도차가 큰 조합은 잡지 않는다", () => {
+    expect(contrastWarnings(["#000000", "#ffffff"])).toEqual([]);
+  });
+
+  it("색상이 정반대여도 명도가 같으면 잡는다", () => {
+    // 빨강과 초록은 색상이 정반대지만 명도가 같으면 편물에서 뭉친다.
+    // 색상(hue)을 보지 않는 것이 이 검사의 요점이다.
+    const warnings = contrastWarnings(["#ff0000", "#009400"]);
+    expect(warnings.length).toBe(1);
+  });
+
+  it("나쁜 조합이 먼저 온다", () => {
+    const warnings = contrastWarnings(["#808080", "#8f8f8f", "#828282"], 2);
+    const ratios = warnings.map((w) => w.ratio);
+    expect([...ratios].sort((a, b) => a - b)).toEqual(ratios);
+  });
+
+  it("색이 하나면 볼 조합이 없다", () => {
+    expect(contrastWarnings(["#808080"])).toEqual([]);
   });
 });

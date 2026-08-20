@@ -222,6 +222,16 @@ export interface ColorChartRecord extends Base {
   gaugeId?: Id;
   projectId?: Id;
   notes?: string;
+  /**
+   * 원형으로 뜨는 도안인가.
+   *
+   * 뒷실 경고가 이걸 봐야 맞는다 — 원형은 단의 끝과 시작이 이어지므로 끝 3코와
+   * 시작 4코가 실제로는 7코 하나다. 화면의 보기 설정이 아니라 도안 자체의
+   * 성질이라 레코드에 둔다.
+   */
+  inRound?: boolean;
+  /** 뒷실 경고 기준(코). 실 굵기에 따라 다르므로 도안마다 다르게 둔다. */
+  floatLimit?: number;
 }
 /**
  * 심볼 차트(무늬 도안) — 칸에 색이 아니라 기법을 담는다.
