@@ -38,8 +38,14 @@ export const Route = createFileRoute("/charts/$chartId")({
 
 /** 편집 격자의 칸 크기. 손가락으로 칠할 수 있는 최소치에서 출발한다. */
 const EDIT_CELL = 18;
-/** 미리보기의 기준 칸 너비. 비율은 게이지가 정한다. */
-const PREVIEW_CELL = 10;
+/**
+ * 미리보기 줌 단계 — 칸 하나의 기준 너비(px). 비율은 게이지가 정한다.
+ *
+ * 미리보기의 크기 기준은 완성 치수(cm)가 아니라 **줌과 반복 횟수**다. 무늬를
+ * 크게 보고 싶은 것과 실제로 몇 cm가 되는지는 다른 질문이고, 여기서 궁금한 건
+ * 앞쪽이다 — 반복 경계가 어떻게 이어지는지, 색이 섞여 보이는지.
+ */
+const PREVIEW_ZOOMS = [6, 10, 16] as const;
 /** 천 미리보기 높이(px). 무늬가 여러 번 이어지는 게 보일 만큼은 필요하다. */
 const FABRIC_HEIGHT = 260;
 /** 좁은 화면에서는 위에 붙여두므로 낮게 — 격자를 가리면 칠할 수 없다. */
@@ -89,6 +95,7 @@ function Editor({
   const [fromPhoto, setFromPhoto] = useState(false);
   const [row, setRow] = useState(0);
   const [repeats, setRepeats] = useState<{ x: number; y: number }>();
+  const [zoom, setZoom] = useState(1);
   const wide = useWideEnough();
 
   useEffect(() => {
@@ -247,6 +254,16 @@ function Editor({
             {t.chart.mirror}
           </Button>
         </div>
+
+        {/* 완성 크기는 격자 옆에 둔다. 미리보기의 기준이 아니라 이 격자가 실제로
+            몇 cm가 되는지에 대한 답이고, 게이지를 골랐을 때만 말할 수 있다. */}
+        {size && (
+          <p className="text-text-3 text-caption mt-2">
+            {t.chart.finishedSize
+              .replace("{w}", units.formatLength(size.widthCm, 1))
+              .replace("{h}", units.formatLength(size.heightCm, 1))}
+          </p>
+        )}
       </section>
 
       <div className="grid gap-6 lg:grid-cols-2">
@@ -313,26 +330,42 @@ function Editor({
               <div className="border-line bg-surface overflow-hidden rounded-md border">
                 <FabricCanvas
                   chart={chart}
-                  cellWidth={PREVIEW_CELL * aspect}
-                  cellHeight={PREVIEW_CELL}
+                  cellWidth={PREVIEW_ZOOMS[zoom] * aspect}
+                  cellHeight={PREVIEW_ZOOMS[zoom]}
                   height={wide ? FABRIC_HEIGHT : FABRIC_HEIGHT_NARROW}
                   onRepeats={setRepeats}
                 />
               </div>
-              <p className="text-text-2 text-small mt-2">
-                {size &&
-                  t.chart.finishedSize
-                    .replace("{w}", units.formatLength(size.widthCm, 1))
-                    .replace("{h}", units.formatLength(size.heightCm, 1))}
-                {repeats && (
-                  <span className="text-text-3">
-                    {size ? " · " : ""}
-                    {t.chart.repeatedAs
+
+              {/* 크기 기준은 줌이다. 크게 보면 코가 보이고, 작게 보면 무늬가
+                  여러 번 이어진 모습이 보인다 — 둘 다 필요한 시야다. */}
+              <div className="mt-2 flex items-center justify-between gap-3">
+                <p className="text-text-2 text-small">
+                  {repeats &&
+                    t.chart.repeatedAs
                       .replace("{x}", String(repeats.x))
                       .replace("{y}", String(repeats.y))}
-                  </span>
-                )}
-              </p>
+                </p>
+                <div className="flex gap-1">
+                  {PREVIEW_ZOOMS.map((_, level) => (
+                    <button
+                      key={level}
+                      type="button"
+                      aria-pressed={zoom === level}
+                      aria-label={t.chart.zoomLevel[level]}
+                      onClick={() => setZoom(level)}
+                      className={cn(
+                        "text-caption min-h-11 rounded-sm px-2.5 transition",
+                        zoom === level
+                          ? "bg-accent text-on-accent font-semibold"
+                          : "bg-sunken text-text-2"
+                      )}
+                    >
+                      {t.chart.zoomLevel[level]}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </>
           )}
         </section>

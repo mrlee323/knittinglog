@@ -248,6 +248,7 @@ export const en: UIStrings = {
     summary: "{sts} sts × {rows} rows / 10cm",
     deleteConfirm: "Delete this swatch record?",
     calc: "Calculator",
+    calcForThis: "Calculate for this project",
     calcTitle: "Gauge calculator",
   },
   chart: {
@@ -267,6 +268,7 @@ export const en: UIStrings = {
     gauge: "Gauge",
     gaugeNone: "Not set",
     finishedSize: "Finished {w} × {h}",
+    zoomLevel: ["Small", "Medium", "Large"],
     repeatedAs: "shown {x} across, {y} down",
     palette: "Colours",
     addColor: "Add colour",
@@ -531,6 +533,12 @@ export const en: UIStrings = {
     goUp: "Try going up to {mm}mm",
     goDown: "Try going down to {mm}mm",
     needleOk: "That's within measuring error. Carry on.",
+    forProject: "Calculating for {name}",
+    backToProject: "Back to project",
+    saveToProject: "Save this to the project notes",
+    saveDone: "Saved to notes",
+    savedNote:
+      "Resized: {sts} sts × {rows} rows at my gauge {gaugeSts}×{gaugeRows}",
     gridHint:
       "Each cell is 10 stitches by 10 rows. Stitches aren't square, so cells come out wide or tall — that's the real shape.",
     fromProfile: "From a measurement profile",
