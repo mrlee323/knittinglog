@@ -15,6 +15,20 @@ export interface ChartCanvasProps {
   /** 칸 경계선을 그릴지. 미리보기에서는 끈다 — 완성품에는 선이 없다. */
   grid?: boolean;
   onPaint?: (x: number, y: number) => void;
+  /**
+   * 한 획의 시작. 되돌리기가 이 시점의 상태를 기억한다.
+   *
+   * 칸마다 기록하면 드래그로 40칸을 칠한 뒤 되돌리기를 40번 눌러야 한다.
+   * 한 획이 한 단위여야 손이 기억하는 단위와 맞는다.
+   */
+  onStrokeStart?: () => void;
+  /**
+   * 드래그로 이어 칠할지.
+   *
+   * 채우기·스포이드는 한 번만 동작해야 한다 — 끌면서 계속 채우면 의도한 영역을
+   * 넘어 번지고, 스포이드는 마지막에 지나간 칸의 색이 잡힌다.
+   */
+  continuous?: boolean;
 }
 
 /**
@@ -32,6 +46,8 @@ export function ChartCanvas({
   cellHeight,
   grid = true,
   onPaint,
+  onStrokeStart,
+  continuous = true,
 }: ChartCanvasProps) {
   const ref = useRef<HTMLCanvasElement>(null);
   const painting = useRef(false);
@@ -115,6 +131,7 @@ export function ChartCanvas({
       style={{ width, height }}
       className={onPaint ? "cursor-crosshair touch-none" : undefined}
       onPointerDown={(e) => {
+        onStrokeStart?.();
         if (!onPaint) return;
         painting.current = true;
         // 캔버스 밖으로 손가락이 나가도 이어서 칠하게 잡아둔다.
@@ -128,7 +145,7 @@ export function ChartCanvas({
         paint(e);
       }}
       onPointerMove={(e) => {
-        if (painting.current) paint(e);
+        if (continuous && painting.current) paint(e);
       }}
       onPointerUp={() => {
         painting.current = false;
