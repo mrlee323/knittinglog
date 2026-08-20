@@ -273,14 +273,29 @@ export interface SessionSummary {
 }
 
 /**
+ * 속도 계산에 쓸 수 있는 세션의 최소 길이(밀리초).
+ *
+ * 앱을 켰다 바로 끈 기록이 섞이면 시간당 단수가 실제보다 크게 튄다.
+ */
+export const USABLE_SESSION_MS = 60_000;
+
+/**
+ * 속도 계산에 쓸 세션만 남긴다.
+ *
+ * 시간당 단수와 완성 예상일이 **같은 집합**을 봐야 한다. 각자 거르면
+ * "시간당 20단"과 그 예상일의 근거가 달라지고, 그 어긋남은 화면에
+ * 드러나지 않는다.
+ */
+export const usableSessions = <T extends SessionSummary>(sessions: T[]): T[] =>
+  sessions.filter((s) => s.durationMs >= USABLE_SESSION_MS && s.rowsAdded > 0);
+
+/**
  * 세션 기록에서 시간당 단수를 구한다.
  *
  * 완성 예상일(기획 §3.10-4)의 입력. 너무 짧은 세션은 노이즈라 버린다.
  */
 export function rowsPerHour(sessions: SessionSummary[]): number | null {
-  const usable = sessions.filter(
-    (s) => s.durationMs >= 60_000 && s.rowsAdded > 0
-  );
+  const usable = usableSessions(sessions);
   if (usable.length === 0) return null;
 
   const rows = usable.reduce((sum, s) => sum + s.rowsAdded, 0);

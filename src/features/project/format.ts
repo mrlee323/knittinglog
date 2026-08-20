@@ -11,3 +11,17 @@ export function pausedLabel(t: UIStrings, days: number): string {
     ? t.project.pausedToday
     : t.project.pausedFor.replace("{days}", String(days));
 }
+
+/**
+ * 하루 평균 뜨는 시간.
+ *
+ * 한 시간 미만이면 "0시간 12분"보다 "12분"이 읽기 쉽다.
+ */
+export function formatHours(t: UIStrings, hours: number): string {
+  const totalMinutes = Math.round(hours * 60);
+  const h = Math.floor(totalMinutes / 60);
+  const m = totalMinutes % 60;
+  return h === 0
+    ? t.finish.minutes.replace("{m}", String(m))
+    : t.finish.hours.replace("{h}", String(h)).replace("{m}", String(m));
+}
