@@ -282,6 +282,7 @@ export const ko = {
     zoomLevel: ["작게", "보통", "크게"],
     repeatedAs: "가로 {x}번 · 세로 {y}번 깔았을 때",
     palette: "색",
+    grid: "격자",
     addColor: "색 추가",
     removeColor: "이 색 지우기",
     mirror: "좌우 반전",
