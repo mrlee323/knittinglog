@@ -104,6 +104,8 @@ export const ko = {
     // 카운터 이름은 사용자가 짓는다. 조사(을/를)를 붙이면 어색해지므로 피한다.
     linkedReadOnly: "{main} {ratio}단마다 자동으로 올라가요",
     empty: "카운터가 없어요",
+    defaultLabel: "단수",
+    createDefault: "단수 카운터 만들기",
     emptyHint: "몸판, 소매, 무늬 반복처럼 세고 싶은 만큼 만들 수 있어요",
     rows: "단",
     remaining: "{n}단 남음",

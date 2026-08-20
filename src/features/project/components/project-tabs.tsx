@@ -20,7 +20,9 @@ export function ProjectTabs({ projectId }: { projectId: Id }) {
     { to: "/projects/$projectId", label: t.project.tabOverview, exact: true },
     { to: "/projects/$projectId/refs", label: t.project.tabWorkbench },
     { to: "/projects/$projectId/log", label: t.project.tabLog },
-    { to: "/projects/$projectId/knit", label: t.counter.knit },
+    // 뜨기는 여기 두지 않는다. 탭 줄에 나란히 있으면 개요·작업대와 같은 층으로
+    // 보이는데, 실제로는 전체화면 모드로 들어가 탭 줄이 사라진다 — 탭처럼
+    // 생겼는데 탭이 아니다. 들어가는 문은 개요의 진행 카드에 크게 둔다.
   ] as const;
 
   return (
