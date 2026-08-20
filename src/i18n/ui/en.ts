@@ -264,7 +264,8 @@ export const en: UIStrings = {
     preview: "Finished shape",
     previewHint:
       "Drawn at your gauge ratio. Stitches aren't square, so this differs from the grid.",
-    needGauge: "Pick a gauge to see the finished shape",
+    needGauge: "Pick a gauge for your real stitch ratio and finished size",
+    previewSquare: "Drawn with square cells — no gauge picked",
     gauge: "Gauge",
     gaugeNone: "Not set",
     finishedSize: "Finished {w} × {h}",
@@ -361,7 +362,8 @@ export const en: UIStrings = {
     preview: "Finished shape",
     previewHint:
       "Drawn at your gauge ratio. Stitches aren't square, so this differs from the grid.",
-    needGauge: "Pick a gauge to see the finished shape",
+    needGauge:
+      "Pick a gauge to see it at your real stitch ratio — squares for now",
     gauge: "Gauge",
     gaugeNone: "Not set",
     finishedSize: "Finished {w} × {h}",

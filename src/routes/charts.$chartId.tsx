@@ -871,27 +871,34 @@ function Editor({
               </div>
             </div>
 
-            {gaugeValues ? (
-              <>
-                <div className="border-line bg-surface overflow-hidden rounded-md border">
-                  <FabricCanvas
-                    chart={shown}
-                    cellWidth={PREVIEW_ZOOMS[zoom] * aspect}
-                    cellHeight={PREVIEW_ZOOMS[zoom]}
-                    height={wide ? FABRIC_HEIGHT : FABRIC_HEIGHT_NARROW}
-                    onRepeats={setRepeats}
-                  />
-                </div>
-                <p className="text-text-2 text-small mt-2">
-                  {repeats &&
-                    t.chart.repeatedAs
-                      .replace("{x}", String(repeats.x))
-                      .replace("{y}", String(repeats.y))}
-                </p>
-              </>
-            ) : (
-              <p className="border-line text-text-3 text-caption rounded-md border border-dashed px-4 py-6 text-center">
-                {t.chart.needGauge}
+            {/*
+              게이지가 없어도 그린다.
+
+              게이지가 정하는 것은 **비율 하나**다(cellAspect). 없으면 정사각
+              격자로 깔면 되고, 무늬가 반복 경계에서 어떻게 이어지는지·색이 섞여
+              보이는지는 비율과 무관하게 보인다 — 여기서 궁금한 건 대개 그쪽이다.
+              게이지를 저장한 적 없는 사람에게 미리보기를 통째로 막으면, 스와치를
+              뜨기 전에는 도안을 볼 수 없다는 뜻이 된다.
+            */}
+            <div className="border-line bg-surface overflow-hidden rounded-md border">
+              <FabricCanvas
+                chart={shown}
+                cellWidth={PREVIEW_ZOOMS[zoom] * aspect}
+                cellHeight={PREVIEW_ZOOMS[zoom]}
+                height={wide ? FABRIC_HEIGHT : FABRIC_HEIGHT_NARROW}
+                onRepeats={setRepeats}
+              />
+            </div>
+            <p className="text-text-2 text-small mt-2">
+              {repeats &&
+                t.chart.repeatedAs
+                  .replace("{x}", String(repeats.x))
+                  .replace("{y}", String(repeats.y))}
+            </p>
+            {/* 비율이 실제와 다르다는 것만 알린다. 막지는 않는다. */}
+            {!gaugeValues && (
+              <p className="text-text-3 text-caption">
+                {t.chart.previewSquare}
               </p>
             )}
           </section>
