@@ -11,32 +11,22 @@
  * 화면 쪽 책임이다.
  */
 
-export interface RGB {
-  r: number;
-  g: number;
-  b: number;
-}
+import { fromHex, toHex, type RGB } from "./color";
 
+// 사진 변환을 쓰는 곳이 색 표기까지 함께 필요할 때가 많아 그대로 내보낸다
+export { fromHex, toHex, type RGB };
+
+/** 캔버스에서 꺼낸 픽셀. DOM을 모르는 형태로 받는다. */
 export interface Pixels {
-  /** RGBA 순서의 평평한 배열 */
-  data: Uint8ClampedArray | number[];
   width: number;
   height: number;
+  /** RGBA가 이어 붙은 배열 — ImageData.data와 같은 형태 */
+  data: Uint8ClampedArray;
 }
 
-/* --- 색 표기 -------------------------------------------------------------- */
-
+/** 0~255로 자르고 정수로 만든다 */
 const clamp = (v: number) => Math.max(0, Math.min(255, Math.round(v)));
 
-export const toHex = ({ r, g, b }: RGB) =>
-  `#${[r, g, b].map((v) => clamp(v).toString(16).padStart(2, "0")).join("")}`;
-
-export function fromHex(hex: string): RGB {
-  const m = /^#?([0-9a-f]{6})$/i.exec(hex.trim());
-  if (!m) throw new RangeError(`색 형식이 올바르지 않습니다: ${hex}`);
-  const n = parseInt(m[1], 16);
-  return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 };
-}
 
 /* --- 색 거리 -------------------------------------------------------------- */
 

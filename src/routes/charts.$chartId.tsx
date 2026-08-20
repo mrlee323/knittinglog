@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { SelectField, TextField } from "@/components/ui/field";
 import { BackLink, Page } from "@/components/ui/page";
 import { ChartCanvas } from "@/features/chart/components/chart-canvas";
+import { FabricCanvas } from "@/features/chart/components/fabric-canvas";
 import { PhotoToChart } from "@/features/chart/components/photo-to-chart";
 import {
   getChart,
@@ -26,6 +27,7 @@ import {
   type ColorChart,
 } from "@/domain/colorChart";
 import { useUnits } from "@/app/units";
+import { useWideEnough } from "@/lib/use-media-query";
 import { useStrings } from "@/i18n";
 import { cn } from "@/lib/utils";
 import type { ColorChartRecord, GaugeRecord } from "@/types/entities";
@@ -38,6 +40,10 @@ export const Route = createFileRoute("/charts/$chartId")({
 const EDIT_CELL = 18;
 /** 미리보기의 기준 칸 너비. 비율은 게이지가 정한다. */
 const PREVIEW_CELL = 10;
+/** 천 미리보기 높이(px). 무늬가 여러 번 이어지는 게 보일 만큼은 필요하다. */
+const FABRIC_HEIGHT = 260;
+/** 좁은 화면에서는 위에 붙여두므로 낮게 — 격자를 가리면 칠할 수 없다. */
+const FABRIC_HEIGHT_NARROW = 132;
 /** 칸을 칠한 뒤 저장까지 기다리는 시간(ms) */
 const SAVE_DELAY = 400;
 
@@ -82,6 +88,8 @@ function Editor({
   const [color, setColor] = useState(() => (record.palette.length > 1 ? 1 : 0));
   const [fromPhoto, setFromPhoto] = useState(false);
   const [row, setRow] = useState(0);
+  const [repeats, setRepeats] = useState<{ x: number; y: number }>();
+  const wide = useWideEnough();
 
   useEffect(() => {
     const timer = setTimeout(() => void saveChart(chartId, chart), SAVE_DELAY);
@@ -259,13 +267,24 @@ function Editor({
           </div>
         </section>
 
-        {/* 완성 모양 — 같은 데이터를 게이지 비율로 그린다. 이게 차별점이다. */}
-        <section>
-          <h2 className="text-micro text-text-3 mb-1">{t.chart.preview}</h2>
-          <p className="text-text-3 text-caption mb-2">
-            {gaugeValues ? t.chart.previewHint : t.chart.needGauge}
-          </p>
+        {/* 완성 모양 — 같은 데이터를 게이지 비율로, 천처럼, 반복해서 그린다.
+            **좁은 화면에서는 위에 붙여둔다.** 칠하는 동안 보이지 않으면
+            "색칠하면 어떻게 보이나"에 답하지 못한다 — 폰에서 격자 아래에 두면
+            칠하는 내내 화면 밖이다. */}
+        <section className="bg-canvas sticky top-0 z-10 order-first pb-2 lg:static lg:order-none lg:pb-0">
+          {/* 좁은 화면에서는 이 자리가 위에 붙어 있으므로 설명을 접는다.
+              붙어 있는 것이 두꺼우면 격자 윗줄을 가려서 칠할 수 없다 —
+              그림이 설명을 대신한다. */}
+          <div className={gaugeValues ? "hidden lg:block" : undefined}>
+            <h2 className="text-micro text-text-3 mb-1">{t.chart.preview}</h2>
+            <p className="text-text-3 text-caption mb-2">
+              {gaugeValues ? t.chart.previewHint : t.chart.needGauge}
+            </p>
+          </div>
 
+          {/* 게이지 선택은 넓은 화면에서만 이 자리에 둔다. 좁은 화면에서는
+              위에 붙는 자리라 셀렉트가 격자를 가린다. */}
+          <div className={gaugeValues ? "hidden lg:block" : undefined}>
           <SelectField
             label={t.chart.gauge}
             value={record.gaugeId ?? ""}
@@ -284,24 +303,36 @@ function Editor({
               })),
             ]}
           />
+          </div>
 
           {gaugeValues && (
             <>
-              <div className="border-line bg-surface overflow-auto rounded-md border p-3">
-                <ChartCanvas
+              {/* 무늬 한 번이 아니라 **깔린 모습**을 보여준다. 한 번은 예뻐도
+                  여러 번 이으면 줄무늬처럼 보이거나 반복 경계가 눈에 띄는
+                  무늬가 있는데, 그건 옷을 다 뜬 뒤에 알게 된다. */}
+              <div className="border-line bg-surface overflow-hidden rounded-md border">
+                <FabricCanvas
                   chart={chart}
                   cellWidth={PREVIEW_CELL * aspect}
                   cellHeight={PREVIEW_CELL}
-                  grid={false}
+                  height={wide ? FABRIC_HEIGHT : FABRIC_HEIGHT_NARROW}
+                  onRepeats={setRepeats}
                 />
               </div>
-              {size && (
-                <p className="text-text-2 text-small mt-2">
-                  {t.chart.finishedSize
+              <p className="text-text-2 text-small mt-2">
+                {size &&
+                  t.chart.finishedSize
                     .replace("{w}", units.formatLength(size.widthCm, 1))
                     .replace("{h}", units.formatLength(size.heightCm, 1))}
-                </p>
-              )}
+                {repeats && (
+                  <span className="text-text-3">
+                    {size ? " · " : ""}
+                    {t.chart.repeatedAs
+                      .replace("{x}", String(repeats.x))
+                      .replace("{y}", String(repeats.y))}
+                  </span>
+                )}
+              </p>
             </>
           )}
         </section>

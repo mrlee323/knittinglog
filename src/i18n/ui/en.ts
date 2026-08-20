@@ -211,6 +211,7 @@ export const en: UIStrings = {
     gauge: "Gauge",
     gaugeNone: "Not set",
     finishedSize: "Finished {w} × {h}",
+    repeatedAs: "shown {x} across, {y} down",
     palette: "Colours",
     addColor: "Add colour",
     removeColor: "Remove this colour",
