@@ -43,7 +43,10 @@ self.addEventListener("fetch", (event) => {
         meta.text = form.get("text") ?? "";
         meta.url = form.get("url") ?? "";
 
-        const files = form.getAll("images").filter((f) => f && f.size > 0);
+        // 사진과 도안 파일을 함께 받는다. 어느 쪽인지는 content-type으로
+        // 갈리므로 여기서는 구별하지 않는다.
+        const files = [...form.getAll("images"), ...form.getAll("patterns")]
+          .filter((f) => f && f.size > 0);
         for (let i = 0; i < files.length; i += 1) {
           const key = scoped(`share-inbox-file-${meta.at}-${i}`);
           await cache.put(

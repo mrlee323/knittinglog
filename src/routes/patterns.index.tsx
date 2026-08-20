@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { ConfirmSheet } from "@/components/ui/confirm-sheet";
 import { BackLink, CardGrid, Page } from "@/components/ui/page";
 import { SymbolCanvas } from "@/features/stitchChart/components/symbol-canvas";
+import { ReceivePatternButton } from "@/features/stitchChart/components/pattern-file-buttons";
 import {
   deleteStitchChart,
   listStitchCharts,
@@ -47,6 +48,19 @@ function Patterns() {
         </Button>
       }
     >
+      {/* 받은 도안 넣기 — 공유하기로도 들어오지만 메일 첨부나 PC에서는 직접
+          고르는 길이 필요하다 */}
+      <div className="mb-4">
+        <ReceivePatternButton
+          onAdded={(id) =>
+            void navigate({ to: "/patterns/$patternId", params: { patternId: id } })
+          }
+        />
+        <p className="text-text-3 text-caption mt-1">
+          {t.pattern.importFileHint}
+        </p>
+      </div>
+
       {charts === undefined ? null : charts.length === 0 ? (
         <div className="border-line rounded-md border border-dashed px-6 py-12 text-center">
           <p className="text-text-2">{t.pattern.empty}</p>

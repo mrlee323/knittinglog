@@ -255,6 +255,16 @@ export const ko = {
   pattern: {
     title: "기호 도안",
     add: "기호 도안 만들기",
+    /* 도안 파일 주고받기 — 서버 없이 되는 것 (LOUNGE.md 0단계) */
+    shareFile: "도안 파일로 보내기",
+    shareFileHint: "카톡·메일로 보내면 받는 사람이 바로 뜰 수 있어요",
+    importFile: "받은 도안 넣기",
+    importFileHint: "공유하기로 knittinglog를 골라도 들어와요",
+    imported: "{name}을 넣었어요",
+    importedMany: "{n}개를 넣었어요",
+    importNotPattern: "도안 파일이 아니에요",
+    importIsBackup: "전체 백업 파일이에요. 설정 › 백업에서 가져와 주세요.",
+    importTooNew: "더 새 버전에서 만든 파일이에요. 앱을 새로고침해 주세요.",
     name: "이름",
     namePlaceholder: "물결 레이스",
     widthLabel: "코수",
