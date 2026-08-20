@@ -49,7 +49,9 @@ function ShareLanding() {
   return (
     <Page title={t.inspiration.title}>
       <p className="text-text-2 text-small">
-        {status === "empty" ? t.inspiration.receivedNone : t.inspiration.receiving}
+        {status === "empty"
+          ? t.inspiration.receivedNone
+          : t.inspiration.receiving}
       </p>
     </Page>
   );

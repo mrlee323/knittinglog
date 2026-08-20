@@ -53,7 +53,10 @@ function Patterns() {
       <div className="mb-4">
         <ReceivePatternButton
           onAdded={(id) =>
-            void navigate({ to: "/patterns/$patternId", params: { patternId: id } })
+            void navigate({
+              to: "/patterns/$patternId",
+              params: { patternId: id },
+            })
           }
         />
         <p className="text-text-3 text-caption mt-1">

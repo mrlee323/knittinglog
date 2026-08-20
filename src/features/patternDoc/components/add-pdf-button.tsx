@@ -1,9 +1,6 @@
 import { useRef, useState } from "react";
 import { FileText } from "lucide-react";
-import {
-  addPatternDoc,
-  NotPdfError,
-} from "@/features/patternDoc/repository";
+import { addPatternDoc, NotPdfError } from "@/features/patternDoc/repository";
 import { isQuotaError } from "@/features/backup/storage";
 import { useStrings } from "@/i18n";
 import { cn } from "@/lib/utils";

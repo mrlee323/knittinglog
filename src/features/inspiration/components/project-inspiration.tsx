@@ -56,7 +56,9 @@ export function ProjectInspiration({ projectId }: { projectId: Id }) {
               </div>
             )}
             {item.title && (
-              <p className="text-caption font-medium break-words">{item.title}</p>
+              <p className="text-caption font-medium break-words">
+                {item.title}
+              </p>
             )}
             {item.note && (
               <p className="text-text-2 text-micro line-clamp-3 break-words">

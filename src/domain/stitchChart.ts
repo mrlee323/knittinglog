@@ -41,7 +41,8 @@ export function createStitchChart(
 }
 
 export function getOp(chart: StitchChart, x: number, y: number): string {
-  if (x < 0 || y < 0 || x >= chart.width || y >= chart.height) return DEFAULT_OP;
+  if (x < 0 || y < 0 || x >= chart.width || y >= chart.height)
+    return DEFAULT_OP;
   return chart.ops[y * chart.width + x] ?? DEFAULT_OP;
 }
 
@@ -88,7 +89,9 @@ export function mirrorStitchChart(chart: StitchChart): StitchChart {
   const ops = new Array<string>(chart.ops.length);
   for (let y = 0; y < chart.height; y += 1)
     for (let x = 0; x < chart.width; x += 1)
-      ops[y * chart.width + (chart.width - 1 - x)] = mirrorOp(getOp(chart, x, y));
+      ops[y * chart.width + (chart.width - 1 - x)] = mirrorOp(
+        getOp(chart, x, y)
+      );
   return { ...chart, ops };
 }
 

@@ -22,7 +22,9 @@ function EditGauge() {
   if (!gauge) return null;
 
   const summary = (sts: number, rows: number) =>
-    t.gauge.summary.replace("{sts}", String(sts)).replace("{rows}", String(rows));
+    t.gauge.summary
+      .replace("{sts}", String(sts))
+      .replace("{rows}", String(rows));
   const needle = gauge.needleMm ? findNeedle(gauge.needleMm) : null;
 
   return (
@@ -34,8 +36,7 @@ function EditGauge() {
         <ShareCardButton
           build={() => ({
             title:
-              gauge.label ??
-              summary(gauge.stitchesPer10cm, gauge.rowsPer10cm),
+              gauge.label ?? summary(gauge.stitchesPer10cm, gauge.rowsPer10cm),
             subtitle: gauge.pattern,
             image: gauge.photoBlob,
             facts: [

@@ -369,7 +369,8 @@ export const ko = {
     selvedgeHint: "평면은 이음선이 생기므로 양쪽에 시접 코를 둬요",
     needCastOn: "시작 코수를 넣으면 무늬가 맞는지 계산해요",
     fitsExact: "{repeats}회 딱 맞아요 · {repeat}코 무늬 × {repeats}회",
-    fitsShort: "{remainder}코가 남아요 · {repeat}코 무늬 {repeats}회 + {remainder}코",
+    fitsShort:
+      "{remainder}코가 남아요 · {repeat}코 무늬 {repeats}회 + {remainder}코",
     fitsNone: "{repeat}코 무늬가 한 번도 들어가지 않아요",
     fitsWithSelvedge: "시접 {edges}코를 뺀 {motif}코 기준이에요",
     nearestDown: "{n}코로 줄이면 맞아요",
@@ -387,7 +388,8 @@ export const ko = {
     noteJog: "단 경계에서 무늬가 한 코 어긋나 보일 수 있어요",
     /* 늘어놓기 — 숫자로 "몇 코 남는다"를 듣는 것과 어디서 잘리는지 보는 건 다르다 */
     tiled: "늘어놓아 보기",
-    tiledHint: "시작 코수만큼 무늬를 늘어놓은 모습이에요. 끊기는 자리가 보여요.",
+    tiledHint:
+      "시작 코수만큼 무늬를 늘어놓은 모습이에요. 끊기는 자리가 보여요.",
     counts: "기법별 칸 수",
     countsValue: "{n}칸",
     rowLabel: "{n}단",
@@ -429,7 +431,8 @@ export const ko = {
     exportTitle: "내보내기",
     exportAll: "사진까지 전부",
     exportRecordsOnly: "기록만 (사진 없이)",
-    exportHint: "사진과 PDF가 용량의 거의 전부예요. 기록만 담으면 파일이 훨씬 작아요.",
+    exportHint:
+      "사진과 PDF가 용량의 거의 전부예요. 기록만 담으면 파일이 훨씬 작아요.",
     exporting: "만드는 중…",
     exported: "{n}개 기록을 내보냈어요 · {size}",
     exportFailed: "내보내기에 실패했어요",
@@ -437,7 +440,8 @@ export const ko = {
     /* 가져오기 */
     importTitle: "가져오기",
     importPick: "백업 파일 고르기",
-    importHint: "합치기는 이 기기에 있는 기록을 덮지 않아요. 덮어쓰기는 지금 것을 모두 지워요.",
+    importHint:
+      "합치기는 이 기기에 있는 기록을 덮지 않아요. 덮어쓰기는 지금 것을 모두 지워요.",
     modeMerge: "합치기",
     modeReplace: "덮어쓰기",
     reading: "읽는 중…",
@@ -446,7 +450,8 @@ export const ko = {
     importedSkipped: "{n}개를 넣고 {skipped}개는 이미 있어서 건너뛰었어요",
     importedNone: "넣을 새 기록이 없었어요",
     notBackup: "knittinglog 백업 파일이 아니에요",
-    tooNew: "더 새 버전에서 만든 파일이에요. 앱을 새로고침한 뒤 다시 시도해 주세요.",
+    tooNew:
+      "더 새 버전에서 만든 파일이에요. 앱을 새로고침한 뒤 다시 시도해 주세요.",
     unknownTables: "이 앱이 모르는 항목 {tables}은(는) 넣지 않았어요",
     replaceConfirm: "지금 기록을 모두 지우고 넣을까요?",
     replaceConfirmBody: "이 기기의 기록 {n}개가 사라져요. 되돌릴 수 없어요.",
@@ -770,6 +775,46 @@ export const ko = {
     deleteImageConfirm: "이 이미지를 지울까요?",
     deleteVideoConfirm: "이 영상 링크를 지울까요?",
   },
+  needle: {
+    title: "바늘",
+    add: "바늘 추가",
+    edit: "바늘 수정",
+    typeLabel: "종류",
+    type: {
+      circular: "줄바늘",
+      straight: "막대바늘",
+      dpn: "장갑바늘",
+      hook: "코바늘",
+    },
+    size: "굵기",
+    sizeHint: "바늘에 찍힌 호수로 찾아도 돼요. mm·호수·US를 함께 보여줘요.",
+    length: "줄 길이 (cm)",
+    lengthHint:
+      "줄바늘의 줄 길이예요. 같은 굵기라도 길이가 다르면 다른 바늘이에요.",
+    material: "재질",
+    materialPlaceholder: "대나무, 금속, 플라스틱",
+    duplicate: "이미 같은 바늘이 있어요. 정말 두 개면 그대로 두셔도 돼요.",
+    empty: "등록한 바늘이 없어요",
+    emptyHint:
+      "가진 바늘을 넣어두면 새 작품을 시작할 때 그 굵기가 다른 작품에 물려 있는지 알려드려요",
+    tally: "{total}개 중 {free}개 여유",
+    free: "여유",
+    inUse: "{project}에 물려 있어요",
+    deleteConfirm: "이 바늘을 서랍에서 지울까요?",
+    /* 프로젝트 쪽 */
+    projectTitle: "쓰는 바늘",
+    assign: "바늘 물리기",
+    none: "물린 바늘이 없어요",
+    noStash: "먼저 바늘을 등록해주세요",
+    pick: "어떤 바늘을 쓸까요?",
+    release: "빼기",
+    takenTitle: "이 바늘은 다른 작품에 물려 있어요",
+    takenBody:
+      "{project}에서 빼서 이 작품에 물릴까요? 실제로 바늘을 옮기는 것과 같아요.",
+    takenConfirm: "여기로 옮기기",
+    gaugeSuggest: "게이지가 {mm}mm를 요구해요",
+    gaugeMissing: "{mm}mm 바늘이 서랍에 없어요",
+  },
   action: {
     create: "만들기",
     save: "저장",
@@ -802,7 +847,10 @@ export const ko = {
   },
   common: {
     notFound: "없는 화면이에요",
-    notFoundHint: "주소가 바뀌었거나 지워진 화면일 수 있어요.", empty: "아직 없어요", loading: "불러오는 중" },
+    notFoundHint: "주소가 바뀌었거나 지워진 화면일 수 있어요.",
+    empty: "아직 없어요",
+    loading: "불러오는 중",
+  },
 };
 
 export type UIStrings = typeof ko;

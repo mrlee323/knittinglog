@@ -464,7 +464,9 @@ function Editor({
 
       {/* 평면 ↔ 원형 — 격자는 그대로고 코수와 양끝 처리가 달라진다(기획 §4) */}
       <section className="mt-6">
-        <h2 className="text-micro text-text-3 mb-1">{t.pattern.construction}</h2>
+        <h2 className="text-micro text-text-3 mb-1">
+          {t.pattern.construction}
+        </h2>
         <p className="text-text-3 text-caption mb-3">
           {t.pattern.constructionHint}
         </p>
@@ -477,7 +479,9 @@ function Editor({
                 inputMode="numeric"
                 value={selvedge}
                 onChange={(e) =>
-                  setSelvedge(Math.max(0, Math.floor(Number(e.target.value) || 0)))
+                  setSelvedge(
+                    Math.max(0, Math.floor(Number(e.target.value) || 0))
+                  )
                 }
               />
             </div>

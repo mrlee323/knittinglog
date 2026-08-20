@@ -4,14 +4,7 @@ import {
   Outlet,
   useRouterState,
 } from "@tanstack/react-router";
-import {
-  Bookmark,
-  Home,
-  Layers,
-  Ruler,
-  Settings,
-  Spool,
-} from "lucide-react";
+import { Bookmark, Home, Layers, Ruler, Settings, Spool } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useApplyTheme } from "@/app/theme";
 import { useStrings } from "@/i18n";

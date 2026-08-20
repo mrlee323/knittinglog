@@ -47,7 +47,10 @@ describe("finishForecast", () => {
   it("쉬는 날을 속도에 포함한다", () => {
     // 8/10과 8/19에 각각 1시간씩 60단 → 관측 10일, 총 2시간
     // 하루 평균 0.2시간(12분). 남은 120단 = 2시간 → 10일
-    const sessions = [session(2026, 8, 10, 60, 60), session(2026, 8, 19, 60, 60)];
+    const sessions = [
+      session(2026, 8, 10, 60, 60),
+      session(2026, 8, 19, 60, 60),
+    ];
     const f = finishForecast(sessions, 120, NOW)!;
     expect(f.perHour).toBe(60);
     expect(f.hoursLeft).toBe(2);
@@ -57,13 +60,19 @@ describe("finishForecast", () => {
 
   it("뜬 날 평균으로 나누지 않는다 — 그러면 10배 낙관이 된다", () => {
     // 위와 같은 기록. "뜬 날은 2일, 하루 1시간" 모델이면 2일이 나온다.
-    const sessions = [session(2026, 8, 10, 60, 60), session(2026, 8, 19, 60, 60)];
+    const sessions = [
+      session(2026, 8, 10, 60, 60),
+      session(2026, 8, 19, 60, 60),
+    ];
     const f = finishForecast(sessions, 120, NOW)!;
     expect(f.daysLeft).not.toBe(2);
   });
 
   it("예상일은 로컬 자정 기준으로 오늘에 더한다", () => {
-    const sessions = [session(2026, 8, 10, 60, 60), session(2026, 8, 19, 60, 60)];
+    const sessions = [
+      session(2026, 8, 10, 60, 60),
+      session(2026, 8, 19, 60, 60),
+    ];
     const f = finishForecast(sessions, 120, NOW)!;
     // 2026-08-20 + 10일
     expect(f.at.getFullYear()).toBe(2026);

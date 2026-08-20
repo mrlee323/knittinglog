@@ -80,7 +80,9 @@ describe("보낸 사람 맥락 떼기", () => {
   });
 
   it("시작 코수도 뗀다 — 보낸 사람의 옷 치수다", () => {
-    expect((stripContext(shared) as Record<string, unknown>).castOn).toBeUndefined();
+    expect(
+      (stripContext(shared) as Record<string, unknown>).castOn
+    ).toBeUndefined();
   });
 
   it("무늬 자체는 그대로 남는다", () => {
@@ -101,7 +103,10 @@ describe("보낸 사람 맥락 떼기", () => {
   });
 
   it("뗄 것이 없어도 동작한다", () => {
-    expect(stripContext({ id: "a", name: "b" })).toEqual({ id: "a", name: "b" });
+    expect(stripContext({ id: "a", name: "b" })).toEqual({
+      id: "a",
+      name: "b",
+    });
   });
 });
 
@@ -150,7 +155,9 @@ describe("받은 도안 확인 — 파일은 신뢰할 수 없다", () => {
 
   it("이름이 없으면 채운다 — 이름이 없는 건 못 쓸 이유가 아니다", () => {
     expect(readSharedChart({ ...good, name: "   " })?.name).toBe("받은 도안");
-    expect(readSharedChart({ ...good, name: undefined })?.name).toBe("받은 도안");
+    expect(readSharedChart({ ...good, name: undefined })?.name).toBe(
+      "받은 도안"
+    );
   });
 
   it("모르는 값의 평면/시작면은 버린다", () => {
@@ -173,9 +180,9 @@ describe("받은 도안 이름", () => {
   it("같은 것을 또 받으면 번호를 붙인다", () => {
     // 단체방에 같은 파일이 다시 올라오는 일은 실제로 생긴다
     expect(receivedName("물결", ["물결 (받음)"], "받음")).toBe("물결 (받음 2)");
-    expect(
-      receivedName("물결", ["물결 (받음)", "물결 (받음 2)"], "받음")
-    ).toBe("물결 (받음 3)");
+    expect(receivedName("물결", ["물결 (받음)", "물결 (받음 2)"], "받음")).toBe(
+      "물결 (받음 3)"
+    );
   });
 
   it("이름이 비어도 이름이 나온다", () => {

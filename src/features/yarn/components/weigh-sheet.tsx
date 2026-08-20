@@ -194,10 +194,7 @@ function Forecast({
         >
           {forecast.enough
             ? t.weighIn.enough
-            : t.weighIn.short.replace(
-                "{n}",
-                String(forecast.shortfallRows)
-              )}
+            : t.weighIn.short.replace("{n}", String(forecast.shortfallRows))}
         </p>
       )}
       <p className="text-text-3 text-caption mt-1">

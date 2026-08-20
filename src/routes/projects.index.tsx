@@ -108,7 +108,6 @@ function Projects() {
       {/* 멈춘 작품들을 보고 있을 때가 "나는 왜 멈추나"를 물을 자리다.
           전용 화면을 두면 매일 보지도 않는 통계에 탭 하나를 쓰게 된다. */}
       {status === "hibernating" && <PauseReasons />}
-
     </Page>
   );
 }

@@ -36,9 +36,7 @@ export function SplitPane({
   const row = direction === "row";
 
   if (second === undefined) {
-    return (
-      <div className={cn("grid min-h-0 min-w-0", className)}>{first}</div>
-    );
+    return <div className={cn("grid min-h-0 min-w-0", className)}>{first}</div>;
   }
 
   /**

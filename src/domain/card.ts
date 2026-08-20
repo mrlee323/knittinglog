@@ -166,8 +166,18 @@ export function coverRect(
   boxWidth: number,
   boxHeight: number
 ): Rect {
-  if (sourceWidth <= 0 || sourceHeight <= 0 || boxWidth <= 0 || boxHeight <= 0) {
-    return { x: 0, y: 0, width: Math.max(0, sourceWidth), height: Math.max(0, sourceHeight) };
+  if (
+    sourceWidth <= 0 ||
+    sourceHeight <= 0 ||
+    boxWidth <= 0 ||
+    boxHeight <= 0
+  ) {
+    return {
+      x: 0,
+      y: 0,
+      width: Math.max(0, sourceWidth),
+      height: Math.max(0, sourceHeight),
+    };
   }
   const sourceRatio = sourceWidth / sourceHeight;
   const boxRatio = boxWidth / boxHeight;

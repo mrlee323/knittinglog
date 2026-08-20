@@ -113,7 +113,9 @@ export function planConversion(input: ConversionInput): ConversionPlan {
   const total = Math.max(0, Math.floor(input.total));
   // 원형에는 시접이라는 개념이 없다 — 양끝이 만나지 않으므로
   const selvedge =
-    to === "flat" ? Math.max(0, Math.floor(input.selvedge ?? DEFAULT_SELVEDGE)) : 0;
+    to === "flat"
+      ? Math.max(0, Math.floor(input.selvedge ?? DEFAULT_SELVEDGE))
+      : 0;
   const edges = selvedge * 2;
   const fit = fitRepeat(total - edges, input.repeat);
 
@@ -173,7 +175,9 @@ export function equivalentTotal(input: {
   to: Construction;
   selvedge?: number;
 }): number {
-  const body = Math.max(0, Math.floor(input.repeats)) * Math.max(1, Math.floor(input.repeat));
+  const body =
+    Math.max(0, Math.floor(input.repeats)) *
+    Math.max(1, Math.floor(input.repeat));
   if (input.to === "round") return body;
   return body + Math.max(0, Math.floor(input.selvedge ?? DEFAULT_SELVEDGE)) * 2;
 }

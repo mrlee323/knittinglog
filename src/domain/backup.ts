@@ -262,10 +262,10 @@ export type StorageLevel = "unknown" | "fine" | "tight" | "full";
  * **비율은 의미가 있다** — 90%를 넘으면 사진 한 장에 저장이 실패할 수 있고,
  * 그때 조용히 실패하면 뜬 기록을 잃는다.
  */
-export function storageLevel(estimate: {
-  usage?: number;
-  quota?: number;
-}): { level: StorageLevel; ratio: number | null } {
+export function storageLevel(estimate: { usage?: number; quota?: number }): {
+  level: StorageLevel;
+  ratio: number | null;
+} {
   const { usage, quota } = estimate;
   if (!usage || !quota || quota <= 0) return { level: "unknown", ratio: null };
   const ratio = usage / quota;

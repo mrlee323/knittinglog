@@ -16,16 +16,28 @@ const chartFromRows = (rows: string[][]): StitchChart => ({
 
 describe("반복 들어맞기", () => {
   it("나누어떨어지면 맞는다", () => {
-    expect(fitRepeat(60, 12)).toMatchObject({ repeats: 5, remainder: 0, fits: true });
+    expect(fitRepeat(60, 12)).toMatchObject({
+      repeats: 5,
+      remainder: 0,
+      fits: true,
+    });
   });
 
   it("남으면 안 맞고, 몇 코가 남는지 알려준다", () => {
-    expect(fitRepeat(60, 7)).toMatchObject({ repeats: 8, remainder: 4, fits: false });
+    expect(fitRepeat(60, 7)).toMatchObject({
+      repeats: 8,
+      remainder: 4,
+      fits: false,
+    });
   });
 
   it("반복이 한 번도 안 들어가면 맞는 게 아니다", () => {
     // 나머지가 0이어도 무늬가 하나도 안 들어간 것이다
-    expect(fitRepeat(0, 12)).toMatchObject({ repeats: 0, remainder: 0, fits: false });
+    expect(fitRepeat(0, 12)).toMatchObject({
+      repeats: 0,
+      remainder: 0,
+      fits: false,
+    });
   });
 
   it("반복보다 코수가 적으면 안 맞는다", () => {
@@ -39,26 +51,40 @@ describe("반복 들어맞기", () => {
 
 describe("원형으로 바꾸기", () => {
   it("코수가 반복의 배수여야 한다", () => {
-    expect(planConversion({ from: "flat", to: "round", repeat: 12, total: 144 }).fit.fits).toBe(true);
-    expect(planConversion({ from: "flat", to: "round", repeat: 12, total: 150 }).fit.fits).toBe(false);
+    expect(
+      planConversion({ from: "flat", to: "round", repeat: 12, total: 144 }).fit
+        .fits
+    ).toBe(true);
+    expect(
+      planConversion({ from: "flat", to: "round", repeat: 12, total: 150 }).fit
+        .fits
+    ).toBe(false);
   });
 
   it("시접 코를 쓰지 않는다 — 양끝이 만나므로", () => {
-    const plan = planConversion({ from: "round", to: "round", repeat: 12, total: 144, selvedge: 3 });
+    const plan = planConversion({
+      from: "round",
+      to: "round",
+      repeat: 12,
+      total: 144,
+      selvedge: 3,
+    });
     expect(plan.selvedge).toBe(0);
     expect(plan.fit.motifStitches).toBe(144);
   });
 
   it("모든 단이 겉면이 된다고 알린다", () => {
-    expect(planConversion({ from: "flat", to: "round", repeat: 12, total: 144 }).notes).toContain(
-      "everyRowRs"
-    );
+    expect(
+      planConversion({ from: "flat", to: "round", repeat: 12, total: 144 })
+        .notes
+    ).toContain("everyRowRs");
   });
 
   it("단 경계 어긋남을 알린다 — 배색·줄무늬에서 두드러진다", () => {
-    expect(planConversion({ from: "flat", to: "round", repeat: 12, total: 144 }).notes).toContain(
-      "jog"
-    );
+    expect(
+      planConversion({ from: "flat", to: "round", repeat: 12, total: 144 })
+        .notes
+    ).toContain("jog");
   });
 
   it("평면에서 오면 시접 코를 빼고 모든 단이 겉면이 된다고 알린다", () => {
@@ -94,7 +120,12 @@ describe("원형으로 바꾸기", () => {
 
 describe("평면으로 바꾸기", () => {
   it("시접 코가 기본으로 양쪽에 붙는다", () => {
-    const plan = planConversion({ from: "round", to: "flat", repeat: 12, total: 146 });
+    const plan = planConversion({
+      from: "round",
+      to: "flat",
+      repeat: 12,
+      total: 146,
+    });
     expect(plan.selvedge).toBe(DEFAULT_SELVEDGE);
     // 146 - 2 = 144, 12의 배수
     expect(plan.fit.motifStitches).toBe(144);
@@ -103,18 +134,35 @@ describe("평면으로 바꾸기", () => {
 
   it("시접을 뺀 안쪽이 반복의 배수여야 한다", () => {
     // 144코는 원형에서는 맞지만 평면에서는 시접 2코를 빼면 142코가 되어 안 맞는다
-    expect(planConversion({ from: "flat", to: "round", repeat: 12, total: 144 }).fit.fits).toBe(true);
-    expect(planConversion({ from: "round", to: "flat", repeat: 12, total: 144 }).fit.fits).toBe(false);
+    expect(
+      planConversion({ from: "flat", to: "round", repeat: 12, total: 144 }).fit
+        .fits
+    ).toBe(true);
+    expect(
+      planConversion({ from: "round", to: "flat", repeat: 12, total: 144 }).fit
+        .fits
+    ).toBe(false);
   });
 
   it("시접 코수를 바꿀 수 있다", () => {
-    const plan = planConversion({ from: "round", to: "flat", repeat: 12, total: 150, selvedge: 3 });
+    const plan = planConversion({
+      from: "round",
+      to: "flat",
+      repeat: 12,
+      total: 150,
+      selvedge: 3,
+    });
     expect(plan.fit.motifStitches).toBe(144);
     expect(plan.fit.fits).toBe(true);
   });
 
   it("안면 단·이음선·무늬 끊김을 알린다", () => {
-    const notes = planConversion({ from: "round", to: "flat", repeat: 12, total: 146 }).notes;
+    const notes = planConversion({
+      from: "round",
+      to: "flat",
+      repeat: 12,
+      total: 146,
+    }).notes;
     expect(notes).toContain("alternatingSides");
     expect(notes).toContain("seam");
     expect(notes).toContain("motifBreaks");
@@ -124,27 +172,51 @@ describe("평면으로 바꾸기", () => {
 describe("가까운 코수 제안", () => {
   it("안 맞으면 아래·위 후보를 준다", () => {
     // 150 / 12 = 12회 + 6코
-    const plan = planConversion({ from: "flat", to: "round", repeat: 12, total: 150 });
+    const plan = planConversion({
+      from: "flat",
+      to: "round",
+      repeat: 12,
+      total: 150,
+    });
     expect(plan.nearest).toEqual({ down: 144, up: 156 });
   });
 
   it("이미 맞으면 반복 하나 적은/많은 값을 준다", () => {
-    const plan = planConversion({ from: "flat", to: "round", repeat: 12, total: 144 });
+    const plan = planConversion({
+      from: "flat",
+      to: "round",
+      repeat: 12,
+      total: 144,
+    });
     expect(plan.nearest).toEqual({ down: 132, up: 156 });
   });
 
   it("후보에 시접 코가 포함된다 — 그대로 캐스트온할 수 있는 값이어야 한다", () => {
-    const plan = planConversion({ from: "round", to: "flat", repeat: 12, total: 150, selvedge: 1 });
+    const plan = planConversion({
+      from: "round",
+      to: "flat",
+      repeat: 12,
+      total: 150,
+      selvedge: 1,
+    });
     // 안쪽 148 → 12회(144) + 4코 남음. 아래 후보 144+2, 위 후보 156+2
     expect(plan.nearest).toEqual({ down: 146, up: 158 });
   });
 
   it("반복이 하나뿐이면 아래 후보가 없다", () => {
-    expect(planConversion({ from: "flat", to: "round", repeat: 12, total: 12 }).nearest.down).toBeNull();
+    expect(
+      planConversion({ from: "flat", to: "round", repeat: 12, total: 12 })
+        .nearest.down
+    ).toBeNull();
   });
 
   it("반복이 하나도 안 들어가면 아래 후보가 없다", () => {
-    const plan = planConversion({ from: "flat", to: "round", repeat: 12, total: 8 });
+    const plan = planConversion({
+      from: "flat",
+      to: "round",
+      repeat: 12,
+      total: 8,
+    });
     expect(plan.nearest.down).toBeNull();
     expect(plan.nearest.up).toBe(12);
   });
@@ -172,8 +244,18 @@ describe("방식 사이로 옮기기", () => {
 
   it("둘레가 아니라 무늬 횟수를 유지한다", () => {
     // 시접이 두꺼워도 무늬 횟수는 그대로다 — 무늬가 몇 번 도는지가 인상을 정한다
-    const thin = equivalentTotal({ repeats: 10, repeat: 8, to: "flat", selvedge: 1 });
-    const thick = equivalentTotal({ repeats: 10, repeat: 8, to: "flat", selvedge: 4 });
+    const thin = equivalentTotal({
+      repeats: 10,
+      repeat: 8,
+      to: "flat",
+      selvedge: 1,
+    });
+    const thick = equivalentTotal({
+      repeats: 10,
+      repeat: 8,
+      to: "flat",
+      selvedge: 4,
+    });
     expect(thin).toBe(82);
     expect(thick).toBe(88);
   });
@@ -186,7 +268,12 @@ describe("방식 사이로 옮기기", () => {
 
   it("옮긴 코수는 그 방식에서 딱 맞는다", () => {
     for (const to of ["flat", "round"] as const) {
-      const total = equivalentTotal({ repeats: 7, repeat: 11, to, selvedge: 2 });
+      const total = equivalentTotal({
+        repeats: 7,
+        repeat: 11,
+        to,
+        selvedge: 2,
+      });
       const plan = planConversion({
         from: to === "flat" ? "round" : "flat",
         to,
@@ -207,8 +294,14 @@ describe("무늬 늘어놓기", () => {
     const tiled = tileChart(motif, 8);
     expect(tiled.width).toBe(8);
     expect([0, 1, 2, 3, 4, 5, 6, 7].map((x) => getOp(tiled, x, 0))).toEqual([
-      "purl", "knit", "knit", "yo",
-      "purl", "knit", "knit", "yo",
+      "purl",
+      "knit",
+      "knit",
+      "yo",
+      "purl",
+      "knit",
+      "knit",
+      "yo",
     ]);
   });
 
@@ -216,17 +309,24 @@ describe("무늬 늘어놓기", () => {
     // 숫자로 "2코 남아요"를 말하는 것과 어디서 잘리는지 보는 것은 다르다
     const tiled = tileChart(motif, 6);
     expect([0, 1, 2, 3, 4, 5].map((x) => getOp(tiled, x, 0))).toEqual([
-      "purl", "knit", "knit", "yo",
-      "purl", "knit",
+      "purl",
+      "knit",
+      "knit",
+      "yo",
+      "purl",
+      "knit",
     ]);
   });
 
   it("시접 코는 겉뜨기로 둔다 — 격자에서 빈 칸이라 무늬와 구별된다", () => {
     const tiled = tileChart(motif, 6, 1);
     expect([0, 1, 2, 3, 4, 5].map((x) => getOp(tiled, x, 0))).toEqual([
-      "knit",                      // 시접
-      "purl", "knit", "knit", "yo", // 무늬 1회
-      "knit",                      // 시접
+      "knit", // 시접
+      "purl",
+      "knit",
+      "knit",
+      "yo", // 무늬 1회
+      "knit", // 시접
     ]);
   });
 

@@ -60,29 +60,29 @@ export function AddPhotoButton({
 
   return (
     <span className="inline-flex shrink-0 flex-col">
-    <label
-      className={cn(
-        "text-small bg-sunken text-text inline-flex min-h-11 shrink-0 cursor-pointer items-center justify-center gap-2 rounded-md px-4 font-medium whitespace-nowrap transition",
-        saving && "opacity-40"
-      )}
-      aria-busy={saving}
-    >
-      <Icon size={16} aria-hidden />
-      {saving ? t.photo.saving : label}
-      <input
-        ref={input}
-        type="file"
-        accept="image/*"
-        multiple
-        disabled={saving}
-        className="sr-only"
-        aria-label={label}
-        onChange={(e) => {
-          if (e.target.files?.length) void handleFiles(e.target.files);
-        }}
-      />
-    </label>
-    {error && <span className="text-frogged text-caption mt-1">{error}</span>}
+      <label
+        className={cn(
+          "text-small bg-sunken text-text inline-flex min-h-11 shrink-0 cursor-pointer items-center justify-center gap-2 rounded-md px-4 font-medium whitespace-nowrap transition",
+          saving && "opacity-40"
+        )}
+        aria-busy={saving}
+      >
+        <Icon size={16} aria-hidden />
+        {saving ? t.photo.saving : label}
+        <input
+          ref={input}
+          type="file"
+          accept="image/*"
+          multiple
+          disabled={saving}
+          className="sr-only"
+          aria-label={label}
+          onChange={(e) => {
+            if (e.target.files?.length) void handleFiles(e.target.files);
+          }}
+        />
+      </label>
+      {error && <span className="text-frogged text-caption mt-1">{error}</span>}
     </span>
   );
 }

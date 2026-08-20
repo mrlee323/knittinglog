@@ -239,7 +239,6 @@ function KnitMode() {
     // 지킨다. 자리가 모자랄 때 밀려나야 하는 것은 읽는 정보이고, 마지막까지
     // 남아야 하는 것은 누르는 자리다.
     <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-
       {counters.length > 1 && (
         <div className="flex gap-2 overflow-x-auto px-3 pb-2">
           {counters.map((counter) => (
@@ -299,9 +298,7 @@ function KnitMode() {
           )}
         >
           {view?.remaining !== undefined && !view.done && (
-            <p>
-              {t.counter.remaining.replace("{n}", String(view.remaining))}
-            </p>
+            <p>{t.counter.remaining.replace("{n}", String(view.remaining))}</p>
           )}
           {view?.done && (
             <p className="text-accent font-medium">{t.counter.done}</p>
@@ -325,7 +322,12 @@ function KnitMode() {
         </div>
 
         {/* 생명줄 — 실수해도 여기까지만 풀면 된다는 안전선 */}
-        <p className={cn("text-hibernating text-caption", short ? "mt-1" : "mt-3")}>
+        <p
+          className={cn(
+            "text-hibernating text-caption",
+            short ? "mt-1" : "mt-3"
+          )}
+        >
           {lifeline === null
             ? t.counter.lifelineNone
             : `${t.counter.lifelineLast.replace("{row}", String(lifeline))} · ${t.counter.lifelineUnravel.replace(
@@ -402,33 +404,33 @@ function KnitMode() {
     <div className="bg-canvas pt-safe pb-safe flex h-dvh flex-col">
       {topBar}
       <SplitPane
-      // 세로 화면에서는 위아래로, 넓은 화면에서는 좌우로 나눈다. 폰에서도
-      // 도안이 보여야 한다 — 기획대로면 실사용의 90%가 폰이고, 거기서
-      // "도안 보며 뜨기"가 없으면 이 화면의 목적이 절반 사라진다.
-      direction={wide ? "row" : "column"}
-      // 안전영역은 분할 바깥에 둔다. 카운터 열에만 두면 세로 분할에서
-      // 위에 오는 도안이 상태바 밑으로 들어간다.
-      className="min-h-0 flex-1"
-      label={t.counter.patternPanel}
-      // 세로에서는 카운터를 더 크게 준다. +1 영역이 엄지에 닿아야 한다.
-      initialRatio={wide ? 45 : 38}
-      first={
-        showPattern ? (
-          <aside
-            className={cn(
-              "h-full min-h-0 overflow-hidden",
-              wide ? "border-line border-r" : "border-line border-b"
-            )}
-          >
-            <KnitPanel projectId={projectId} />
-          </aside>
-        ) : (
-          counterPane
-        )
-      }
-      // 도안을 접으면 카운터가 화면을 다 쓴다. 낮고 좁은 창에서는 애초에
-      // 나누지 않으므로 둘째 칸이 없다.
-      second={showPattern && !swap ? counterPane : undefined}
+        // 세로 화면에서는 위아래로, 넓은 화면에서는 좌우로 나눈다. 폰에서도
+        // 도안이 보여야 한다 — 기획대로면 실사용의 90%가 폰이고, 거기서
+        // "도안 보며 뜨기"가 없으면 이 화면의 목적이 절반 사라진다.
+        direction={wide ? "row" : "column"}
+        // 안전영역은 분할 바깥에 둔다. 카운터 열에만 두면 세로 분할에서
+        // 위에 오는 도안이 상태바 밑으로 들어간다.
+        className="min-h-0 flex-1"
+        label={t.counter.patternPanel}
+        // 세로에서는 카운터를 더 크게 준다. +1 영역이 엄지에 닿아야 한다.
+        initialRatio={wide ? 45 : 38}
+        first={
+          showPattern ? (
+            <aside
+              className={cn(
+                "h-full min-h-0 overflow-hidden",
+                wide ? "border-line border-r" : "border-line border-b"
+              )}
+            >
+              <KnitPanel projectId={projectId} />
+            </aside>
+          ) : (
+            counterPane
+          )
+        }
+        // 도안을 접으면 카운터가 화면을 다 쓴다. 낮고 좁은 창에서는 애초에
+        // 나누지 않으므로 둘째 칸이 없다.
+        second={showPattern && !swap ? counterPane : undefined}
       />
     </div>
   );

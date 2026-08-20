@@ -277,10 +277,7 @@ export function BackupCard() {
           {t.backup.persistTitle}
         </h3>
         <p
-          className={cn(
-            "text-small",
-            persisted ? "text-text-2" : "text-text"
-          )}
+          className={cn("text-small", persisted ? "text-text-2" : "text-text")}
         >
           {persisted ? t.backup.persistOn : t.backup.persistOff}
         </p>

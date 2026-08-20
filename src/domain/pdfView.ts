@@ -49,7 +49,9 @@ export function stepZoom(zoom: Zoom, direction: 1 | -1): Zoom {
               : best,
           0
         );
-  return ZOOM_STEPS[Math.min(ZOOM_STEPS.length - 1, Math.max(0, from + direction))];
+  return ZOOM_STEPS[
+    Math.min(ZOOM_STEPS.length - 1, Math.max(0, from + direction))
+  ];
 }
 
 /**

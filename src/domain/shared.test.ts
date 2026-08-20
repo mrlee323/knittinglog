@@ -17,7 +17,9 @@ describe("주소 찾아내기", () => {
   });
 
   it("첫 주소만 쓴다", () => {
-    expect(extractUrl("https://a.com 그리고 https://b.com")).toBe("https://a.com");
+    expect(extractUrl("https://a.com 그리고 https://b.com")).toBe(
+      "https://a.com"
+    );
   });
 
   it("http도 받는다", () => {
@@ -34,7 +36,11 @@ describe("주소 찾아내기", () => {
 describe("공유 payload 정리", () => {
   it("url 칸을 제대로 채워 보내면 그대로 쓴다", () => {
     expect(
-      parseShared({ title: "눈송이 무늬", text: "요크에 쓰고 싶다", url: "https://pin.it/a" })
+      parseShared({
+        title: "눈송이 무늬",
+        text: "요크에 쓰고 싶다",
+        url: "https://pin.it/a",
+      })
     ).toEqual({
       url: "https://pin.it/a",
       title: "눈송이 무늬",
@@ -63,7 +69,11 @@ describe("공유 payload 정리", () => {
   });
 
   it("제목과 메모가 같으면 하나만 남긴다", () => {
-    const draft = parseShared({ title: "눈송이", text: "눈송이", url: "https://a.com" });
+    const draft = parseShared({
+      title: "눈송이",
+      text: "눈송이",
+      url: "https://a.com",
+    });
     expect(draft.title).toBe("눈송이");
     expect(draft.note).toBeUndefined();
   });
@@ -91,7 +101,9 @@ describe("공유 payload 정리", () => {
 
 describe("출처", () => {
   it("호스트만 짧게 보여준다", () => {
-    expect(sourceHost("https://www.pinterest.com/pin/123")).toBe("pinterest.com");
+    expect(sourceHost("https://www.pinterest.com/pin/123")).toBe(
+      "pinterest.com"
+    );
     expect(sourceHost("https://pin.it/abc")).toBe("pin.it");
   });
 

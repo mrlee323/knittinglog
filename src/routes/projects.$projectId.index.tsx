@@ -30,6 +30,7 @@ import {
   listPhotos,
   listReferencePhotos,
 } from "@/features/photo/repository";
+import { NeedleSection } from "@/features/needle/components/needle-section";
 import { AllocationSection } from "@/features/yarn/components/allocation-section";
 import { allowedEvents, daysSincePaused } from "@/domain/projectStatus";
 import { useLocale, useStrings } from "@/i18n";
@@ -115,7 +116,10 @@ function ProjectOverview() {
           <ShareCardButton
             build={async () => {
               const [sessions, counters, gauge, yarns] = await Promise.all([
-                db.counterSessions.where("projectId").equals(projectId).toArray(),
+                db.counterSessions
+                  .where("projectId")
+                  .equals(projectId)
+                  .toArray(),
                 listCounters(projectId),
                 project.gaugeId ? getGauge(project.gaugeId) : undefined,
                 yarnsForProject(projectId),
@@ -134,7 +138,10 @@ function ProjectOverview() {
 
               return {
                 title: project.name,
-                subtitle: [t.status[project.status], t.category[project.category]]
+                subtitle: [
+                  t.status[project.status],
+                  t.category[project.category],
+                ]
                   .filter(Boolean)
                   .join(" · "),
                 image: cover?.blob,
@@ -291,6 +298,7 @@ function ProjectOverview() {
                 읽기용 진행도는 본문 위쪽 ProgressCard가 맡는다. */}
             <CounterSection projectId={projectId} />
             <AllocationSection projectId={projectId} />
+            <NeedleSection projectId={projectId} />
 
             <section className="border-line mb-6 rounded-md border p-4">
               <p className="text-text-2 text-caption">

@@ -70,7 +70,9 @@ describe("값 변환", () => {
 
   it("사진을 빼도 나머지 값은 그대로다", async () => {
     const at = new Date("2026-01-02T03:04:05.000Z");
-    expect(await drop({ id: "a", name: "케이블", at, blob: new Blob(["x"]) })).toEqual({
+    expect(
+      await drop({ id: "a", name: "케이블", at, blob: new Blob(["x"]) })
+    ).toEqual({
       id: "a",
       name: "케이블",
       at: { __t: "date", iso: at.toISOString() },
@@ -119,7 +121,9 @@ describe("파일 확인", () => {
   });
 
   it("tables가 없으면 거부한다", () => {
-    expect(checkBackup({ ...file, tables: undefined }).problem).toBe("notBackup");
+    expect(checkBackup({ ...file, tables: undefined }).problem).toBe(
+      "notBackup"
+    );
   });
 
   it("더 새 형식은 거부한다 — 일부만 들어오는 게 성공처럼 보인다", () => {
@@ -159,9 +163,11 @@ describe("병합 계획", () => {
   });
 
   it("합치기는 기기에 있는 것을 덮지 않는다 — 오래된 백업으로 뜬 단수를 잃으면 안 된다", () => {
-    const plan = planImport(file({ counters: [{ id: "c", value: 10 }] }), "merge", [
-      known("counters", ["c"]),
-    ]);
+    const plan = planImport(
+      file({ counters: [{ id: "c", value: 10 }] }),
+      "merge",
+      [known("counters", ["c"])]
+    );
     expect(plan.added).toBe(0);
     expect(plan.skipped).toBe(1);
   });
@@ -187,7 +193,9 @@ describe("병합 계획", () => {
   });
 
   it("모르는 테이블이 비어 있으면 알리지 않는다 — 알릴 것이 없다", () => {
-    const plan = planImport(file({ 빈테이블: [] }), "merge", [known("projects")]);
+    const plan = planImport(file({ 빈테이블: [] }), "merge", [
+      known("projects"),
+    ]);
     expect(plan.unknownTables).toEqual([]);
   });
 
