@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { db, stamp, touch } from "@/lib/db";
-import type { Id, Yarn, YarnAllocation } from "@/types/entities";
+import type { WeighIn } from "@/domain/yarn";
+import type { Id, Yarn, YarnAllocation, YarnWeighIn } from "@/types/entities";
 
 /* --- 입력 검증 ------------------------------------------------------------ */
 
@@ -165,3 +166,41 @@ export async function deallocateYarn(yarnId: Id, projectId: Id) {
   await db.yarnWeighIns.where("allocationId").anyOf(ids).delete();
   await db.yarnAllocations.bulkDelete(ids);
 }
+
+/* --- 무게 재기 ------------------------------------------------------------ */
+
+/**
+ * 실 잔량 기록.
+ *
+ * 저울에 올려 남은 무게를 적는다. 두 번 이상 쌓이면 단당 소모량이 나오고,
+ * 거기서 "이 실로 목표 단수까지 갈 수 있나"가 계산된다(기획 §3.10-3).
+ * 한 번만 재면 소모량을 알 수 없으므로 화면이 두 번째 기록을 재촉해야 한다.
+ *
+ * `atRow`는 잰 시점의 단수다. 없으면 소모량 역산에 쓸 수 없어 목록에만 남는다.
+ */
+export const listWeighIns = (allocationId: Id) =>
+  db.yarnWeighIns.where("allocationId").equals(allocationId).sortBy("date");
+
+export async function addWeighIn(
+  allocationId: Id,
+  remainingGrams: number,
+  atRow?: number,
+  date = new Date()
+): Promise<Id> {
+  const weighIn = stamp({ allocationId, date, remainingGrams, atRow });
+  await db.yarnWeighIns.add(weighIn as YarnWeighIn);
+  return weighIn.id;
+}
+
+export const deleteWeighIn = (id: Id) => db.yarnWeighIns.delete(id);
+
+/**
+ * 소모량 역산에 쓸 수 있는 기록만 도메인 타입으로 옮긴다.
+ *
+ * 단수를 적지 않은 기록은 목록에는 남지만 계산에는 못 쓴다 — 언제 잰
+ * 무게인지 모르면 단당 소모량이 나오지 않는다.
+ */
+export const measurableWeighIns = (weighIns: YarnWeighIn[]): WeighIn[] =>
+  weighIns
+    .filter((w) => w.atRow !== undefined)
+    .map((w) => ({ remainingGrams: w.remainingGrams, atRow: w.atRow! }));

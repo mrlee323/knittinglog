@@ -3,6 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { useLiveQuery } from "dexie-react-hooks";
 import { Button } from "@/components/ui/button";
 import { counterView, lastLifelineBelow } from "@/domain/counter";
+import { FinishEstimate } from "./finish-estimate";
 import {
   createCounter,
   lifelineRows,
@@ -99,6 +100,10 @@ export function ProgressCard({ projectId }: { projectId: Id }) {
           ? t.counter.lifelineNone
           : t.counter.lifelineLast.replace("{row}", String(lifeline))}
       </p>
+
+      {/* 완성 예상은 진행도의 일부다 — "어디까지 왔나" 다음 질문이 "언제
+          끝나나"이고, 마감이 있는 사람에게는 그게 계획의 근거가 된다. */}
+      <FinishEstimate projectId={projectId} remainingRows={view.remaining} />
 
       <Link
         to="/projects/$projectId/knit"

@@ -20,6 +20,7 @@ import { Route as PatternsIndexRouteImport } from './routes/patterns.index'
 import { Route as GaugeIndexRouteImport } from './routes/gauge.index'
 import { Route as ChartsIndexRouteImport } from './routes/charts.index'
 import { Route as YarnNewRouteImport } from './routes/yarn.new'
+import { Route as YarnCalcRouteImport } from './routes/yarn.calc'
 import { Route as ProjectsNewRouteImport } from './routes/projects.new'
 import { Route as ProfilesNewRouteImport } from './routes/profiles.new'
 import { Route as PatternsNewRouteImport } from './routes/patterns.new'
@@ -91,6 +92,11 @@ const ChartsIndexRoute = ChartsIndexRouteImport.update({
 const YarnNewRoute = YarnNewRouteImport.update({
   id: '/yarn/new',
   path: '/yarn/new',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const YarnCalcRoute = YarnCalcRouteImport.update({
+  id: '/yarn/calc',
+  path: '/yarn/calc',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProjectsNewRoute = ProjectsNewRouteImport.update({
@@ -192,6 +198,7 @@ export interface FileRoutesByFullPath {
   '/patterns/new': typeof PatternsNewRoute
   '/profiles/new': typeof ProfilesNewRoute
   '/projects/new': typeof ProjectsNewRoute
+  '/yarn/calc': typeof YarnCalcRoute
   '/yarn/new': typeof YarnNewRoute
   '/charts/': typeof ChartsIndexRoute
   '/gauge/': typeof GaugeIndexRoute
@@ -222,6 +229,7 @@ export interface FileRoutesByTo {
   '/patterns/new': typeof PatternsNewRoute
   '/profiles/new': typeof ProfilesNewRoute
   '/projects/new': typeof ProjectsNewRoute
+  '/yarn/calc': typeof YarnCalcRoute
   '/yarn/new': typeof YarnNewRoute
   '/charts': typeof ChartsIndexRoute
   '/gauge': typeof GaugeIndexRoute
@@ -253,6 +261,7 @@ export interface FileRoutesById {
   '/patterns/new': typeof PatternsNewRoute
   '/profiles/new': typeof ProfilesNewRoute
   '/projects/new': typeof ProjectsNewRoute
+  '/yarn/calc': typeof YarnCalcRoute
   '/yarn/new': typeof YarnNewRoute
   '/charts/': typeof ChartsIndexRoute
   '/gauge/': typeof GaugeIndexRoute
@@ -285,6 +294,7 @@ export interface FileRouteTypes {
     | '/patterns/new'
     | '/profiles/new'
     | '/projects/new'
+    | '/yarn/calc'
     | '/yarn/new'
     | '/charts/'
     | '/gauge/'
@@ -315,6 +325,7 @@ export interface FileRouteTypes {
     | '/patterns/new'
     | '/profiles/new'
     | '/projects/new'
+    | '/yarn/calc'
     | '/yarn/new'
     | '/charts'
     | '/gauge'
@@ -345,6 +356,7 @@ export interface FileRouteTypes {
     | '/patterns/new'
     | '/profiles/new'
     | '/projects/new'
+    | '/yarn/calc'
     | '/yarn/new'
     | '/charts/'
     | '/gauge/'
@@ -376,6 +388,7 @@ export interface RootRouteChildren {
   PatternsNewRoute: typeof PatternsNewRoute
   ProfilesNewRoute: typeof ProfilesNewRoute
   ProjectsNewRoute: typeof ProjectsNewRoute
+  YarnCalcRoute: typeof YarnCalcRoute
   YarnNewRoute: typeof YarnNewRoute
   ChartsIndexRoute: typeof ChartsIndexRoute
   GaugeIndexRoute: typeof GaugeIndexRoute
@@ -471,6 +484,13 @@ declare module '@tanstack/react-router' {
       path: '/yarn/new'
       fullPath: '/yarn/new'
       preLoaderRoute: typeof YarnNewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/yarn/calc': {
+      id: '/yarn/calc'
+      path: '/yarn/calc'
+      fullPath: '/yarn/calc'
+      preLoaderRoute: typeof YarnCalcRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/projects/new': {
@@ -608,6 +628,7 @@ const rootRouteChildren: RootRouteChildren = {
   PatternsNewRoute: PatternsNewRoute,
   ProfilesNewRoute: ProfilesNewRoute,
   ProjectsNewRoute: ProjectsNewRoute,
+  YarnCalcRoute: YarnCalcRoute,
   YarnNewRoute: YarnNewRoute,
   ChartsIndexRoute: ChartsIndexRoute,
   GaugeIndexRoute: GaugeIndexRoute,
