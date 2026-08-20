@@ -10,6 +10,8 @@
  * 비대칭 무늬에서는 완성품이 실제로 뒤집혀 나온다.
  */
 
+import { contrastRatio } from "./color";
+
 export interface ColorChart {
   /** 코수 */
   width: number;
@@ -104,6 +106,185 @@ export function mirrorChart(chart: ColorChart): ColorChart {
   return { ...chart, cells };
 }
 
+/* --- 단·코 삽입 · 삭제 ---------------------------------------------------- */
+
+/**
+ * `y` 자리에 빈 단 하나를 끼워넣는다. 원래 그 자리의 단은 위로 올라간다.
+ *
+ * `resizeChart`와 별도 함수인 이유는 하는 일이 다르기 때문이다. 크기 변경은
+ * 끝에서 자라고, 이건 **중간에 끼워넣는다** — 무늬를 그려놓고 "여기 한 단이
+ * 더 필요하다"는 것은 실제 작업이고, 끝에서만 자라면 그 위를 전부 다시 그려야
+ * 한다.
+ *
+ * `y === height`면 맨 위에 붙인다. 범위를 넘으면 그대로 둔다.
+ */
+export function insertRow(chart: ColorChart, y: number): ColorChart {
+  if (y < 0 || y > chart.height) return chart;
+  const at = y * chart.width;
+  return {
+    ...chart,
+    height: chart.height + 1,
+    cells: [
+      ...chart.cells.slice(0, at),
+      ...new Array(chart.width).fill(0),
+      ...chart.cells.slice(at),
+    ],
+  };
+}
+
+/** `y` 단을 뺀다. 마지막 한 단은 뺄 수 없다 — 빈 차트는 차트가 아니다. */
+export function removeRow(chart: ColorChart, y: number): ColorChart {
+  if (chart.height <= 1 || y < 0 || y >= chart.height) return chart;
+  return {
+    ...chart,
+    height: chart.height - 1,
+    cells: [
+      ...chart.cells.slice(0, y * chart.width),
+      ...chart.cells.slice((y + 1) * chart.width),
+    ],
+  };
+}
+
+/**
+ * `x` 자리에 빈 코 하나를 끼워넣는다. 원래 그 자리의 코는 왼쪽으로 밀린다.
+ *
+ * `x === width`면 맨 오른쪽(1번 코 자리)에 붙인다.
+ */
+export function insertColumn(chart: ColorChart, x: number): ColorChart {
+  if (x < 0 || x > chart.width) return chart;
+  const width = chart.width + 1;
+  const cells = new Array(width * chart.height).fill(0);
+  for (let y = 0; y < chart.height; y += 1) {
+    for (let sx = 0; sx < chart.width; sx += 1) {
+      cells[y * width + (sx < x ? sx : sx + 1)] =
+        chart.cells[y * chart.width + sx];
+    }
+  }
+  return { ...chart, width, cells };
+}
+
+/** `x` 코를 뺀다. 마지막 한 코는 뺄 수 없다. */
+export function removeColumn(chart: ColorChart, x: number): ColorChart {
+  if (chart.width <= 1 || x < 0 || x >= chart.width) return chart;
+  const width = chart.width - 1;
+  const cells: number[] = [];
+  for (let y = 0; y < chart.height; y += 1) {
+    for (let sx = 0; sx < chart.width; sx += 1) {
+      if (sx !== x) cells.push(chart.cells[y * chart.width + sx]);
+    }
+  }
+  return { ...chart, width, cells };
+}
+
+/* --- 색 일괄 교체 --------------------------------------------------------- */
+
+/**
+ * `from` 색으로 칠한 칸을 전부 `to` 색으로 바꾼다.
+ *
+ * 스태시 실이 모자랄 때 색을 갈아치우는 작업이다. 팔레트를 고치는 것(그 색의
+ * hex를 바꾸는 것)과는 다르다 — 이건 **칸이 가리키는 색을 옮긴다.**
+ *
+ * 팔레트에서 `from`을 빼지 않는다. 빼면 그 뒤 색들의 인덱스가 하나씩 밀려서
+ * 도안 전체가 엉뚱한 색으로 바뀐다. 비워진 색은 색별 코수에서 0코로 남는다.
+ */
+export function remapColor(
+  chart: ColorChart,
+  from: number,
+  to: number
+): ColorChart {
+  if (from === to) return chart;
+  if (to < 0 || to >= chart.palette.length) return chart;
+  if (!chart.cells.includes(from)) return chart;
+  return { ...chart, cells: chart.cells.map((c) => (c === from ? to : c)) };
+}
+
+/* --- 직선 · 사각형 -------------------------------------------------------- */
+
+export interface Point {
+  x: number;
+  y: number;
+}
+
+/**
+ * 두 칸을 잇는 격자 위의 직선.
+ *
+ * 브레젠험이다. 소수 좌표를 반올림하면 기울기가 완만할 때 같은 칸이 두 번
+ * 나오거나 한 칸이 비는데, 코는 이산적이라 빈 칸이 눈에 보인다.
+ *
+ * 칸 목록을 돌려주고 칠하기는 `paintPoints`가 한다. 미리보기(화면)와 실제
+ * 칠하기가 같은 목록을 봐야 손을 떼기 전에 본 것과 결과가 같다.
+ */
+export function linePoints(from: Point, to: Point): Point[] {
+  let x = Math.round(from.x);
+  let y = Math.round(from.y);
+  const endX = Math.round(to.x);
+  const endY = Math.round(to.y);
+  const dx = Math.abs(endX - x);
+  const dy = Math.abs(endY - y);
+  const stepX = x < endX ? 1 : -1;
+  const stepY = y < endY ? 1 : -1;
+  let error = dx - dy;
+  const points: Point[] = [];
+
+  for (;;) {
+    points.push({ x, y });
+    if (x === endX && y === endY) break;
+    const doubled = error * 2;
+    if (doubled > -dy) {
+      error -= dy;
+      x += stepX;
+    }
+    if (doubled < dx) {
+      error += dx;
+      y += stepY;
+    }
+  }
+  return points;
+}
+
+/**
+ * 두 칸을 대각으로 하는 사각형의 **테두리**.
+ *
+ * 속을 채우지 않는다. 배색에서 사각형은 대개 테두리(가장자리 줄무늬, 액자
+ * 무늬)이고, 속이 필요하면 테두리를 두른 뒤 채우기를 한 번 하면 된다 —
+ * 테두리가 영역을 감싸므로 채우기가 정확히 그 안에서 멈춘다.
+ */
+export function rectPoints(from: Point, to: Point): Point[] {
+  const x0 = Math.min(from.x, to.x);
+  const x1 = Math.max(from.x, to.x);
+  const y0 = Math.min(from.y, to.y);
+  const y1 = Math.max(from.y, to.y);
+  const points: Point[] = [];
+
+  for (let x = x0; x <= x1; x += 1) {
+    points.push({ x, y: y0 });
+    if (y1 !== y0) points.push({ x, y: y1 });
+  }
+  for (let y = y0 + 1; y < y1; y += 1) {
+    points.push({ x: x0, y });
+    if (x1 !== x0) points.push({ x: x1, y });
+  }
+  return points;
+}
+
+/** 칸 목록을 한 색으로 칠한다. 바뀔 것이 없으면 같은 객체를 돌려준다. */
+export function paintPoints(
+  chart: ColorChart,
+  points: Point[],
+  color: number
+): ColorChart {
+  if (color < 0 || color >= chart.palette.length) return chart;
+  let cells: number[] | null = null;
+  for (const point of points) {
+    if (!inside(chart, point.x, point.y)) continue;
+    const index = point.y * chart.width + point.x;
+    if (chart.cells[index] === color) continue;
+    if (!cells) cells = chart.cells.slice();
+    cells[index] = color;
+  }
+  return cells ? { ...chart, cells } : chart;
+}
+
 /* --- 게이지 비율 ---------------------------------------------------------- */
 
 export interface ChartGauge {
@@ -182,6 +363,149 @@ export function fillArea(
   }
 
   return { ...chart, cells };
+}
+
+/* --- 대칭 그리기 ---------------------------------------------------------- */
+
+/**
+ * 세로축 대칭 좌표.
+ *
+ * 배색·레이스 무늬는 대부분 좌우 대칭이라, 칠할 때 반대 칸을 함께 칠하면
+ * 작업량이 절반이 된다. 전체를 뒤집는 `mirrorChart`와는 다른 기능이다.
+ *
+ * **폭이 홀수면 가운데 열은 자기 자신이 짝이다.** 식이 그걸 자연히 만족하므로
+ * 부르는 쪽에서 홀짝을 따질 필요가 없다 — 같은 칸을 두 번 칠해도 결과는 같다.
+ */
+export function mirrorCell(chart: ColorChart, x: number): number {
+  return chart.width - 1 - x;
+}
+
+/* --- 뒷실(부동사) --------------------------------------------------------- */
+
+/**
+ * 기준을 넘는 뒷실 구간.
+ *
+ * `y`·`x`는 구간의 시작 칸(x는 왼쪽 기준), `count`는 연속한 코 수다.
+ */
+export interface FloatRun {
+  y: number;
+  x: number;
+  count: number;
+  color: number;
+  /** 원형에서 단의 끝과 시작을 이어 센 구간인지 */
+  wraps: boolean;
+}
+
+/**
+ * 뒷실 기준 기본값(코).
+ *
+ * 실 굵기와 취향에 따라 다르므로 3~9로 조절할 수 있게 두고, 흔히 쓰는 값을
+ * 기본으로 둔다.
+ */
+export const DEFAULT_FLOAT_LIMIT = 5;
+
+/**
+ * 뒷실이 긴 구간을 찾는다.
+ *
+ * 페어아일에서 같은 색이 여러 코 연속되면 그 뒤로 다른 색 실이 그만큼 길게
+ * 지나간다. 그 실이 길면 손가락에 걸리고 편물이 당긴다. **다 뜨고 뒤집어 봐야**
+ * 아는 실수라서, 그리는 중에 말해주는 것이 이 함수의 존재 이유다.
+ *
+ * 기준을 **넘는**(초과) 구간만 모은다 — 기준이 5코면 5코는 괜찮고 6코부터다.
+ *
+ * **한 색뿐인 단은 세지 않는다.** 그 단은 실을 하나만 들고 뜨므로 뒤로 지나갈
+ * 실이 없다. 이걸 빼지 않으면 배경만 있는 단이 전부 경고로 잡혀서, 정작 봐야
+ * 할 구간이 묻힌다.
+ */
+export function longFloats(
+  chart: ColorChart,
+  options: { threshold?: number; inRound?: boolean } = {}
+): FloatRun[] {
+  const threshold = options.threshold ?? DEFAULT_FLOAT_LIMIT;
+  const inRound = options.inRound ?? false;
+  const found: FloatRun[] = [];
+
+  for (let y = 0; y < chart.height; y += 1) {
+    // 왼쪽에서 오른쪽으로 센다. 뒷실 길이는 읽는 방향과 무관하고, 좌표를
+    // 그대로 쓸 수 있어야 화면에 덮어 그릴 수 있다.
+    const runs = rowRuns(chart, y, false);
+    // 실을 하나만 들고 뜨는 단
+    if (runs.length <= 1) continue;
+
+    let x = 0;
+    const placed: FloatRun[] = runs.map((run) => {
+      const at = x;
+      x += run.count;
+      return { y, x: at, count: run.count, color: run.color, wraps: false };
+    });
+
+    let row = placed;
+    const first = placed[0];
+    const last = placed[placed.length - 1];
+    // 원형은 단의 끝과 시작이 이어진다. 합치지 않으면 원형 도안에서 가장 긴
+    // 뒷실을 놓친다 — 끝 3코 + 시작 4코가 실제로는 7코 하나다.
+    // (구간은 색이 번갈아 나오므로 둘뿐일 때는 색이 같을 수 없다.)
+    if (inRound && first.color === last.color && placed.length > 2) {
+      row = placed.slice(1, -1);
+      row.push({
+        y,
+        x: last.x,
+        count: last.count + first.count,
+        color: last.color,
+        wraps: true,
+      });
+    }
+
+    for (const run of row) {
+      if (run.count > threshold) found.push(run);
+    }
+  }
+
+  // 좌표 순으로 돌려준다. 원형에서 합친 구간이 단의 끝으로 밀리므로 다시 세운다.
+  return found.sort((a, b) => a.y - b.y || a.x - b.x);
+}
+
+/* --- 명도 대비 ------------------------------------------------------------ */
+
+/** 명도가 비슷해 무늬가 뭉쳐 보이는 색 조합. `a`·`b`는 팔레트 인덱스. */
+export interface ContrastWarning {
+  a: number;
+  b: number;
+  ratio: number;
+}
+
+/**
+ * 명도비 임계값.
+ *
+ * 경험값이다. 실제 편물 사진과 비교해 보정해야 한다(docs/CHART-EDITOR.md §8).
+ * 글자 가독성 기준(4.5:1)을 쓰면 안 된다 — 배색은 글자가 아니라 면이라 그보다
+ * 훨씬 낮은 차이에서도 무늬가 읽힌다.
+ */
+export const DEFAULT_CONTRAST_RATIO = 1.5;
+
+/**
+ * 명도차가 부족한 색 조합.
+ *
+ * **색이 달라도 명도가 비슷하면 무늬가 사라진다.** 색상(hue) 차이는 보지 않는다 —
+ * 빨강과 초록은 색상이 정반대지만 명도가 같으면 편물에서 뭉친다.
+ *
+ * 팔레트의 모든 조합을 본다. 어느 색이 어디에 인접하는지는 그리는 중에 계속
+ * 바뀌므로, 지금 붙어 있지 않다고 안심시키는 건 도움이 되지 않는다.
+ *
+ * 나쁜 조합이 먼저 오도록 정렬한다.
+ */
+export function contrastWarnings(
+  palette: string[],
+  threshold = DEFAULT_CONTRAST_RATIO
+): ContrastWarning[] {
+  const warnings: ContrastWarning[] = [];
+  for (let a = 0; a < palette.length; a += 1) {
+    for (let b = a + 1; b < palette.length; b += 1) {
+      const ratio = contrastRatio(palette[a], palette[b]);
+      if (ratio < threshold) warnings.push({ a, b, ratio });
+    }
+  }
+  return warnings.sort((x, y) => x.ratio - y.ratio);
 }
 
 /* --- 집계 ----------------------------------------------------------------- */

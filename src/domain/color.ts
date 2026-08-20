@@ -69,3 +69,55 @@ export function isLight(hex: string): boolean {
   // 사람 눈의 민감도를 반영한 가중치. 단순 평균은 노란색을 어둡다고 본다.
   return (0.299 * r + 0.587 * g + 0.114 * b) / 255 > 0.62;
 }
+
+/* --- 명도 ----------------------------------------------------------------- */
+
+/** sRGB 채널값(0~255)을 감마를 벗긴 선형값(0~1)으로 */
+function linear(value: number): number {
+  const s = value / 255;
+  return s <= 0.04045 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
+}
+
+/** 선형값(0~1)을 다시 sRGB 채널값(0~255)으로 */
+function encode(value: number): number {
+  const s =
+    value <= 0.0031308 ? value * 12.92 : 1.055 * value ** (1 / 2.4) - 0.055;
+  return s * 255;
+}
+
+/**
+ * WCAG 상대휘도. 검정 0, 흰색 1.
+ *
+ * `isLight`와 계산이 다른 것은 쓰임이 다르기 때문이다. `isLight`는 **글자를
+ * 이 색 위에 얹을지**를 감마 있는 근사식으로 빠르게 정하고, 이쪽은 **두 색이
+ * 나란히 놓였을 때 구분되는지**를 잰다. 후자는 감마를 벗겨야 맞다 — 벗기지
+ * 않으면 어두운 색끼리의 차이가 실제보다 크게 나온다.
+ */
+export function relativeLuminance(hex: string): number {
+  const { r, g, b } = fromHex(hex);
+  return 0.2126 * linear(r) + 0.7152 * linear(g) + 0.0722 * linear(b);
+}
+
+/**
+ * WCAG 명도비. 같은 명도면 1:1, 검정과 흰색이 21:1.
+ *
+ * 순서는 상관없다 — 밝은 쪽을 분자로 놓는다.
+ */
+export function contrastRatio(a: string, b: string): number {
+  const la = relativeLuminance(a);
+  const lb = relativeLuminance(b);
+  const [light, dark] = la >= lb ? [la, lb] : [lb, la];
+  return (light + 0.05) / (dark + 0.05);
+}
+
+/**
+ * 명도만 남긴 회색.
+ *
+ * 배색에서 무늬가 사라지는 이유는 **색이 아니라 명도**다. 휘도를 유지한 회색으로
+ * 바꿔 보면 명도가 비슷한 두 색이 같은 회색으로 뭉쳐 보인다 — 경고 문장보다
+ * 이게 빠르다(docs/CHART-EDITOR.md §4.3).
+ */
+export function toGray(hex: string): string {
+  const value = encode(relativeLuminance(hex));
+  return toHex({ r: value, g: value, b: value });
+}

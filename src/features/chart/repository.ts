@@ -77,4 +77,37 @@ export async function setChartGauge(id: Id, gaugeId?: Id) {
   await db.colorCharts.update(id, touch({ gaugeId }));
 }
 
+/**
+ * 뒷실 경고의 조건.
+ *
+ * 인덱스를 걸지 않은 필드라 스키마 변경이 없다. 예전 도안은 값이 비어 있고,
+ * 그때는 평면·기본 기준으로 읽힌다.
+ */
+export async function setChartFloats(
+  id: Id,
+  input: { inRound?: boolean; floatLimit?: number }
+) {
+  await db.colorCharts.update(id, touch(input));
+}
+
+/**
+ * 반복 단위와 얹을 코수.
+ *
+ * 0이나 빈 값은 "지정 안 함"이라 undefined로 지운다 — 0코 반복은 뜻이 없고,
+ * 남겨두면 안내선이 매 칸마다 그려진다.
+ */
+export async function setChartRepeat(
+  id: Id,
+  input: { repeatStitches?: number; repeatRows?: number; castOn?: number }
+) {
+  const count = (value?: number) =>
+    value && value > 0 ? Math.floor(value) : undefined;
+  const clean: Partial<ColorChartRecord> = {};
+  if ("repeatStitches" in input)
+    clean.repeatStitches = count(input.repeatStitches);
+  if ("repeatRows" in input) clean.repeatRows = count(input.repeatRows);
+  if ("castOn" in input) clean.castOn = count(input.castOn);
+  await db.colorCharts.update(id, touch(clean));
+}
+
 export const deleteChart = (id: Id) => db.colorCharts.delete(id);

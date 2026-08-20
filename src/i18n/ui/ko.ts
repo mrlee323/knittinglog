@@ -272,13 +272,65 @@ export const ko = {
     /* 정사각 격자로 그리면 완성 모양이 실제와 다르다 */
     previewHint:
       "게이지 비율을 넣어 그린 거예요. 뜨개 코는 정사각형이 아니라서 격자와 모양이 달라요.",
-    needGauge: "게이지를 고르면 완성 모양을 볼 수 있어요",
+    /* 게이지가 정하는 것은 비율 하나다. 없어도 미리보기를 막지 않는다. */
+    needGauge: "게이지를 고르면 실제 코 비율과 완성 크기를 알려줘요",
+    previewSquare: "정사각형 비율로 그렸어요 — 게이지가 없어서요",
     gauge: "게이지",
     gaugeNone: "고르지 않음",
     finishedSize: "완성 {w} × {h}",
-    tool: { paint: "칠하기", fill: "채우기", pick: "색 집기" },
+    tool: {
+      paint: "칠하기",
+      fill: "채우기",
+      pick: "색 집기",
+      line: "직선",
+      rect: "사각형",
+    },
     undo: "되돌리기",
     redo: "다시하기",
+    /* 중간에 끼워넣기 — 크기 입력은 끝에서만 자란다 */
+    insertHint: "번호를 넣고 그 자리에 한 단·한 코를 끼우거나 빼요",
+    rowAt: "단",
+    stitchAt: "코",
+    insertRow: "이 자리에 단 넣기",
+    removeRow: "이 단 빼기",
+    insertColumn: "이 자리에 코 넣기",
+    removeColumn: "이 코 빼기",
+    /* 반복 안내선 — 10코 관습선과 달리 이 무늬의 경계다 */
+    repeat: "반복",
+    repeatStitches: "코 반복",
+    repeatRows: "단 반복",
+    repeatChartFits: "격자 {width}코 = {repeat}코 무늬 {repeats}회",
+    repeatChartOff:
+      "격자 {width}코는 {repeat}코 무늬의 배수가 아니에요 · {remainder}코 남아요",
+    castOn: "얹을 코수",
+    castOnHint: "얹을 코수를 넣으면 반복이 맞는지 검산해요",
+    repeatFits: "{total}코에 {repeat}코 무늬 {repeats}회 — 딱 맞아요",
+    repeatShort:
+      "{total}코에 {repeat}코 무늬면 {repeats}회 · {remainder}코 남아요",
+    repeatNone: "{total}코에는 {repeat}코 무늬가 한 번도 안 들어가요",
+    /* 색 일괄 교체 — 팔레트 hex를 고치는 것과 다르다 */
+    swapFrom: "바꿀 색",
+    swapTo: "새 색",
+    swap: "{n}코 바꾸기",
+    /* 대칭 그리기 — 무늬 대부분이 좌우 대칭이라 작업량이 절반이 된다 */
+    symmetry: "대칭 그리기",
+    symmetryHint: "칠할 때 좌우 반대 칸도 함께 칠해요",
+    /* 뒷실(부동사) — 다 뜨고 뒤집어 봐야 아는 실수를 그리는 중에 알린다 */
+    floats: "뒷실",
+    floatsHint: "같은 색이 길게 이어지면 그 뒤로 다른 색 실이 그만큼 지나가요",
+    floatLimit: "기준",
+    floatSummary: "뒷실 {n}곳 · 가장 긴 것 {max}코",
+    floatNone: "기준을 넘는 뒷실이 없어요",
+    shape: "뜨는 방식",
+    flat: "평면",
+    inRound: "원형",
+    inRoundHint: "원형은 단의 끝과 시작이 이어져요",
+    /* 명도 대비 — 색이 달라도 명도가 비슷하면 무늬가 사라진다 */
+    contrast: "명도 대비",
+    contrastPair: "{a}번과 {b}번이 비슷해요 ({ratio}:1)",
+    contrastNone: "색끼리 명도가 충분히 달라요",
+    grayscale: "흑백으로 보기",
+    grayscaleHint: "명도만 남겨요. 뭉쳐 보이면 실제 편물에서도 뭉쳐요",
     zoomLevel: ["작게", "보통", "크게"],
     repeatedAs: "가로 {x}번 · 세로 {y}번 깔았을 때",
     palette: "색",
@@ -333,7 +385,8 @@ export const ko = {
     preview: "완성 모양",
     previewHint:
       "게이지 비율을 넣어 그린 거예요. 뜨개 코는 정사각형이 아니라서 격자와 모양이 달라요.",
-    needGauge: "게이지를 고르면 완성 모양을 볼 수 있어요",
+    /* 게이지가 정하는 것은 비율 하나다. 없어도 미리보기를 막지 않는다. */
+    needGauge: "게이지를 고르면 실제 코 비율로 보여요. 지금은 정사각형이에요",
     gauge: "게이지",
     gaugeNone: "고르지 않음",
     finishedSize: "완성 {w} × {h}",

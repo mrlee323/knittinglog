@@ -2,10 +2,21 @@ import { describe, expect, it } from "vitest";
 import {
   cellAspect,
   chartSizeCm,
+  contrastWarnings,
   createChart,
   fillArea,
   getCell,
+  insertColumn,
+  insertRow,
+  linePoints,
+  longFloats,
+  mirrorCell,
   mirrorChart,
+  paintPoints,
+  rectPoints,
+  remapColor,
+  removeColumn,
+  removeRow,
   resizeChart,
   rowRuns,
   setCell,
@@ -198,25 +209,26 @@ describe("단별 읽기", () => {
   });
 });
 
+/**
+ * 문자열로 도안을 만든다 — 눈으로 확인하기 쉽게.
+ *
+ * 위 줄이 화면의 위(마지막 단)다. 저장은 y=0이 첫 단(아래)이므로 뒤집어 넣는다.
+ */
+const from = (rows: string[]): ColorChart => ({
+  width: rows[0].length,
+  height: rows.length,
+  palette: ["#fff", "#000", "#f00"],
+  cells: [...rows].reverse().flatMap((row) => [...row].map((ch) => Number(ch))),
+});
+
+const draw = (chart: ColorChart) =>
+  Array.from({ length: chart.height }, (_, y) =>
+    Array.from({ length: chart.width }, (_, x) =>
+      String(getCell(chart, x, chart.height - 1 - y))
+    ).join("")
+  );
+
 describe("fillArea", () => {
-  /** 문자열로 도안을 만든다 — 눈으로 확인하기 쉽게 */
-  const from = (rows: string[]): ColorChart => ({
-    width: rows[0].length,
-    height: rows.length,
-    palette: ["#fff", "#000", "#f00"],
-    // 저장은 y=0이 첫 단(아래)이므로 뒤집어 넣는다
-    cells: [...rows]
-      .reverse()
-      .flatMap((row) => [...row].map((ch) => Number(ch))),
-  });
-
-  const draw = (chart: ColorChart) =>
-    Array.from({ length: chart.height }, (_, y) =>
-      Array.from({ length: chart.width }, (_, x) =>
-        String(getCell(chart, x, chart.height - 1 - y))
-      ).join("")
-    );
-
   it("이어진 같은 색을 한 번에 바꾼다", () => {
     const chart = from(["0000", "0110", "0110", "0000"]);
     expect(draw(fillArea(chart, 0, 0, 2))).toEqual([
@@ -250,5 +262,292 @@ describe("fillArea", () => {
     const before = [...chart.cells];
     fillArea(chart, 0, 0, 1);
     expect(chart.cells).toEqual(before);
+  });
+});
+
+describe("mirrorCell — 대칭 그리기", () => {
+  it("폭이 짝수면 양 끝이 짝이다", () => {
+    const chart = createChart(4, 1);
+    expect(mirrorCell(chart, 0)).toBe(3);
+    expect(mirrorCell(chart, 1)).toBe(2);
+  });
+
+  it("폭이 홀수면 가운데 열은 자기 자신이다", () => {
+    // 부르는 쪽에서 홀짝을 따지지 않게 하는 것이 이 함수의 목적이다 —
+    // 같은 칸을 두 번 칠해도 결과가 같아야 한다.
+    const chart = createChart(5, 1);
+    expect(mirrorCell(chart, 2)).toBe(2);
+  });
+
+  it("두 번 부르면 제자리로 돌아온다", () => {
+    const chart = createChart(7, 1);
+    for (let x = 0; x < 7; x += 1) {
+      expect(mirrorCell(chart, mirrorCell(chart, x))).toBe(x);
+    }
+  });
+});
+
+describe("longFloats — 뒷실 경고", () => {
+  it("기준을 넘는 구간만 모은다", () => {
+    // 위 단은 0이 6코 연속(기준 5 초과), 아래 단은 5코라 괜찮다
+    const chart = from(["0000001", "0000011"]);
+    const floats = longFloats(chart, { threshold: 5 });
+    expect(floats).toEqual([{ y: 1, x: 0, count: 6, color: 0, wraps: false }]);
+  });
+
+  it("한 색뿐인 단은 세지 않는다", () => {
+    // 실을 하나만 들고 뜨는 단에는 뒤로 지나갈 실이 없다. 이걸 빼지 않으면
+    // 배경만 있는 단이 전부 경고로 잡혀 정작 봐야 할 구간이 묻힌다.
+    expect(longFloats(from(["0000000"]), { threshold: 3 })).toEqual([]);
+  });
+
+  it("구간의 시작 칸을 왼쪽 기준으로 알려준다", () => {
+    const chart = from(["0011100"]);
+    expect(longFloats(chart, { threshold: 2 })).toEqual([
+      { y: 0, x: 2, count: 3, color: 1, wraps: false },
+    ]);
+  });
+
+  it("원형은 단의 끝과 시작을 하나로 센다", () => {
+    // 끝 2코 + 시작 2코가 실제로는 4코 하나다. 합치지 않으면 원형 도안에서
+    // 가장 긴 뒷실을 놓친다.
+    const chart = from(["0011100"]);
+    expect(longFloats(chart, { threshold: 3, inRound: true })).toEqual([
+      { y: 0, x: 5, count: 4, color: 0, wraps: true },
+    ]);
+  });
+
+  it("평면은 끝과 시작을 합치지 않는다", () => {
+    const chart = from(["0011100"]);
+    expect(longFloats(chart, { threshold: 3 })).toEqual([]);
+  });
+
+  it("기본 기준은 5코다", () => {
+    expect(longFloats(from(["0000011"]))).toEqual([]);
+    expect(longFloats(from(["0000001"])).length).toBe(1);
+  });
+
+  it("아래 단부터 왼쪽부터 돌려준다", () => {
+    const chart = from(["1000000", "0000001"]);
+    const floats = longFloats(chart, { threshold: 5 });
+    expect(floats.map((f) => [f.y, f.x])).toEqual([
+      [0, 0],
+      [1, 1],
+    ]);
+  });
+});
+
+describe("contrastWarnings — 명도 대비", () => {
+  it("명도가 비슷한 조합을 잡는다", () => {
+    const warnings = contrastWarnings(["#808080", "#858585"]);
+    expect(warnings.length).toBe(1);
+    expect(warnings[0]).toMatchObject({ a: 0, b: 1 });
+  });
+
+  it("명도차가 큰 조합은 잡지 않는다", () => {
+    expect(contrastWarnings(["#000000", "#ffffff"])).toEqual([]);
+  });
+
+  it("색상이 정반대여도 명도가 같으면 잡는다", () => {
+    // 빨강과 초록은 색상이 정반대지만 명도가 같으면 편물에서 뭉친다.
+    // 색상(hue)을 보지 않는 것이 이 검사의 요점이다.
+    const warnings = contrastWarnings(["#ff0000", "#009400"]);
+    expect(warnings.length).toBe(1);
+  });
+
+  it("나쁜 조합이 먼저 온다", () => {
+    const warnings = contrastWarnings(["#808080", "#8f8f8f", "#828282"], 2);
+    const ratios = warnings.map((w) => w.ratio);
+    expect([...ratios].sort((a, b) => a - b)).toEqual(ratios);
+  });
+
+  it("색이 하나면 볼 조합이 없다", () => {
+    expect(contrastWarnings(["#808080"])).toEqual([]);
+  });
+});
+
+describe("단·코 끼워넣기 · 빼기", () => {
+  it("중간에 빈 단을 끼워넣고 위를 밀어올린다", () => {
+    // 끝에서만 자라면 끼워넣은 위를 전부 다시 그려야 한다
+    const chart = from(["11", "22"]);
+    expect(draw(insertRow(chart, 1))).toEqual(["11", "00", "22"]);
+  });
+
+  it("맨 위에 붙일 수 있다", () => {
+    const chart = from(["11"]);
+    expect(draw(insertRow(chart, 1))).toEqual(["00", "11"]);
+  });
+
+  it("단을 뺀다", () => {
+    const chart = from(["11", "22", "00"]);
+    // y=1은 가운데 단
+    expect(draw(removeRow(chart, 1))).toEqual(["11", "00"]);
+  });
+
+  it("마지막 한 단은 뺄 수 없다", () => {
+    const chart = from(["11"]);
+    expect(removeRow(chart, 0)).toBe(chart);
+  });
+
+  it("중간에 빈 코를 끼워넣는다", () => {
+    const chart = from(["12", "12"]);
+    expect(draw(insertColumn(chart, 1))).toEqual(["102", "102"]);
+  });
+
+  it("맨 오른쪽(1번 코 자리)에 붙일 수 있다", () => {
+    const chart = from(["12"]);
+    expect(draw(insertColumn(chart, 2))).toEqual(["120"]);
+  });
+
+  it("코를 뺀다", () => {
+    const chart = from(["120", "120"]);
+    expect(draw(removeColumn(chart, 1))).toEqual(["10", "10"]);
+  });
+
+  it("마지막 한 코는 뺄 수 없다", () => {
+    const chart = from(["1"]);
+    expect(removeColumn(chart, 0)).toBe(chart);
+  });
+
+  it("범위를 넘으면 그대로 둔다", () => {
+    const chart = from(["12", "12"]);
+    expect(insertRow(chart, 5)).toBe(chart);
+    expect(insertRow(chart, -1)).toBe(chart);
+    expect(removeRow(chart, 9)).toBe(chart);
+    expect(insertColumn(chart, 5)).toBe(chart);
+    expect(removeColumn(chart, -1)).toBe(chart);
+  });
+
+  it("단 순서를 지킨다 — 첫 단은 계속 아래다", () => {
+    let chart = from(["00", "11"]);
+    chart = insertRow(chart, 0);
+    // 새 단이 첫 단이 되고 원래 첫 단(1)은 2단으로 올라간다
+    expect(getCell(chart, 0, 0)).toBe(0);
+    expect(getCell(chart, 0, 1)).toBe(1);
+  });
+});
+
+describe("색 일괄 교체", () => {
+  it("한 색으로 칠한 칸을 전부 옮긴다", () => {
+    const chart = from(["12", "21"]);
+    expect(draw(remapColor(chart, 1, 2))).toEqual(["22", "22"]);
+  });
+
+  it("팔레트는 건드리지 않는다 — 인덱스가 밀리면 도안 전체가 바뀐다", () => {
+    const chart = from(["12"]);
+    const next = remapColor(chart, 1, 2);
+    expect(next.palette).toEqual(chart.palette);
+    expect(stitchCounts(next)[1]).toBe(0);
+  });
+
+  it("같은 색으로 바꾸면 아무 일도 하지 않는다", () => {
+    const chart = from(["12"]);
+    expect(remapColor(chart, 1, 1)).toBe(chart);
+  });
+
+  it("쓰지 않은 색을 바꾸면 그대로 둔다", () => {
+    const chart = from(["11"]);
+    expect(remapColor(chart, 2, 0)).toBe(chart);
+  });
+
+  it("팔레트에 없는 색으로는 바꾸지 않는다", () => {
+    const chart = from(["11"]);
+    expect(remapColor(chart, 1, 9)).toBe(chart);
+  });
+});
+
+describe("직선", () => {
+  it("가로선은 사이를 빠뜨리지 않는다", () => {
+    expect(linePoints({ x: 0, y: 0 }, { x: 3, y: 0 })).toEqual([
+      { x: 0, y: 0 },
+      { x: 1, y: 0 },
+      { x: 2, y: 0 },
+      { x: 3, y: 0 },
+    ]);
+  });
+
+  it("45도 대각선은 한 칸씩 오른다", () => {
+    expect(linePoints({ x: 0, y: 0 }, { x: 2, y: 2 })).toEqual([
+      { x: 0, y: 0 },
+      { x: 1, y: 1 },
+      { x: 2, y: 2 },
+    ]);
+  });
+
+  it("완만한 기울기에서도 칸이 이어진다", () => {
+    // 코는 이산적이라 한 칸이 비면 눈에 보인다
+    const points = linePoints({ x: 0, y: 0 }, { x: 4, y: 1 });
+    expect(points.length).toBe(5);
+    expect(points.map((p) => p.x)).toEqual([0, 1, 2, 3, 4]);
+  });
+
+  it("한 칸을 찍으면 그 칸만 나온다", () => {
+    expect(linePoints({ x: 2, y: 3 }, { x: 2, y: 3 })).toEqual([
+      { x: 2, y: 3 },
+    ]);
+  });
+
+  it("거꾸로 그어도 같은 칸을 지난다", () => {
+    const forward = linePoints({ x: 0, y: 0 }, { x: 3, y: 2 });
+    const backward = linePoints({ x: 3, y: 2 }, { x: 0, y: 0 });
+    expect([...backward].reverse()).toEqual(forward);
+  });
+});
+
+describe("사각형", () => {
+  it("테두리만 낸다 — 속은 채우기로 하면 된다", () => {
+    const chart = paintPoints(
+      from(["0000", "0000", "0000", "0000"]),
+      rectPoints({ x: 0, y: 0 }, { x: 3, y: 3 }),
+      1
+    );
+    expect(draw(chart)).toEqual(["1111", "1001", "1001", "1111"]);
+  });
+
+  it("어느 꼭짓점에서 끌어도 같다", () => {
+    const a = rectPoints({ x: 3, y: 0 }, { x: 0, y: 2 });
+    const b = rectPoints({ x: 0, y: 2 }, { x: 3, y: 0 });
+    expect(new Set(a.map((p) => `${p.x},${p.y}`))).toEqual(
+      new Set(b.map((p) => `${p.x},${p.y}`))
+    );
+  });
+
+  it("한 줄짜리 사각형은 선이 된다", () => {
+    const points = rectPoints({ x: 0, y: 1 }, { x: 2, y: 1 });
+    expect(points).toEqual([
+      { x: 0, y: 1 },
+      { x: 1, y: 1 },
+      { x: 2, y: 1 },
+    ]);
+  });
+});
+
+describe("칸 목록 칠하기", () => {
+  it("여러 칸을 한 번에 칠한다", () => {
+    const chart = from(["00", "00"]);
+    const next = paintPoints(
+      chart,
+      [
+        { x: 0, y: 0 },
+        { x: 1, y: 1 },
+      ],
+      1
+    );
+    expect(draw(next)).toEqual(["01", "10"]);
+  });
+
+  it("격자 밖은 버린다", () => {
+    const chart = from(["00"]);
+    expect(paintPoints(chart, [{ x: 9, y: 9 }], 1)).toBe(chart);
+  });
+
+  it("바뀔 것이 없으면 같은 객체를 돌려준다", () => {
+    const chart = from(["11"]);
+    expect(paintPoints(chart, [{ x: 0, y: 0 }], 1)).toBe(chart);
+  });
+
+  it("팔레트에 없는 색은 무시한다", () => {
+    const chart = from(["00"]);
+    expect(paintPoints(chart, [{ x: 0, y: 0 }], 9)).toBe(chart);
   });
 });

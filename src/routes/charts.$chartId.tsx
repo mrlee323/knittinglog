@@ -1,15 +1,21 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useLiveQuery } from "dexie-react-hooks";
 import {
   Brush,
   ChevronLeft,
+  Contrast,
+  FlipHorizontal,
   FlipHorizontal2,
   ImagePlus,
+  Minus,
   PaintBucket,
   Pipette,
   Plus,
   Redo2,
+  Replace,
+  Slash,
+  Square,
   Undo2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -22,22 +28,39 @@ import {
   getChart,
   renameChart,
   saveChart,
+  setChartFloats,
   setChartGauge,
+  setChartRepeat,
   toChart,
 } from "@/features/chart/repository";
 import { listGauges } from "@/features/gauge/repository";
 import {
   cellAspect,
   chartSizeCm,
+  contrastWarnings,
+  DEFAULT_FLOAT_LIMIT,
   fillArea,
   getCell,
+  insertColumn,
+  insertRow,
+  linePoints,
+  longFloats,
+  mirrorCell,
   mirrorChart,
+  paintPoints,
+  rectPoints,
+  remapColor,
+  removeColumn,
+  removeRow,
   resizeChart,
   rowRuns,
   setCell,
   stitchCounts,
   type ColorChart,
+  type Point,
 } from "@/domain/colorChart";
+import { toGray } from "@/domain/color";
+import { fitRepeat } from "@/domain/construction";
 import { useUnits } from "@/app/units";
 import { useWideEnough } from "@/lib/use-media-query";
 import { useStrings } from "@/i18n";
@@ -51,19 +74,40 @@ export const Route = createFileRoute("/charts/$chartId")({
 /**
  * 그리기 도구.
  *
- * 셋으로 끝낸다. 직선·사각형은 넣지 않았다 — 배색 무늬는 대개 곡선이고,
- * 대칭 그리기가 들어오면 손이 훨씬 덜 아프다(docs/CHART-EDITOR.md §5.4).
+ * 다섯으로 끝낸다. 자유 브러시 크기·회전은 넣지 않는다 — 코는 이산적이고,
+ * 90도 돌리면 코와 단이 바뀌어 게이지 비율이 뒤집힌다(docs/CHART-EDITOR.md §7).
+ *
+ * 직선·사각형은 손을 뗄 때 확정되는 도구다. 지나간 칸이 아니라 **두 끝**이
+ * 뜻을 가지므로 끄는 동안 미리보기만 얹는다.
  */
-type Tool = "paint" | "fill" | "pick";
+type Tool = "paint" | "fill" | "pick" | "line" | "rect";
 
 const TOOLS = [
   { id: "paint" as const, icon: Brush },
   { id: "fill" as const, icon: PaintBucket },
   { id: "pick" as const, icon: Pipette },
+  { id: "line" as const, icon: Slash },
+  { id: "rect" as const, icon: Square },
 ];
+
+/** 위치를 입력받는 칸에서 쓰는 숫자 읽기. 빈 칸과 오타는 없는 값이다. */
+const num = (raw: string) => {
+  const parsed = Number(raw);
+  return raw.trim() === "" || Number.isNaN(parsed)
+    ? undefined
+    : Math.floor(parsed);
+};
 
 /** 되돌리기 스택 상한. 차트가 작아서 이 정도는 20KB를 넘지 않는다. */
 const HISTORY_LIMIT = 50;
+
+/**
+ * 뒷실 기준으로 고를 수 있는 값(코).
+ *
+ * 실 굵기와 취향에 따라 다르다 — 굵은 실은 더 짧게 잡는다. 자유 입력으로 두지
+ * 않는 것은 이게 취향의 범위가 좁은 값이기 때문이다.
+ */
+const FLOAT_LIMITS = [3, 4, 5, 6, 7, 8, 9] as const;
 
 /** 편집 격자의 칸 크기. 손가락으로 칠할 수 있는 최소치에서 출발한다. */
 const EDIT_CELL = 18;
@@ -126,6 +170,25 @@ function Editor({
   const [repeats, setRepeats] = useState<{ x: number; y: number }>();
   const [zoom, setZoom] = useState(1);
   const [tool, setTool] = useState<Tool>("paint");
+  /**
+   * 대칭 그리기.
+   *
+   * 배색·레이스 무늬의 대부분이 좌우 대칭이라 작업량이 절반이 된다. 켠 상태를
+   * 저장하지 않는 것은 이게 도안의 성질이 아니라 지금 손의 방식이기 때문이다 —
+   * 대칭인 도안도 마무리는 한쪽만 손보게 된다.
+   */
+  const [symmetry, setSymmetry] = useState(false);
+  /** 흑백으로 보기. 명도가 뭉치는지 눈으로 확인하는 보기 모드다. */
+  const [gray, setGray] = useState(false);
+  /**
+   * 끼워넣거나 뺄 자리. 화면에 적힌 번호 그대로다 — 단은 아래가 1단,
+   * 코는 오른쪽이 1번이다.
+   */
+  const [rowAt, setRowAt] = useState("1");
+  const [stitchAt, setStitchAt] = useState("1");
+  /** 색 일괄 교체의 두 색(팔레트 인덱스) */
+  const [swapFrom, setSwapFrom] = useState(0);
+  const [swapTo, setSwapTo] = useState(1);
   /**
    * 되돌리기 · 다시하기.
    *
@@ -221,9 +284,84 @@ function Editor({
   const counts = stitchCounts(chart);
   const runs = rowRuns(chart, row);
 
+  /*
+    뒷실·명도 경고는 도안 전체를 훑는다. 칠하는 중에도 다시 계산되어야 하지만
+    (그리는 중에 아는 것이 이 기능의 요점이다) 매 렌더마다 새 배열을 만들면
+    격자가 이유 없이 다시 그려진다 — 캔버스가 이 값을 의존성으로 본다.
+  */
+  const inRound = record.inRound ?? false;
+  const floatLimit = record.floatLimit ?? DEFAULT_FLOAT_LIMIT;
+  const floats = useMemo(
+    () => longFloats(chart, { threshold: floatLimit, inRound }),
+    [chart, floatLimit, inRound]
+  );
+  const longestFloat = floats.reduce((max, f) => Math.max(max, f.count), 0);
+  const contrast = useMemo(
+    () => contrastWarnings(chart.palette),
+    [chart.palette]
+  );
+
+  /**
+   * 화면에 그릴 차트.
+   *
+   * 흑백 보기는 팔레트만 바꿔 같은 데이터를 그린다. 칠하기는 계속 원래 색으로
+   * 들어간다 — 보기 모드가 저장되는 색을 바꾸면 안 된다.
+   */
+  const shown = useMemo(
+    () => (gray ? { ...chart, palette: chart.palette.map(toGray) } : chart),
+    [chart, gray]
+  );
+
   const resize = (width: number, height: number) => {
     if (width < 1 || height < 1) return;
     commit(resizeChart(chart, Math.min(120, width), Math.min(200, height)));
+  };
+
+  /*
+    반복 검산.
+
+    무늬 반복은 기호 도안에서 이미 푼 문제라 fitRepeat을 그대로 쓴다. 격자 폭
+    자체가 반복의 배수인지(그리는 중에 어긋나는지)와, 얹을 코수에 맞는지는
+    다른 질문이라 둘 다 본다 — 20코 격자에 8코 무늬를 그리면 격자 안에서 이미
+    어긋나고, 격자가 맞아도 118코 몸판에서는 남는다.
+  */
+  const repeatStitches = record.repeatStitches;
+  const repeatRows = record.repeatRows;
+  const chartFit = repeatStitches
+    ? fitRepeat(chart.width, repeatStitches)
+    : null;
+  const castOnFit =
+    repeatStitches && record.castOn
+      ? fitRepeat(record.castOn, repeatStitches)
+      : null;
+
+  /** 화면 번호(아래가 1단)를 저장 좌표로 */
+  const rowIndex = (num(rowAt) ?? 1) - 1;
+  /**
+   * 화면 번호(오른쪽이 1번)를 저장 좌표로.
+   *
+   * 넣기와 빼기가 자리 하나 다르다. `n번 자리에 넣기`는 원래 n번을 n+1번으로
+   * 밀어야 하므로 그 오른쪽 경계에 들어가고, 빼기는 n번 그 칸이다.
+   */
+  const insertAt = chart.width - (num(stitchAt) ?? 1) + 1;
+  const removeAt = chart.width - (num(stitchAt) ?? 1);
+
+  /** 도형 도구인가 */
+  const shape = tool === "line" || tool === "rect" ? tool : undefined;
+
+  /** 도형을 확정한다. 대칭이 켜져 있으면 반대쪽 칸까지 한 단위로 칠한다. */
+  const applyShape = (from: Point, to: Point) => {
+    const points =
+      shape === "rect" ? rectPoints(from, to) : linePoints(from, to);
+    const all = symmetry
+      ? [
+          ...points,
+          ...points.map((p) => ({ x: mirrorCell(chart, p.x), y: p.y })),
+        ]
+      : points;
+    const next = paintPoints(chart, all, color);
+    // 바뀔 것이 없으면 기억하지 않는다 — 아무 일도 하지 않는 되돌리기가 남는다
+    if (next !== chart) commit(next);
   };
 
   return (
@@ -278,6 +416,170 @@ function Editor({
                 {t.chart.finishedSize
                   .replace("{w}", units.formatLength(size.widthCm, 1))
                   .replace("{h}", units.formatLength(size.heightCm, 1))}
+              </p>
+            )}
+
+            {/*
+              중간에 끼워넣기 · 빼기.
+
+              크기 입력은 끝에서 자란다. 실제 작업은 "여기 한 단이 더 필요하다"
+              이고, 끝에서만 자라면 그 위를 전부 다시 그려야 한다.
+              번호는 격자에 적힌 그대로다 — 단은 아래가 1단, 코는 오른쪽이 1번.
+            */}
+            <p className="text-text-3 text-caption mt-3">
+              {t.chart.insertHint}
+            </p>
+            <div className="mt-1 space-y-1.5">
+              <div className="flex items-end gap-1.5">
+                <div className="w-20">
+                  <TextField
+                    label={t.chart.rowAt}
+                    className="mb-0"
+                    inputMode="numeric"
+                    value={rowAt}
+                    onChange={(e) => setRowAt(e.target.value)}
+                  />
+                </div>
+                <Button
+                  icon
+                  variant="secondary"
+                  aria-label={t.chart.insertRow}
+                  title={t.chart.insertRow}
+                  onClick={() => commit(insertRow(chart, rowIndex))}
+                >
+                  <Plus size={16} />
+                </Button>
+                <Button
+                  icon
+                  variant="secondary"
+                  aria-label={t.chart.removeRow}
+                  title={t.chart.removeRow}
+                  disabled={chart.height <= 1}
+                  onClick={() => commit(removeRow(chart, rowIndex))}
+                >
+                  <Minus size={16} />
+                </Button>
+              </div>
+              <div className="flex items-end gap-1.5">
+                <div className="w-20">
+                  <TextField
+                    label={t.chart.stitchAt}
+                    className="mb-0"
+                    inputMode="numeric"
+                    value={stitchAt}
+                    onChange={(e) => setStitchAt(e.target.value)}
+                  />
+                </div>
+                <Button
+                  icon
+                  variant="secondary"
+                  aria-label={t.chart.insertColumn}
+                  title={t.chart.insertColumn}
+                  onClick={() => commit(insertColumn(chart, insertAt))}
+                >
+                  <Plus size={16} />
+                </Button>
+                <Button
+                  icon
+                  variant="secondary"
+                  aria-label={t.chart.removeColumn}
+                  title={t.chart.removeColumn}
+                  disabled={chart.width <= 1}
+                  onClick={() => commit(removeColumn(chart, removeAt))}
+                >
+                  <Minus size={16} />
+                </Button>
+              </div>
+            </div>
+          </section>
+
+          {/*
+            반복 안내선 — 무늬가 다시 시작하는 자리.
+
+            10코마다 넣는 관습선은 좌표를 세는 눈금이고, 이건 이 무늬의 경계다.
+            얹을 코수를 넣으면 반복이 맞는지 검산한다.
+          */}
+          <section>
+            <h2 className="text-micro text-text-3 mb-2">{t.chart.repeat}</h2>
+            <div className="flex items-end gap-2">
+              <div className="w-20">
+                <TextField
+                  label={t.chart.repeatStitches}
+                  className="mb-0"
+                  inputMode="numeric"
+                  value={repeatStitches ?? ""}
+                  onChange={(e) =>
+                    void setChartRepeat(chartId, {
+                      repeatStitches: num(e.target.value),
+                    })
+                  }
+                />
+              </div>
+              <div className="w-20">
+                <TextField
+                  label={t.chart.repeatRows}
+                  className="mb-0"
+                  inputMode="numeric"
+                  value={repeatRows ?? ""}
+                  onChange={(e) =>
+                    void setChartRepeat(chartId, {
+                      repeatRows: num(e.target.value),
+                    })
+                  }
+                />
+              </div>
+            </div>
+
+            {chartFit && (
+              <p
+                className={cn(
+                  "text-caption mt-2",
+                  chartFit.fits ? "text-text-3" : "text-hibernating"
+                )}
+              >
+                {(chartFit.fits
+                  ? t.chart.repeatChartFits
+                  : t.chart.repeatChartOff
+                )
+                  .replace("{width}", String(chart.width))
+                  .replace("{repeat}", String(chartFit.repeat))
+                  .replace("{repeats}", String(chartFit.repeats))
+                  .replace("{remainder}", String(chartFit.remainder))}
+              </p>
+            )}
+
+            <div className="mt-2 w-24">
+              <TextField
+                label={t.chart.castOn}
+                className="mb-0"
+                inputMode="numeric"
+                value={record.castOn ?? ""}
+                onChange={(e) =>
+                  void setChartRepeat(chartId, { castOn: num(e.target.value) })
+                }
+              />
+            </div>
+            {castOnFit ? (
+              <p
+                className={cn(
+                  "text-caption mt-2",
+                  castOnFit.fits ? "text-finished" : "text-hibernating"
+                )}
+              >
+                {(castOnFit.repeats === 0
+                  ? t.chart.repeatNone
+                  : castOnFit.fits
+                    ? t.chart.repeatFits
+                    : t.chart.repeatShort
+                )
+                  .replace("{total}", String(castOnFit.motifStitches))
+                  .replace("{repeat}", String(castOnFit.repeat))
+                  .replace("{repeats}", String(castOnFit.repeats))
+                  .replace("{remainder}", String(castOnFit.remainder))}
+              </p>
+            ) : (
+              <p className="text-text-3 text-caption mt-2">
+                {t.chart.castOnHint}
               </p>
             )}
           </section>
@@ -357,6 +659,159 @@ function Editor({
               <Plus size={14} />
               {t.chart.addColor}
             </Button>
+
+            {/*
+              색 일괄 교체.
+
+              팔레트의 hex를 고치는 것(위의 색 상자)과 다르다. 이건 칸이
+              가리키는 색을 옮긴다 — 스태시 실이 모자라 이 색을 저 색으로
+              갈아치우는 작업이고, 그때 다른 색은 그대로 있어야 한다.
+            */}
+            {chart.palette.length > 1 && (
+              <div className="mt-3">
+                <div className="flex items-end gap-1.5">
+                  <div className="min-w-0 flex-1">
+                    <SelectField
+                      label={t.chart.swapFrom}
+                      className="mb-0"
+                      value={String(swapFrom)}
+                      onChange={(e) => setSwapFrom(Number(e.target.value))}
+                      options={chart.palette.map((_, i) => ({
+                        value: String(i),
+                        label: t.chart.colorName.replace("{n}", String(i + 1)),
+                      }))}
+                    />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <SelectField
+                      label={t.chart.swapTo}
+                      className="mb-0"
+                      value={String(swapTo)}
+                      onChange={(e) => setSwapTo(Number(e.target.value))}
+                      options={chart.palette.map((_, i) => ({
+                        value: String(i),
+                        label: t.chart.colorName.replace("{n}", String(i + 1)),
+                      }))}
+                    />
+                  </div>
+                </div>
+                <Button
+                  variant="secondary"
+                  className="mt-2 !min-h-9 !px-2"
+                  disabled={swapFrom === swapTo || counts[swapFrom] === 0}
+                  onClick={() => commit(remapColor(chart, swapFrom, swapTo))}
+                >
+                  <Replace size={14} />
+                  {t.chart.swap.replace("{n}", String(counts[swapFrom] ?? 0))}
+                </Button>
+              </div>
+            )}
+          </section>
+
+          {/*
+            명도 대비 — 색이 달라도 명도가 비슷하면 무늬가 사라진다.
+            팔레트 바로 아래에 둔다. 색을 고치는 손이 여기 있다.
+          */}
+          <section>
+            <h2 className="text-micro text-text-3 mb-2">{t.chart.contrast}</h2>
+            {contrast.length > 0 ? (
+              <ul className="space-y-1">
+                {contrast.map((pair) => (
+                  <li
+                    key={`${pair.a}-${pair.b}`}
+                    className="text-hibernating text-caption flex items-center gap-1.5"
+                  >
+                    <span aria-hidden className="flex shrink-0">
+                      <span
+                        className="ring-line size-3 rounded-l-sm ring-1 ring-inset"
+                        style={{ background: chart.palette[pair.a] }}
+                      />
+                      <span
+                        className="ring-line size-3 rounded-r-sm ring-1 ring-inset"
+                        style={{ background: chart.palette[pair.b] }}
+                      />
+                    </span>
+                    {t.chart.contrastPair
+                      .replace("{a}", String(pair.a + 1))
+                      .replace("{b}", String(pair.b + 1))
+                      .replace("{ratio}", pair.ratio.toFixed(1))}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-text-3 text-caption">{t.chart.contrastNone}</p>
+            )}
+            {/* 경고 문장보다 눈으로 보는 게 빠르다 */}
+            <Button
+              variant={gray ? "primary" : "secondary"}
+              aria-pressed={gray}
+              className="mt-2 !min-h-9 !px-2"
+              onClick={() => setGray((on) => !on)}
+            >
+              <Contrast size={14} />
+              {t.chart.grayscale}
+            </Button>
+            <p className="text-text-3 text-caption mt-1">
+              {t.chart.grayscaleHint}
+            </p>
+          </section>
+
+          {/*
+            뒷실 — 다 뜨고 뒤집어 봐야 아는 실수라서 그리는 중에 말해준다.
+            평면·원형 구분이 여기 있어야 맞는다. 원형은 단의 끝과 시작이 이어져서
+            끝 3코 + 시작 4코가 실제로는 7코 하나다.
+          */}
+          <section>
+            <h2 className="text-micro text-text-3 mb-2">{t.chart.floats}</h2>
+            <div className="flex items-end gap-2">
+              <div className="min-w-0 flex-1">
+                <SelectField
+                  label={t.chart.shape}
+                  className="mb-0"
+                  value={inRound ? "round" : "flat"}
+                  onChange={(e) =>
+                    void setChartFloats(chartId, {
+                      inRound: e.target.value === "round",
+                    })
+                  }
+                  options={[
+                    { value: "flat", label: t.chart.flat },
+                    { value: "round", label: t.chart.inRound },
+                  ]}
+                />
+              </div>
+              <div className="w-24">
+                <SelectField
+                  label={t.chart.floatLimit}
+                  className="mb-0"
+                  value={String(floatLimit)}
+                  onChange={(e) =>
+                    void setChartFloats(chartId, {
+                      floatLimit: Number(e.target.value),
+                    })
+                  }
+                  options={FLOAT_LIMITS.map((n) => ({
+                    value: String(n),
+                    label: t.chart.countsValue.replace("{n}", String(n)),
+                  }))}
+                />
+              </div>
+            </div>
+            <p
+              className={cn(
+                "text-caption mt-2",
+                floats.length > 0 ? "text-hibernating" : "text-text-3"
+              )}
+            >
+              {floats.length > 0
+                ? t.chart.floatSummary
+                    .replace("{n}", String(floats.length))
+                    .replace("{max}", String(longestFloat))
+                : t.chart.floatNone}
+            </p>
+            <p className="text-text-3 text-caption mt-1">
+              {inRound ? t.chart.inRoundHint : t.chart.floatsHint}
+            </p>
           </section>
 
           {/* 사진에서 옮기기 — 칸을 하나씩 칠하는 대신 사진을 통째로 옮긴다 */}
@@ -416,27 +871,34 @@ function Editor({
               </div>
             </div>
 
-            {gaugeValues ? (
-              <>
-                <div className="border-line bg-surface overflow-hidden rounded-md border">
-                  <FabricCanvas
-                    chart={chart}
-                    cellWidth={PREVIEW_ZOOMS[zoom] * aspect}
-                    cellHeight={PREVIEW_ZOOMS[zoom]}
-                    height={wide ? FABRIC_HEIGHT : FABRIC_HEIGHT_NARROW}
-                    onRepeats={setRepeats}
-                  />
-                </div>
-                <p className="text-text-2 text-small mt-2">
-                  {repeats &&
-                    t.chart.repeatedAs
-                      .replace("{x}", String(repeats.x))
-                      .replace("{y}", String(repeats.y))}
-                </p>
-              </>
-            ) : (
-              <p className="border-line text-text-3 text-caption rounded-md border border-dashed px-4 py-6 text-center">
-                {t.chart.needGauge}
+            {/*
+              게이지가 없어도 그린다.
+
+              게이지가 정하는 것은 **비율 하나**다(cellAspect). 없으면 정사각
+              격자로 깔면 되고, 무늬가 반복 경계에서 어떻게 이어지는지·색이 섞여
+              보이는지는 비율과 무관하게 보인다 — 여기서 궁금한 건 대개 그쪽이다.
+              게이지를 저장한 적 없는 사람에게 미리보기를 통째로 막으면, 스와치를
+              뜨기 전에는 도안을 볼 수 없다는 뜻이 된다.
+            */}
+            <div className="border-line bg-surface overflow-hidden rounded-md border">
+              <FabricCanvas
+                chart={shown}
+                cellWidth={PREVIEW_ZOOMS[zoom] * aspect}
+                cellHeight={PREVIEW_ZOOMS[zoom]}
+                height={wide ? FABRIC_HEIGHT : FABRIC_HEIGHT_NARROW}
+                onRepeats={setRepeats}
+              />
+            </div>
+            <p className="text-text-2 text-small mt-2">
+              {repeats &&
+                t.chart.repeatedAs
+                  .replace("{x}", String(repeats.x))
+                  .replace("{y}", String(repeats.y))}
+            </p>
+            {/* 비율이 실제와 다르다는 것만 알린다. 막지는 않는다. */}
+            {!gaugeValues && (
+              <p className="text-text-3 text-caption">
+                {t.chart.previewSquare}
               </p>
             )}
           </section>
@@ -464,6 +926,26 @@ function Editor({
                   </button>
                 ))}
               </div>
+
+              {/*
+                대칭 그리기. 전체를 뒤집는 좌우 반전과는 다른 기능이라 도구 옆에
+                둔다 — 이건 지금부터 칠하는 방식이고, 반전은 한 번의 조작이다.
+              */}
+              <button
+                type="button"
+                aria-pressed={symmetry}
+                title={t.chart.symmetryHint}
+                onClick={() => setSymmetry((on) => !on)}
+                className={cn(
+                  "text-caption inline-flex min-h-11 items-center gap-1.5 rounded-md px-2.5 transition",
+                  symmetry
+                    ? "bg-accent text-on-accent font-semibold"
+                    : "bg-sunken text-text-2 hover:text-text"
+                )}
+              >
+                <FlipHorizontal size={16} />
+                {t.chart.symmetry}
+              </button>
 
               {/* 지금 칠하는 색을 도구 옆에 둔다. 색을 바꾸려고 페이지를
                   거슬러 올라가야 했던 게 이 화면의 가장 큰 불편이었다. */}
@@ -525,12 +1007,18 @@ function Editor({
 
             <div className="border-line overflow-auto rounded-md border p-2">
               <ChartCanvas
-                chart={chart}
+                chart={shown}
                 cellWidth={EDIT_CELL}
                 cellHeight={EDIT_CELL}
                 labels
+                floats={floats}
+                repeatStitches={repeatStitches}
+                repeatRows={repeatRows}
+                shape={shape}
+                color={color}
+                onShape={applyShape}
                 continuous={tool === "paint"}
-                onStrokeStart={tool === "pick" ? undefined : remember}
+                onStrokeStart={tool === "pick" || shape ? undefined : remember}
                 onPaint={(x, y) => {
                   if (tool === "pick") {
                     // 색을 집는 이유는 그 색으로 칠하려는 것이다
@@ -539,12 +1027,25 @@ function Editor({
                     return;
                   }
                   if (tool === "fill") {
-                    setChart((prev) => fillArea(prev, x, y, color));
+                    setChart((prev) => {
+                      const filled = fillArea(prev, x, y, color);
+                      if (!symmetry) return filled;
+                      // 영역을 뒤집어 옮기는 것이 아니라 **같은 조작을 반대쪽에
+                      // 한 번 더** 한다. 비대칭 영역에서도 결과를 예상할 수 있고,
+                      // 두 영역의 모양이 다를 때 한쪽이 뭉개지지 않는다.
+                      return fillArea(filled, mirrorCell(prev, x), y, color);
+                    });
                     return;
                   }
                   // 함수형 갱신을 쓴다. 클로저의 chart를 읽으면 같은 tick에
                   // 여러 포인터 이벤트가 오갈 때 앞서 칠한 칸이 덮여 사라진다.
-                  setChart((prev) => setCell(prev, x, y, color));
+                  setChart((prev) => {
+                    const painted = setCell(prev, x, y, color);
+                    if (!symmetry) return painted;
+                    // 폭이 홀수면 가운데 열은 자기 자신이 짝이다. 같은 칸을 두 번
+                    // 칠해도 결과가 같으므로 여기서 홀짝을 따지지 않는다.
+                    return setCell(painted, mirrorCell(prev, x), y, color);
+                  });
                 }}
               />
             </div>

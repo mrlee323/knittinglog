@@ -323,24 +323,25 @@ function Editor({
             ]}
           />
 
-          {gaugeValues && (
-            <>
-              <div className="border-line bg-surface overflow-auto rounded-md border p-3">
-                <SymbolCanvas
-                  chart={chart}
-                  cellWidth={PREVIEW_CELL * aspect}
-                  cellHeight={PREVIEW_CELL}
-                  grid={false}
-                />
-              </div>
-              {size && (
-                <p className="text-text-2 text-small mt-2">
-                  {t.pattern.finishedSize
-                    .replace("{w}", units.formatLength(size.width, 1))
-                    .replace("{h}", units.formatLength(size.height, 1))}
-                </p>
-              )}
-            </>
+          {/*
+            게이지가 없어도 그린다. 게이지가 정하는 것은 비율 하나(cellAspect)이고,
+            없으면 정사각으로 깔면 된다 — 무늬 자체는 비율과 무관하게 읽힌다.
+            스와치를 뜨기 전에는 도안을 볼 수 없다는 뜻이 되면 안 된다.
+          */}
+          <div className="border-line bg-surface overflow-auto rounded-md border p-3">
+            <SymbolCanvas
+              chart={chart}
+              cellWidth={PREVIEW_CELL * aspect}
+              cellHeight={PREVIEW_CELL}
+              grid={false}
+            />
+          </div>
+          {size && (
+            <p className="text-text-2 text-small mt-2">
+              {t.pattern.finishedSize
+                .replace("{w}", units.formatLength(size.width, 1))
+                .replace("{h}", units.formatLength(size.height, 1))}
+            </p>
           )}
         </section>
       </div>
