@@ -336,9 +336,11 @@ export const ko = {
    * 읽던 자리가 붙는다.
    */
   /**
-   * 영감 보관함 — 뜨기 전에 모으는 것들.
+   * 스크랩 — 뜨기 전에 모으는 것들.
    *
-   * 프로젝트가 없어도 존재한다. 영감은 대개 프로젝트보다 먼저 오고, 어느
+   * 키 이름은 inspiration으로 남겼다(저장 이름과 맞춘다). 화면에는 "스크랩".
+   *
+   * 프로젝트가 없어도 존재한다. 스크랩은 대개 프로젝트보다 먼저 오고, 어느
    * 작품에 쓸지는 나중에 정해진다.
    */
   /**
@@ -416,36 +418,42 @@ export const ko = {
     motifSize: "{w}코 × {h}단 무늬",
   },
   inspiration: {
-    title: "영감 보관함",
-    open: "영감 보관함",
-    empty: "모아둔 영감이 없어요",
+    title: "스크랩",
+    open: "스크랩",
+    empty: "스크랩한 게 없어요",
     emptyHint:
-      "핀터레스트나 인스타에서 본 무늬, 영상, 떠오른 한 줄을 여기 모아두면 새 작품을 시작할 때 꺼내 볼 수 있어요",
+      "핀터레스트나 인스타에서 본 무늬, 영상, 떠오른 한 줄을 스크랩해두면 새 작품을 시작할 때 꺼내 볼 수 있어요",
     /* 공유 시트가 이 기능의 주된 입구다 */
+    shareTitle: "공유하기로 스크랩",
     shareHint:
-      "다른 앱에서 공유하기를 눌러 knittinglog를 고르면 여기로 들어와요.",
-    iosNote: "iOS는 아직 공유 시트를 지원하지 않아요. 주소를 붙여넣어 주세요.",
+      "핀터레스트·인스타·유튜브에서 공유하기를 누르고 knittinglog를 고르면 여기 쌓여요.",
+    /* 공유 시트는 설치된 앱에서만 동작한다 — 그걸 모르면 왜 안 뜨는지 알 수 없다 */
+    needInstall: "공유 목록에 뜨려면 앱을 설치해야 해요",
+    goInstall: "설치 방법 보기",
+    addManually: "직접 넣기",
+    addManuallyHint: "공유가 안 되는 앱이나 PC에서는 주소를 붙여넣어요.",
+    iosNote: "iOS는 아직 공유 대상이 되지 않아요. 여기에 붙여넣어 주세요.",
     addLink: "주소 붙여넣기",
     addImage: "이미지 고르기",
     urlLabel: "주소",
     urlPlaceholder: "https://…",
     titleLabel: "제목",
     noteLabel: "메모",
-    save: "보관함에 넣기",
+    save: "스크랩",
     /* 아직 안 붙인 것이 기본 상태다 */
     forProject: "어느 작품에",
     unassigned: "아직 안 정함",
     filterAll: "전체",
     filterUnassigned: "안 정한 것",
     count: "{n}개",
-    received: "{n}개를 보관함에 넣었어요",
+    received: "{n}개를 스크랩했어요",
     receivedNone: "받은 내용이 없어요",
     receiving: "받는 중…",
     openExternal: "원래 자리에서 열기",
-    deleteConfirm: "이 영감을 지울까요?",
+    deleteConfirm: "이 스크랩을 지울까요?",
     /* 프로젝트 상세의 무드보드 */
-    projectSection: "이 작품의 영감",
-    projectEmpty: "이 작품에 붙인 영감이 없어요",
+    projectSection: "이 작품에 붙인 스크랩",
+    projectEmpty: "이 작품에 붙인 스크랩이 없어요",
   },
   patternDoc: {
     add: "PDF 도안",

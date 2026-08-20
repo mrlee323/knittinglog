@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useLiveQuery } from "dexie-react-hooks";
-import { ExternalLink, ImagePlus, Link2, Trash2 } from "lucide-react";
+import { ExternalLink, ImagePlus, Link2, Share2, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ConfirmSheet } from "@/components/ui/confirm-sheet";
 import { SelectField, TextAreaField, TextField } from "@/components/ui/field";
@@ -14,6 +14,7 @@ import {
   listInspirations,
 } from "@/features/inspiration/repository";
 import { listProjects } from "@/features/project/repository";
+import { isStandalone } from "@/features/install/use-install";
 import { parseShared, sourceHost } from "@/domain/shared";
 import { useStrings } from "@/i18n";
 import { cn } from "@/lib/utils";
@@ -35,6 +36,9 @@ function InspirationBox() {
   const projects = useLiveQuery(() => listProjects(), []);
   const [filter, setFilter] = useState<Filter>("all");
   const [pendingDelete, setPendingDelete] = useState<Inspiration>();
+  // 설치 여부는 렌더 시점에 알 수 있다 — effect로 미루면 첫 렌더가 틀린 안내를
+  // 한 번 보여주고 다시 그린다.
+  const [installed] = useState(isStandalone);
 
   const shown = (items ?? []).filter(
     (item) => filter === "all" || !item.projectId
@@ -50,13 +54,26 @@ function InspirationBox() {
         </p>
       )}
 
-      <p className="text-text-2 text-small">{t.inspiration.shareHint}</p>
-      {/* iOS는 공유 시트 대상이 안 되므로 붙여넣기 경로를 함께 안내한다 */}
-      <p className="text-text-3 text-caption mt-1 mb-4">
-        {t.inspiration.iosNote}
-      </p>
-
-      <AddForm />
+      {/* 공유로 받는 것이 이 화면의 주 경로다. 붙여넣기 폼을 앞세웠더니
+          그게 주 기능처럼 보였고, 정작 공유 시트는 설치된 앱에서만 뜨므로
+          사용자가 확인할 방법도 없었다. */}
+      <section className="border-line bg-surface mb-5 rounded-md border p-4">
+        <h2 className="text-small mb-1 flex items-center gap-2 font-medium">
+          <Share2 size={15} className="text-text-2" aria-hidden />
+          {t.inspiration.shareTitle}
+        </h2>
+        <p className="text-text-2 text-caption">{t.inspiration.shareHint}</p>
+        {/* 설치돼 있지 않으면 공유 목록에 우리가 없다 — 그걸 모르면 왜 안
+            뜨는지 알 수 없다. */}
+        {!installed && (
+          <p className="text-text-3 text-caption mt-2">
+            {t.inspiration.needInstall}{" "}
+            <Link to="/settings" className="underline">
+              {t.inspiration.goInstall}
+            </Link>
+          </p>
+        )}
+      </section>
 
       {items === undefined ? null : items.length === 0 ? (
         <div className="border-line rounded-md border border-dashed px-6 py-12 text-center">
@@ -105,6 +122,20 @@ function InspirationBox() {
         </>
       )}
 
+      {/* 직접 넣기 — 공유가 안 되는 앱이나 PC를 위한 길이다. 설치돼 있지
+          않으면 공유로 받을 수 없으므로 그때는 펼쳐 둔다. */}
+      <details className="border-line mt-6 rounded-md border" open={!installed}>
+        <summary className="text-small cursor-pointer px-4 py-3 font-medium">
+          {t.inspiration.addManually}
+        </summary>
+        <div className="px-4 pb-4">
+          <p className="text-text-3 text-caption mb-3">
+            {t.inspiration.addManuallyHint} {t.inspiration.iosNote}
+          </p>
+          <AddForm />
+        </div>
+      </details>
+
       {pending && (
         <ConfirmSheet
           title={t.inspiration.deleteConfirm}
@@ -144,7 +175,7 @@ function AddForm() {
   }
 
   return (
-    <form onSubmit={submit} className="border-line mb-6 rounded-md border p-3">
+    <form onSubmit={submit}>
       <div className="flex flex-wrap items-end gap-3">
         <div className="min-w-56 flex-1">
           <TextField

@@ -120,8 +120,8 @@ export class KnittinglogDB extends Dexie {
       patternDocs: "id, updatedAt, projectId",
     });
 
-    // v8 — 영감 보관함. projectId가 비어 있는 것이 정상 상태라(아직 안 붙인
-    // 영감) 인덱스로 그것만 골라낼 수 있어야 한다.
+    // v8 — 스크랩. projectId가 비어 있는 것이 정상 상태라(아직 작품을 안
+    // 정한 스크랩) 인덱스로 그것만 골라낼 수 있어야 한다.
     this.version(8).stores({
       inspirations: "id, updatedAt, projectId",
     });
