@@ -376,6 +376,8 @@ export const en: UIStrings = {
     prev: "Back",
   },
   chart: {
+    floatLimitHint:
+      "We flag runs longer than this. 5 stitches is the usual starting point; go shorter for thicker yarn.",
     title: "Colourwork charts",
     add: "New colourwork chart",
     name: "Name",

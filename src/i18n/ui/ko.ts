@@ -390,6 +390,8 @@ export const ko = {
     prev: "이전",
   },
   chart: {
+    floatLimitHint:
+      "이 코수보다 길게 이어지면 알려드려요. 5코가 흔한 기준이고, 굵은 실이면 더 짧게 잡아요.",
     title: "배색 도안",
     add: "배색 도안 만들기",
     name: "이름",

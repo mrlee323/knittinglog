@@ -844,8 +844,21 @@ function Editor({
                     .replace("{max}", String(longestFloat))
                 : t.chart.floatNone}
             </p>
+            {/*
+              뒷실이 무엇인지는 언제나 말한다. 전에는 원형일 때 이 자리를
+              `inRoundHint`가 차지해서, 원형으로 뜨는 사람은 뒷실이 뭔지
+              끝까지 못 봤다. 원형 설명은 덧붙이는 말이지 대신하는 말이 아니다.
+
+              "기준"이 몇 코를 뜻하는지도 적는다. 고를 수는 있는데 5가 흔한
+              값이라는 건 화면 어디에도 없었다 — 고를 수 있게 해두고 무엇을
+              고르면 되는지 안 알려주면 고를 수 없다(디자인 원칙 5).
+            */}
             <p className="text-text-3 text-caption mt-1">
-              {inRound ? t.chart.inRoundHint : t.chart.floatsHint}
+              {t.chart.floatsHint}
+              {inRound && ` ${t.chart.inRoundHint}`}
+            </p>
+            <p className="text-text-3 text-caption mt-1">
+              {t.chart.floatLimitHint}
             </p>
           </section>
 
