@@ -15,6 +15,7 @@ import { aggregateSessions } from "@/domain/stats";
 import { db } from "@/lib/db";
 import { DerivedFrom } from "@/features/project/components/derived-from";
 import { ProgressCard } from "@/features/project/components/progress-card";
+import { StartGuide } from "@/features/project/components/start-guide";
 import { ProjectTabs } from "@/features/project/components/project-tabs";
 import {
   applyEvent,
@@ -204,6 +205,9 @@ function ProjectOverview() {
       <Columns
         main={
           <>
+            {/* 순서를 모르는 사람에게 다음 걸음 하나를 말한다. 카운터가
+                생기면 스스로 접힌다. */}
+            <StartGuide projectId={projectId} />
             <ProgressCard projectId={projectId} />
 
             <SectionLink

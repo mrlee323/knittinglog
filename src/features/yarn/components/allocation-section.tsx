@@ -48,7 +48,7 @@ export function AllocationSection({ projectId }: { projectId: Id }) {
     .filter((row) => row.yarn);
 
   return (
-    <section className="border-line mb-6 border-t pt-5">
+    <section id="allocation-section" className="border-line mb-6 border-t pt-5">
       <div className="mb-3 flex items-center justify-between">
         <h2 className="font-medium">{t.allocation.title}</h2>
         <Button
