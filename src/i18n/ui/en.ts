@@ -182,6 +182,12 @@ export const en: UIStrings = {
     farOff: "at this pace, over a year",
   },
   yarn: {
+    weightEstimated: "estimated from the label",
+    essentials:
+      "A name plus the grams and metres from the label is enough — those two numbers give us the weight and a needle suggestion. The rest can wait.",
+    swatchNextHint:
+      "The suggested needle is a starting point. Your real size differs, so knit a small square and measure it.",
+    swatchNext: "Swatches in this yarn",
     title: "Yarn",
     add: "Add yarn",
     edit: "Edit yarn",

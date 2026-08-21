@@ -16,10 +16,23 @@ import {
   YARN_WEIGHTS,
   type YarnWeightClass,
 } from "@/domain/units";
+import { z } from "zod";
 import { useStrings } from "@/i18n";
 import type { GaugeFormValues } from "@/features/gauge/repository";
 
-export const Route = createFileRoute("/gauge/new")({ component: NewGauge });
+/**
+ * 실을 미리 골라 들어올 수 있다.
+ *
+ * 실 상세가 "권장 바늘 3.75~4.5mm"까지 알려주고 끝나면 다음 걸음이 없다.
+ * 거기서 바로 들어오면 굵기를 다시 고르지 않아도 된다 — 그 실을 이미 아는데
+ * 또 묻는 건 원칙 5가 말하는 "데려가는 길"이 아니다.
+ */
+const searchSchema = z.object({ yarnId: z.string().optional() });
+
+export const Route = createFileRoute("/gauge/new")({
+  component: NewGauge,
+  validateSearch: searchSchema,
+});
 
 /**
  * 스와치 안내 — 게이지를 **모르는 사람**의 입구.
@@ -42,9 +55,10 @@ function NewGauge() {
   const t = useStrings();
   const navigate = useNavigate();
   const yarns = useLiveQuery(() => listYarns(), []);
+  const { yarnId: fromLink } = Route.useSearch();
 
   const [step, setStep] = useState<Step>("yarn");
-  const [yarnId, setYarnId] = useState("");
+  const [yarnId, setYarnId] = useState(fromLink ?? "");
   const [manualWeight, setManualWeight] = useState<YarnWeightClass | "">("");
   const [measured, setMeasured] = useState<{
     stitchesPer10cm: number;
