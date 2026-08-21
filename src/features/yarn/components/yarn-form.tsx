@@ -85,6 +85,15 @@ export function YarnForm({
 
   return (
     <form onSubmit={handleSubmit} noValidate>
+      {/* 칸이 열다섯 개면 처음 등록하는 사람은 다 채워야 하는 줄 안다. 실제로
+          필요한 건 셋뿐이고, 그 셋이 굵기·바늘·게이지 출발점을 전부 만든다.
+          무엇이 필수인지는 폼을 봐서는 알 수 없으므로 말로 해야 한다. */}
+      {!initial && (
+        <p className="border-line bg-sunken text-small mb-5 rounded-md border p-3">
+          {t.yarn.essentials}
+        </p>
+      )}
+
       <TextField
         label={t.yarn.name}
         placeholder={t.yarn.namePlaceholder}

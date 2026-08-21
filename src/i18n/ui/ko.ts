@@ -191,6 +191,12 @@ export const ko = {
     farOff: "이 속도면 1년 넘게 걸려요",
   },
   yarn: {
+    weightEstimated: "라벨 기준 추정",
+    essentials:
+      "이름과 라벨의 타래 무게·길이만 있으면 충분해요. 그 두 숫자로 굵기와 권장 바늘을 알려드려요. 나머지는 나중에 채워도 돼요.",
+    swatchNextHint:
+      "권장 바늘은 출발점이에요. 실제 크기는 사람마다 달라서 작은 조각을 떠서 재봐야 알아요.",
+    swatchNext: "이 실의 스와치",
     title: "실",
     add: "실 추가",
     edit: "실 수정",

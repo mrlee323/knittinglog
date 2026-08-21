@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useLiveQuery } from "dexie-react-hooks";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, Ruler } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ConfirmSheet } from "@/components/ui/confirm-sheet";
 import { BackLink, Page } from "@/components/ui/page";
@@ -11,8 +11,9 @@ import {
   getYarn,
   listAllocationsForYarn,
 } from "@/features/yarn/repository";
+import { listGaugesForYarn } from "@/features/gauge/repository";
 import { freeSkeins, stashTotal } from "@/domain/yarn";
-import { yarnWeight } from "@/domain/units";
+import { guessWeightFromLabel, yarnWeight } from "@/domain/units";
 import { db } from "@/lib/db";
 import { useStrings } from "@/i18n";
 import type { ReactNode } from "react";
@@ -38,14 +39,22 @@ function YarnDetail() {
     [yarnId]
   );
   const projects = useLiveQuery(() => db.projects.toArray(), []);
+  const swatches = useLiveQuery(() => listGaugesForYarn(yarnId), [yarnId]);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
 
   if (!yarn) return null;
 
   const total = stashTotal(yarn);
   const free = freeSkeins(yarn, allocations ?? []);
-  const weight =
+  /* 굵기를 직접 고르지 않았어도 라벨의 무게·길이로 되짚는다. 등록 폼이
+     추정해 보여주지만 "이 굵기로 설정"을 누르지 않으면 저장되지 않는데,
+     그 버튼을 안 눌렀다는 이유로 권장 바늘을 감출 이유가 없다 —
+     알 수 있는 값은 알려준다(디자인 원칙 5). 추정임은 밝힌다. */
+  const stored =
     yarn.weightClass !== undefined ? yarnWeight(yarn.weightClass) : null;
+  const guessed =
+    stored ?? guessWeightFromLabel(yarn.skeinGrams, yarn.skeinMeters) ?? null;
+  const weight = guessed;
 
   async function handleDelete() {
     await deleteYarn(yarnId);
@@ -110,6 +119,7 @@ function YarnDetail() {
         <section className={CARD}>
           <p className={SECTION_LABEL}>
             {t.yarn.weightClass} · CYC {weight.cyc}
+            {!stored && ` · ${t.yarn.weightEstimated}`}
           </p>
           <p className="text-subhead font-semibold">{weight.names.ko}</p>
           <p className="text-text-2 text-small mt-1">
@@ -128,6 +138,49 @@ function YarnDetail() {
           </p>
         </section>
       )}
+
+      {/* 다음 걸음. 굵기 카드가 "권장 바늘 4mm"까지 알려주고 끝나면 그걸 보고
+          무엇을 하면 되는지가 없다 — 스와치를 떠야 하는데 거기로 가는 길이
+          없었다(디자인 원칙 5). 이미 재둔 스와치가 있으면 그쪽을 보여준다. */}
+      <section className={CARD}>
+        <p className={SECTION_LABEL}>{t.yarn.swatchNext}</p>
+        {swatches && swatches.length > 0 ? (
+          <ul className="space-y-1.5">
+            {swatches.map((swatch) => (
+              <li key={swatch.id}>
+                <Link
+                  to="/gauge/$gaugeId/edit"
+                  params={{ gaugeId: swatch.id }}
+                  className="border-line flex items-center justify-between gap-3 rounded-md border p-3"
+                >
+                  <span className="text-small font-medium">
+                    {t.gauge.summary
+                      .replace("{sts}", String(swatch.stitchesPer10cm))
+                      .replace("{rows}", String(swatch.rowsPer10cm))}
+                  </span>
+                  {swatch.needleMm && (
+                    <span className="text-text-2 text-caption shrink-0">
+                      {swatch.needleMm}mm
+                    </span>
+                  )}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <>
+            <p className="text-text-2 text-small mb-3">
+              {t.yarn.swatchNextHint}
+            </p>
+            <Link to="/gauge/new" search={{ yarnId }}>
+              <Button variant="secondary">
+                <Ruler size={16} />
+                {t.swatch.start}
+              </Button>
+            </Link>
+          </>
+        )}
+      </section>
 
       {/* 어느 프로젝트에 물려 있는지 */}
       {(allocations?.length ?? 0) > 0 && (

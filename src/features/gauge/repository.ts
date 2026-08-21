@@ -40,6 +40,15 @@ export const listGauges = () =>
 
 export const getGauge = (id: Id) => db.gauges.get(id);
 
+/**
+ * 이 실로 뜬 스와치.
+ *
+ * 실 상세가 "권장 바늘 4mm"까지 알려주고 끝나면 다음 걸음이 없다. 이미 재둔
+ * 스와치가 있으면 그걸 보여주고, 없으면 재러 가는 길을 준다.
+ */
+export const listGaugesForYarn = (yarnId: Id) =>
+  db.gauges.where("yarnId").equals(yarnId).toArray();
+
 export const listGaugesForProject = (projectId: Id) =>
   db.gauges.where("projectId").equals(projectId).toArray();
 
