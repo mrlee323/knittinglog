@@ -122,6 +122,17 @@ function GaugeCalc() {
 
       {/* 내 게이지 — 아래 계산 전부의 입력 */}
       <Section title={t.calc.myGauge}>
+        {/* 스와치가 없으면 아래 숫자는 내 게이지가 아니라 남의 값이다.
+            계산은 되지만 그 결과로 뜨면 크기가 안 맞으므로 그렇다고 말한다. */}
+        {swatches && swatches.length === 0 && (
+          <p className="text-text-2 text-small mb-3">
+            {t.calc.noSwatch}{" "}
+            <Link to="/gauge/new" className="underline">
+              {t.swatch.start}
+            </Link>
+          </p>
+        )}
+
         {swatches && swatches.length > 0 && (
           <SelectField
             label={t.calc.pickGauge}

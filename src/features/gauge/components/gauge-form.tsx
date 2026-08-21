@@ -11,7 +11,18 @@ import { listYarns } from "@/features/yarn/repository";
 import { PhotoMeasure } from "./photo-measure";
 import { useStrings } from "@/i18n";
 
-const EMPTY: GaugeFormValues = { stitchesPer10cm: 22, rowsPer10cm: 30 };
+/**
+ * 작성 중인 값.
+ *
+ * 코수·단수를 **비워둔 채로** 시작한다. 예전에는 22/30이 미리 채워져 있었는데,
+ * 그건 남의 게이지다. 스와치를 처음 재는 사람에게는 그 숫자가 정답처럼 보여서
+ * 그대로 저장하게 되고, 그러면 이후 도안 계산이 전부 조용히 틀린다 —
+ * 빈칸보다 나쁘다.
+ */
+type Draft = Omit<GaugeFormValues, "stitchesPer10cm" | "rowsPer10cm"> & {
+  stitchesPer10cm?: number;
+  rowsPer10cm?: number;
+};
 
 const num = (raw: string) => (raw.trim() === "" ? undefined : Number(raw));
 
@@ -28,15 +39,13 @@ export function GaugeForm({
 }) {
   const t = useStrings();
   const yarns = useLiveQuery(() => listYarns(), []);
-  const [values, setValues] = useState<GaugeFormValues>(initial ?? EMPTY);
+  const [values, setValues] = useState<Draft>(initial ?? {});
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
   const [measuring, setMeasuring] = useState(false);
 
-  const set = <K extends keyof GaugeFormValues>(
-    key: K,
-    value: GaugeFormValues[K]
-  ) => setValues((prev) => ({ ...prev, [key]: value }));
+  const set = <K extends keyof Draft>(key: K, value: Draft[K]) =>
+    setValues((prev) => ({ ...prev, [key]: value }));
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
@@ -105,18 +114,18 @@ export function GaugeForm({
           <TextField
             label={t.gauge.stitches}
             inputMode="decimal"
-            value={values.stitchesPer10cm}
+            value={values.stitchesPer10cm ?? ""}
             error={errors.stitchesPer10cm}
-            onChange={(e) => set("stitchesPer10cm", num(e.target.value) ?? 0)}
+            onChange={(e) => set("stitchesPer10cm", num(e.target.value))}
           />
         </div>
         <div className="flex-1">
           <TextField
             label={t.gauge.rows}
             inputMode="decimal"
-            value={values.rowsPer10cm}
+            value={values.rowsPer10cm ?? ""}
             error={errors.rowsPer10cm}
-            onChange={(e) => set("rowsPer10cm", num(e.target.value) ?? 0)}
+            onChange={(e) => set("rowsPer10cm", num(e.target.value))}
           />
         </div>
       </div>

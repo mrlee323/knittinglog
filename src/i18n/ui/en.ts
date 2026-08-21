@@ -244,12 +244,68 @@ export const en: UIStrings = {
     blockedHint:
       "Measure again after washing for accurate finished sizes. Optional.",
     empty: "No swatches recorded",
-    emptyHint: "Record a swatch to recalculate patterns for your own gauge",
+    emptyHint:
+      "A swatch is a small square you knit first to measure your size. New to this? Follow the guide.",
     summary: "{sts} sts × {rows} rows / 10cm",
     deleteConfirm: "Delete this swatch record?",
     calc: "Calculator",
     calcForThis: "Calculate for this project",
     calcTitle: "Gauge calculator",
+  },
+  swatch: {
+    how: "How will you measure?",
+    start: "Guide me through a swatch",
+    title: "Knit a swatch",
+    why: "Why bother?",
+    whyBody:
+      "The same pattern in the same yarn comes out a different size for each knitter, because hand tension differs. Use the pattern's stitch counts as-is and the finished piece won't fit. A swatch is a small square you knit first to measure your own size.",
+    whyCost: "It takes 20 minutes. Skip it and you find out weeks later.",
+
+    step1: "What are you knitting with?",
+    pickYarn: "Which yarn?",
+    manualWeight: "Pick a yarn weight instead",
+    noStash: "Add yarn to your stash and you can pick it here",
+    unknownWeight:
+      "We don't know this yarn's weight. Add the skein's grams and metres and we can work it out.",
+    guessed: "Looks like {name} from the label",
+
+    adviceTitle: "Start here",
+    adviceNeedle: "{min}–{max}mm needles",
+    adviceCastOn: "Cast on {n}",
+    adviceSize: "About {n}cm square",
+    adviceStitch:
+      "Knit it in stocking stitch — the side that looks like rows of Vs",
+    whySize:
+      "To measure 10cm you have to stay away from the edges. Edges curl and their tension differs, so measuring there gives the wrong answer.",
+    whyCastOn:
+      "This weight usually gives {min}–{max} stitches per 10cm. Your real number will differ — finding it is the whole point of the swatch, so treat this as a starting point.",
+
+    step2: "Knitted it? Let's measure",
+    whatToCount: "What am I counting?",
+    diagramAlt: "Diagram showing one stitch and one row in stocking stitch",
+    oneStitch: "one stitch",
+    stitchCount: "{n} stitches",
+    rowCount: "{n} rows",
+    countHow:
+      "Each V side by side is one stitch; each line of Vs stacked up is one row.",
+    countTip: "Skip 2–3 stitches at each edge and count in the middle.",
+    byPhoto: "Measure from a photo",
+    byHand: "Count by hand",
+    spanStitches: "Stitches counted",
+    spanRows: "Rows counted",
+    spanWidthCm: "Width of those stitches (cm)",
+    spanHeightCm: "Height of those rows (cm)",
+    spanHint:
+      "You don't have to land exactly on 10cm. Counting about 20 stitches and measuring their width is more accurate.",
+    computed: "{sts} sts × {rows} rows / 10cm",
+    needSpan: "Enter both a count and a length and we'll work it out",
+
+    step3: "Check and save",
+    looksOff:
+      "That's an unlikely number for this yarn. Did the stitches and rows get swapped?",
+    knowAlready: "I already know my numbers",
+    next: "Next",
+    prev: "Back",
   },
   chart: {
     title: "Colourwork charts",
@@ -560,6 +616,8 @@ export const en: UIStrings = {
     preview: "Preview",
   },
   calc: {
+    noSwatch:
+      "The numbers below are an example. Measure your own gauge and the maths fits you.",
     myGauge: "My gauge",
     pickGauge: "Use a recorded swatch",
     manual: "Enter manually",
