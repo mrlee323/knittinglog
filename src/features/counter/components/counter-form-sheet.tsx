@@ -40,7 +40,9 @@ export function CounterFormSheet({
 
   async function submit() {
     if (!label.trim()) {
-      setError(t.project.name);
+      /* 전에는 여기에 칸의 라벨("이름")을 넣었다. 이름 칸 밑에 "이름"이
+         떠도 무엇이 잘못됐는지는 알 수 없다. */
+      setError(t.validate.nameRequired);
       return;
     }
     setSaving(true);

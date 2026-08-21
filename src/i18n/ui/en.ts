@@ -980,6 +980,12 @@ export const en: UIStrings = {
     back: "Back",
     close: "Close",
   },
+  validate: {
+    nameRequired: "Give it a name",
+    sizeRequired: "Use a number of 1 or more",
+    maxStitches: "up to {n} sts",
+    maxRows: "up to {n} rows",
+  },
   install: {
     title: "Install as an app",
     installed: "Running as an installed app",
