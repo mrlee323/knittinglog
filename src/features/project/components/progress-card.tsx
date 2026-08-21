@@ -1,14 +1,9 @@
-import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useLiveQuery } from "dexie-react-hooks";
 import { Button } from "@/components/ui/button";
 import { counterView, lastLifelineBelow } from "@/domain/counter";
 import { FinishEstimate } from "./finish-estimate";
-import {
-  createCounter,
-  lifelineRows,
-  listCounters,
-} from "@/features/counter/repository";
+import { lifelineRows, listCounters } from "@/features/counter/repository";
 import { useStrings } from "@/i18n";
 import type { Id } from "@/types/entities";
 
@@ -24,7 +19,6 @@ import type { Id } from "@/types/entities";
  */
 export function ProgressCard({ projectId }: { projectId: Id }) {
   const t = useStrings();
-  const [making, setMaking] = useState(false);
   const counters = useLiveQuery(() => listCounters(projectId), [projectId]);
   const main = counters?.find((c) => !c.linkedCounterId) ?? counters?.[0];
   const lifelines = useLiveQuery(
@@ -34,30 +28,20 @@ export function ProgressCard({ projectId }: { projectId: Id }) {
 
   if (!counters) return null;
 
-  if (!main) {
-    return (
-      <section className="border-line mb-6 rounded-md border border-dashed p-5 text-center">
-        <p className="text-text-2 text-small">{t.counter.empty}</p>
-        <p className="text-text-3 text-caption mt-1">{t.counter.emptyHint}</p>
-        {/* 만드는 화면은 옆 단에 있고 폰에서는 페이지 맨 아래다. 여기서
-            바로 만들 수 있어야 이 카드가 막다른 길이 아니다. */}
-        <Button
-          className="mt-3"
-          disabled={making}
-          onClick={async () => {
-            setMaking(true);
-            try {
-              await createCounter(projectId, { label: t.counter.defaultLabel });
-            } finally {
-              setMaking(false);
-            }
-          }}
-        >
-          {t.counter.createDefault}
-        </Button>
-      </section>
-    );
-  }
+  /*
+    카운터가 없으면 아무것도 그리지 않는다.
+
+    전에는 여기서 "카운터가 없어요 + 만들기"를 띄웠다. 그런데 카운터가 0개인
+    조건은 바로 위 `StartGuide`가 뜨는 조건과 정확히 같아서, 두 카드가 늘 함께
+    나와 같은 일을 두 번 시켰다. 게다가 이쪽 버튼이 primary라 안내가 권하는
+    단계보다 더 크게 소리쳤다 — 순서가 뒤집힌다.
+
+    그래서 "다음에 뭘 하지"는 안내 하나가 맡고, 이 카드는 셀 것이 생긴 뒤부터
+    자기 일(어디까지 떴나)만 한다. 안내는 카운터 섹션으로 데려가는데, 거기서는
+    조각을 골라 계획 단수를 목표로 가져올 수 있다 — 여기서 기본 이름으로 바로
+    만드는 것보다 쓸모 있는 카운터가 나온다.
+  */
+  if (!main) return null;
 
   const view = counterView(main);
   const lifeline = lastLifelineBelow(view.value, lifelines ?? []);
