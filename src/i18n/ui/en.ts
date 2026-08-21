@@ -168,6 +168,27 @@ export const en: UIStrings = {
       other: "Other",
     },
   },
+  start: {
+    title: "Do this next",
+    progress: "{done}/{total}",
+    yarn: "Pick the yarn",
+    yarnWhy: "You need to know the yarn before you can measure anything.",
+    yarnAction: "Assign yarn",
+    yarnActionEmpty: "Add yarn",
+    swatch: "Knit a swatch and measure it",
+    swatchWhy:
+      "The same pattern comes out a different size for each knitter. Knit a small square first to learn your size.",
+    swatchAction: "Guide me through a swatch",
+    piece: "Work out how many stitches to cast on",
+    pieceWhy:
+      "Turn the size you want into stitch counts. What you calculate is saved as a piece, so charts and counters use the same numbers.",
+    pieceAction: "Open the calculator",
+    counter: "Make a counter",
+    counterWhy:
+      "This is where you track how far you've got. You can pull the planned rows in as its target.",
+    counterAction: "Create a counter",
+    skip: "Skipping steps is fine — you can just follow a pattern.",
+  },
   finish: {
     title: "Finish estimate",
     pace: "{n} rows/hour",

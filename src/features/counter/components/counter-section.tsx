@@ -26,7 +26,7 @@ export function CounterSection({ projectId }: { projectId: Id }) {
   if (!counters) return null;
 
   return (
-    <section className="border-line mb-6 border-t pt-5">
+    <section id="counter-section" className="border-line mb-6 border-t pt-5">
       <div className="mb-3 flex items-center justify-between">
         <h2 className="font-medium">{t.counter.title}</h2>
         <Button
