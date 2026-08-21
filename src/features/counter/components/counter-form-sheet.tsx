@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { SelectField, TextField } from "@/components/ui/field";
 import { useStrings } from "@/i18n";
 import type { CounterInput } from "@/features/counter/repository";
-import type { Counter } from "@/types/entities";
+import type { Counter, ProjectPiece } from "@/types/entities";
 
 /** 빈 문자열을 undefined로 — 0과 "입력 안 함"은 다르다 */
 const num = (raw: string): number | undefined => {
@@ -15,11 +15,14 @@ const num = (raw: string): number | undefined => {
 
 export function CounterFormSheet({
   siblings,
+  pieces = [],
   onSubmit,
   onCancel,
 }: {
   /** 연동 대상 후보 — 같은 프로젝트의 다른 카운터들 */
   siblings: Counter[];
+  /** 조각 계획 — 단수가 있는 조각은 이름과 목표를 한 번에 채운다 */
+  pieces?: ProjectPiece[];
   onSubmit: (input: CounterInput) => Promise<void>;
   onCancel: () => void;
 }) {
@@ -79,6 +82,34 @@ export function CounterFormSheet({
           autoFocus
           onChange={(e) => setLabel(e.target.value)}
         />
+
+        {/* 조각에 계획한 단수가 있으면 이름과 목표를 한 번에 채운다.
+            예전에는 이 숫자를 사용자가 외워서 옮겨 적었다. 채워진 값은
+            그대로 고칠 수 있다 — 칩은 출발점이지 잠금이 아니다. */}
+        {pieces.some((p) => p.rows) && (
+          <div className="-mt-1 mb-4">
+            <p className="text-text-3 text-micro mb-2">{t.counter.fromPiece}</p>
+            <div className="flex flex-wrap gap-2">
+              {pieces
+                .filter((p) => p.rows)
+                .map((piece) => (
+                  <Button
+                    key={piece.id}
+                    variant="secondary"
+                    className="!text-caption !min-h-9 !px-3"
+                    onClick={() => {
+                      setLabel(piece.name);
+                      setTarget(String(piece.rows));
+                      setError(undefined);
+                    }}
+                  >
+                    {piece.name} · {piece.rows}
+                    {t.counter.rows}
+                  </Button>
+                ))}
+            </div>
+          </div>
+        )}
 
         <TextField
           label={t.counter.target}

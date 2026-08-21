@@ -92,6 +92,7 @@ export const en: UIStrings = {
     reasonOpen: "{n} still on hold",
   },
   counter: {
+    fromPiece: "Take from a piece",
     title: "Counters",
     knit: "Knit",
     add: "Add counter",
