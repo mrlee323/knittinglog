@@ -6,7 +6,16 @@ import type { GaugeRecord, Id } from "@/types/entities";
 
 // 10cm당 코수·단수. 레이스 실이 40코, 점보 실이 4코 정도라 이 범위를 벗어나면
 // 대개 단위를 착각한 것이다(4인치당 값을 넣었거나, 1cm당 값을 넣었거나).
-const perTenCm = z.number().positive().max(100);
+/**
+ * 10cm당 코수·단수.
+ *
+ * 비어 있을 때의 문구를 직접 준다. 기본 문구는 "expected number, received
+ * undefined"인데, 스와치를 처음 재는 사람이 받을 말이 아니다.
+ */
+const perTenCm = z
+  .number({ error: "10cm 안에서 센 수를 넣어주세요" })
+  .positive("0보다 커야 해요")
+  .max(100);
 
 export const gaugeFormSchema = z.object({
   label: z.string().trim().min(1).max(60).optional(),

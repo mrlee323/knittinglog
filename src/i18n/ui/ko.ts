@@ -250,12 +250,71 @@ export const ko = {
     blockedHint:
       "세탁 후 다시 재서 넣으면 완성 치수가 정확해져요. 안 넣어도 괜찮아요.",
     empty: "기록한 스와치가 없어요",
-    emptyHint: "스와치를 재두면 도안을 내 게이지로 다시 계산할 수 있어요",
+    emptyHint:
+      "스와치는 크기를 재려고 먼저 뜨는 작은 조각이에요. 처음이면 안내를 따라와보세요.",
     summary: "{sts}코 × {rows}단 / 10cm",
     deleteConfirm: "이 스와치 기록을 지울까요?",
     calc: "계산기",
     calcForThis: "이 프로젝트로 계산하기",
     calcTitle: "게이지 계산기",
+  },
+  swatch: {
+    how: "어떻게 잴까요",
+    start: "스와치 뜨기 안내",
+    title: "스와치 뜨기",
+    /* 초보가 막히는 자리는 게이지의 뜻이 아니라 "그래서 뭘 하면 되나"다 */
+    why: "왜 하나요?",
+    whyBody:
+      "같은 도안에 같은 실이어도 뜨는 사람마다 크기가 달라져요. 손 힘이 다르니까요. 그래서 도안에 적힌 코수를 그대로 쓰면 완성했을 때 안 맞아요. 작은 조각을 먼저 떠서 내 크기를 재는 게 스와치예요.",
+    whyCost: "20분이면 돼요. 건너뛰면 몇 주 뜬 뒤에 알게 돼요.",
+
+    /* 1 — 실에서 출발점을 낸다. 묻지 않고 알려주는 것이 이 화면의 목적이다. */
+    step1: "무엇으로 뜰까요",
+    pickYarn: "어떤 실로 뜨나요",
+    manualWeight: "실 굵기를 직접 고르기",
+    noStash: "스태시에 실을 등록하면 여기서 고를 수 있어요",
+    unknownWeight:
+      "이 실은 굵기를 몰라요. 타래 무게와 길이를 넣으면 알려드릴 수 있어요.",
+    guessed: "라벨 기준 {name}로 보여요",
+
+    adviceTitle: "이렇게 시작해보세요",
+    adviceNeedle: "바늘 {min}~{max}mm",
+    adviceCastOn: "{n}코 잡기",
+    adviceSize: "사방 {n}cm쯤",
+    adviceStitch: "겉면이 V자로 보이는 무늬(메리야스)로 떠주세요",
+    whySize:
+      "10cm를 재려면 가장자리를 피해야 해요. 가장자리는 말리고 장력이 달라서 그대로 재면 틀려요.",
+    whyCastOn:
+      "이 굵기의 예상 코수는 10cm당 {min}~{max}코예요. 실제 값은 사람마다 달라서, 그걸 재는 게 스와치의 목적이에요 — 이 숫자는 출발점일 뿐이에요.",
+
+    /* 2 — 무엇을 세는지 그림으로. 글로만 쓰면 읽고도 편물을 못 알아본다. */
+    step2: "떴으면 재볼까요",
+    whatToCount: "무엇을 세나요",
+    diagramAlt: "메리야스 편물에서 한 코와 한 단을 세는 그림",
+    oneStitch: "한 코",
+    stitchCount: "코 {n}개",
+    rowCount: "단 {n}개",
+    countHow:
+      "가로로 나란한 V자 하나가 한 코, 위아래로 쌓인 줄 하나가 한 단이에요.",
+    countTip: "가장자리 2~3코는 빼고 가운데에서 세요.",
+    byPhoto: "사진으로 재기",
+    byHand: "직접 세기",
+    spanStitches: "센 코수",
+    spanRows: "센 단수",
+    spanWidthCm: "그 코들의 폭 (cm)",
+    spanHeightCm: "그 단들의 높이 (cm)",
+    spanHint:
+      "10cm에 딱 맞춰 세지 않아도 돼요. 20코쯤 세고 그 폭을 재는 쪽이 더 정확해요.",
+    computed: "10cm당 {sts}코 × {rows}단",
+    needSpan: "코수와 폭을 모두 넣으면 계산해드려요",
+
+    /* 3 — 조용히 틀리는 것을 막는다 */
+    step3: "확인하고 기록",
+    looksOff:
+      "이 실에서 나오기 어려운 값이에요. 코수와 단수를 바꿔 넣지 않았나요?",
+    knowAlready: "숫자를 이미 알아요",
+    next: "다음",
+    prev: "이전",
   },
   chart: {
     title: "배색 도안",
@@ -624,6 +683,8 @@ export const ko = {
     preview: "미리 보기",
   },
   calc: {
+    noSwatch:
+      "아래 숫자는 예시예요. 내 게이지를 재두면 계산이 내 크기로 맞아요.",
     myGauge: "내 게이지",
     pickGauge: "기록한 스와치에서 가져오기",
     manual: "직접 입력",

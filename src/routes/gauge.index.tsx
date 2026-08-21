@@ -71,6 +71,11 @@ function GaugeIndex() {
           <Ruler size={20} className="text-text-3 mx-auto mb-2" />
           <p className="text-text-2">{t.gauge.empty}</p>
           <p className="text-text-3 text-small mt-1">{t.gauge.emptyHint}</p>
+          {/* 빈 화면이 막다른 길이면 안 된다. 게이지를 모르는 사람에게
+              필요한 건 "스와치를 재두세요"가 아니라 데려가는 문이다. */}
+          <Link to="/gauge/new" className="mt-4 inline-block">
+            <Button>{t.swatch.start}</Button>
+          </Link>
         </div>
       ) : (
         <CardGrid>
