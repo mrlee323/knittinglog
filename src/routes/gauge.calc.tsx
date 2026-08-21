@@ -30,6 +30,7 @@ import {
 import { PieceSchematic } from "@/features/gauge/components/piece-schematic";
 import { listGauges, listGaugesForProject } from "@/features/gauge/repository";
 import { appendProjectNote, getProject } from "@/features/project/repository";
+import { createPiece } from "@/features/piece/repository";
 import { listProfiles } from "@/features/profile/repository";
 import { useStrings } from "@/i18n";
 import { cn } from "@/lib/utils";
@@ -184,7 +185,12 @@ function GaugeCalc() {
 
       {gaugeReady && (
         <>
-          <SizeToStitches gauge={myGauge} profiles={profiles ?? []} />
+          <SizeToStitches
+            gauge={myGauge}
+            profiles={profiles ?? []}
+            projectId={projectId}
+            gaugeId={swatch?.id}
+          />
           <ResizePattern gauge={myGauge} projectId={projectId} />
           <NeedleAdvice gauge={myGauge} />
         </>
@@ -212,14 +218,21 @@ function GaugeCalc() {
 function SizeToStitches({
   gauge,
   profiles,
+  projectId,
+  gaugeId,
 }: {
   gauge: Gauge;
   profiles: BodyProfile[];
+  /** 프로젝트에서 들어왔으면 결과를 조각으로 남길 수 있다 */
+  projectId?: string;
+  gaugeId?: string;
 }) {
   const t = useStrings();
   const units = useUnits();
 
   const [profileId, setProfileId] = useState("");
+  const [pieceName, setPieceName] = useState("");
+  const [savedPiece, setSavedPiece] = useState(false);
   const [measureKey, setMeasureKey] = useState<MeasurementKey>("bust");
   const [width, setWidth] = useState("50");
   const [length, setLength] = useState("60");
@@ -337,6 +350,46 @@ function SizeToStitches({
             <p className="text-text-3 text-caption mt-2 text-left">
               {t.calc.gridHint}
             </p>
+          </div>
+        )}
+
+        {/* 계산해놓고 잊는 게 이 계산의 가장 흔한 결말이다. 조각으로 남기면
+            배색 도안의 얹을 코수와 게이지 어긋남 감시가 이 숫자를 이어받는다.
+            치수(cm)까지 함께 저장된다 — 그게 뜻이고 코수는 답이다. */}
+        {projectId && widthCm > 0 && (
+          <div className="border-line mt-3 flex gap-2 border-t pt-3">
+            <div className="flex-1">
+              <TextField
+                label={t.piece.name}
+                className="mb-0"
+                placeholder={t.piece.namePlaceholder}
+                value={pieceName}
+                onChange={(e) => {
+                  setPieceName(e.target.value);
+                  setSavedPiece(false);
+                }}
+              />
+            </div>
+            <Button
+              variant="secondary"
+              className="self-end"
+              disabled={savedPiece || pieceName.trim() === ""}
+              onClick={() => {
+                void createPiece(projectId, {
+                  name: pieceName.trim(),
+                  widthCm: Math.round(widthCm * 10) / 10,
+                  lengthCm:
+                    lengthCm > 0 ? Math.round(lengthCm * 10) / 10 : undefined,
+                  stitches: stitchesForWidth(gauge, widthCm),
+                  rows:
+                    lengthCm > 0 ? rowsForLength(gauge, lengthCm) : undefined,
+                  gaugeId,
+                });
+                setSavedPiece(true);
+              }}
+            >
+              {savedPiece ? t.piece.savedAsPiece : t.piece.saveAsPiece}
+            </Button>
           </div>
         )}
       </Result>

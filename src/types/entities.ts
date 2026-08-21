@@ -7,6 +7,7 @@
  */
 
 import type { Craft, YarnWeightClass } from "@/domain/units";
+import type { PieceKind } from "@/domain/piece";
 import type { Side } from "@/domain/stitchChart";
 import type { Measurements } from "@/domain/body";
 
@@ -49,6 +50,31 @@ export type ProjectCategory =
   | "blanket"
   | "accessory"
   | "other";
+
+/**
+ * 프로젝트를 이루는 조각 — 몸판, 소매, 발.
+ *
+ * 계산기가 만든 코수가 머무는 자리다. 없을 때는 "몸판 118코"를 계산해도
+ * 화면을 벗어나면 사라져서, 배색 도안과 카운터가 같은 숫자를 다시 물었다.
+ *
+ * **치수(cm)가 뜻이고 코수는 파생값이다.** 게이지가 바뀌면 코수는 다시
+ * 계산되어야 하고, 예전 값을 함께 들고 있어야 무엇이 얼마나 달라졌는지
+ * 말할 수 있다(`domain/piece.ts`).
+ */
+export interface ProjectPiece extends Base {
+  projectId: Id;
+  /** 사용자가 짓는다 — 도안마다 부르는 말이 다르다 */
+  name: string;
+  /** 제안에서 만든 조각이면 종류가 남는다 */
+  kind?: PieceKind;
+  widthCm?: number;
+  lengthCm?: number;
+  stitches?: number;
+  rows?: number;
+  /** 이 코수를 만든 게이지. 어긋남을 판정하는 기준이다. */
+  gaugeId?: Id;
+  sortOrder: number;
+}
 
 export interface Project extends Base {
   name: string;

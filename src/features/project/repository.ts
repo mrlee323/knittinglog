@@ -238,6 +238,7 @@ export async function deleteProject(id: Id) {
       db.inspirations,
       db.froggingLogs,
       db.pauseEvents,
+      db.projectPieces,
       db.counters,
       db.counterMarks,
       db.counterSessions,
@@ -251,6 +252,7 @@ export async function deleteProject(id: Id) {
 
       await db.counterMarks.where("counterId").anyOf(counterIds).delete();
       await db.counterSessions.where("projectId").equals(id).delete();
+      await db.projectPieces.where("projectId").equals(id).delete();
       await db.counters.where("projectId").equals(id).delete();
       await db.projectLinks.where("projectId").equals(id).delete();
       await db.projectPhotos.where("projectId").equals(id).delete();

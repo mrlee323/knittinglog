@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useLiveQuery } from "dexie-react-hooks";
+import { hasStitches } from "@/domain/piece";
+import { listPieces } from "@/features/piece/repository";
 import {
   Brush,
   ChevronLeft,
@@ -65,6 +67,7 @@ import { useUnits } from "@/app/units";
 import { useWideEnough } from "@/lib/use-media-query";
 import { useStrings } from "@/i18n";
 import { cn } from "@/lib/utils";
+import type { ProjectPiece } from "@/types/entities";
 import type { ColorChartRecord, GaugeRecord } from "@/types/entities";
 
 export const Route = createFileRoute("/charts/$chartId")({
@@ -137,17 +140,32 @@ function ChartEditor() {
   const { chartId } = Route.useParams();
   const record = useLiveQuery(() => getChart(chartId), [chartId]);
   const gauges = useLiveQuery(() => listGauges(), []);
+  // 프로젝트에서 연 도안이면 조각의 코수를 얹을 코수로 끌어올 수 있다.
+  // 예전에는 이 숫자를 사용자가 외워서 옮겨 적었다.
+  const pieces = useLiveQuery(
+    () => (record?.projectId ? listPieces(record.projectId) : []),
+    [record?.projectId]
+  );
 
   if (!record) return null;
-  return <Editor key={record.id} record={record} gauges={gauges ?? []} />;
+  return (
+    <Editor
+      key={record.id}
+      record={record}
+      gauges={gauges ?? []}
+      pieces={pieces ?? []}
+    />
+  );
 }
 
 function Editor({
   record,
   gauges,
+  pieces,
 }: {
   record: ColorChartRecord;
   gauges: GaugeRecord[];
+  pieces: ProjectPiece[];
 }) {
   const t = useStrings();
   const units = useUnits();
@@ -559,6 +577,23 @@ function Editor({
                 }
               />
             </div>
+            {/* 조각에 저장된 코수가 있으면 손으로 옮겨 적지 않아도 된다 */}
+            {pieces.some(hasStitches) && (
+              <div className="mt-2 flex flex-wrap gap-2">
+                {pieces.filter(hasStitches).map((piece) => (
+                  <Button
+                    key={piece.id}
+                    variant="secondary"
+                    className="!text-caption !min-h-9 !px-3"
+                    onClick={() =>
+                      void setChartRepeat(chartId, { castOn: piece.stitches })
+                    }
+                  >
+                    {piece.name} {piece.stitches}
+                  </Button>
+                ))}
+              </div>
+            )}
             {castOnFit ? (
               <p
                 className={cn(

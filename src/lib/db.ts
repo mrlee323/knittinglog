@@ -26,6 +26,7 @@ import type {
   ProjectLink,
   ProjectLog,
   ProjectPhoto,
+  ProjectPiece,
   Yarn,
   YarnAllocation,
   YarnWeighIn,
@@ -42,6 +43,8 @@ export class KnittinglogDB extends Dexie {
   pauseEvents!: EntityTable<PauseEvent, "id">;
   colorCharts!: EntityTable<ColorChartRecord, "id">;
   stitchCharts!: EntityTable<StitchChartRecord, "id">;
+
+  projectPieces!: EntityTable<ProjectPiece, "id">;
 
   counters!: EntityTable<Counter, "id">;
   counterMarks!: EntityTable<CounterMark, "id">;
@@ -124,6 +127,12 @@ export class KnittinglogDB extends Dexie {
     // 정한 스크랩) 인덱스로 그것만 골라낼 수 있어야 한다.
     this.version(8).stores({
       inspirations: "id, updatedAt, projectId",
+    });
+
+    // v9 — 조각 계획. 계산기가 만든 코수가 머무는 자리다.
+    // 프로젝트별로 모아 뜨는 순서대로 보여주므로 counters와 같은 인덱스를 쓴다.
+    this.version(9).stores({
+      projectPieces: "id, projectId, sortOrder",
     });
   }
 }
