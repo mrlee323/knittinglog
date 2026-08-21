@@ -10,12 +10,14 @@ import {
   deleteCounter,
   listCounters,
 } from "@/features/counter/repository";
+import { listPieces } from "@/features/piece/repository";
 import { useStrings } from "@/i18n";
 import type { Counter, Id } from "@/types/entities";
 
 export function CounterSection({ projectId }: { projectId: Id }) {
   const t = useStrings();
   const counters = useLiveQuery(() => listCounters(projectId), [projectId]);
+  const pieces = useLiveQuery(() => listPieces(projectId), [projectId]);
   const [adding, setAdding] = useState(false);
   // 확인 시트는 행마다 두지 않고 섹션이 하나만 들고 있는다. 행에 두면
   // 열려 있는 동안 목록이 갱신되면 시트가 행과 함께 사라진다.
@@ -55,6 +57,7 @@ export function CounterSection({ projectId }: { projectId: Id }) {
       {adding && (
         <CounterFormSheet
           siblings={counters}
+          pieces={pieces}
           onCancel={() => setAdding(false)}
           onSubmit={async (input) => {
             await createCounter(projectId, input);
