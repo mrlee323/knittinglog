@@ -97,6 +97,7 @@ export const ko = {
     reasonOpen: "{n}개 멈춤 중",
   },
   counter: {
+    lifelineAt: "지금 생명줄 자리에 있어요",
     fromPiece: "조각에서 가져오기",
     title: "카운터",
     knit: "뜨기",

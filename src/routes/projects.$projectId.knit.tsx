@@ -2,12 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useLiveQuery } from "dexie-react-hooks";
 import { Columns2, LifeBuoy, Plus, Minus, Undo2, X, Sun } from "lucide-react";
-import {
-  counterView,
-  isLinked,
-  lastLifelineBelow,
-  rowsToUnravel,
-} from "@/domain/counter";
+import { counterView, isLinked } from "@/domain/counter";
+import { LifelineNote } from "@/features/counter/components/lifeline-note";
 import { haptic, useWakeLock } from "@/hooks/useWakeLock";
 import {
   addMark,
@@ -164,7 +160,6 @@ function KnitMode() {
   }
 
   const view = selected ? counterView(selected) : null;
-  const lifeline = lastLifelineBelow(selected?.value ?? 0, lifelines ?? []);
   const linked = selected ? isLinked(selected) : false;
   const mainCounter = counters.find((c) => c.id === selected?.linkedCounterId);
 
@@ -322,19 +317,11 @@ function KnitMode() {
         </div>
 
         {/* 생명줄 — 실수해도 여기까지만 풀면 된다는 안전선 */}
-        <p
-          className={cn(
-            "text-hibernating text-caption",
-            short ? "mt-1" : "mt-3"
-          )}
-        >
-          {lifeline === null
-            ? t.counter.lifelineNone
-            : `${t.counter.lifelineLast.replace("{row}", String(lifeline))} · ${t.counter.lifelineUnravel.replace(
-                "{n}",
-                String(rowsToUnravel(selected?.value ?? 0, lifeline))
-              )}`}
-        </p>
+        <LifelineNote
+          value={selected?.value ?? 0}
+          lifelines={lifelines ?? []}
+          className={short ? "mt-1" : "mt-3"}
+        />
       </section>
 
       {/* --- 큰 +1 영역 ---
