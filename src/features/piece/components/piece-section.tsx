@@ -58,7 +58,12 @@ export function PieceSection({ projectId }: { projectId: Id }) {
 
   // 계산기에서 저장한 조각은 kind가 없다 — 이름이 같아도 "몸판을 추가하라"고
   // 제안하면 이상하므로 이름으로도 거른다.
-  const suggestions = SUGGESTED_PIECES[project.category].filter(
+  /* `?? []`가 필요한 이유: 카테고리는 백업 파일에서 들어올 수 있고, 백업
+     검사는 봉투(앱 이름·format·tables)만 보고 레코드 내용은 보지 않는다.
+     새 버전이 카테고리를 하나 늘린 뒤 그 백업을 구 버전에서 열면 여기서
+     undefined가 나오고, `.filter`가 화면 전체를 죽인다. 제안 목록이 없는 건
+     화면이 안 뜨는 것보다 훨씬 가벼운 실패다. */
+  const suggestions = (SUGGESTED_PIECES[project.category] ?? []).filter(
     (kind) =>
       !pieces.some((p) => p.kind === kind || p.name === t.piece.kind[kind])
   );

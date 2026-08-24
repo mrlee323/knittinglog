@@ -337,7 +337,7 @@ export interface CounterMark extends Base {
   atRow: number;
   kind: CounterMarkKind;
   note?: string;
-  /** 생명줄을 넣은 시점의 코수 스냅샷 */
+  /** 라이프라인을 넣은 시점의 코수 스냅샷 */
   stitchCount?: number;
 }
 

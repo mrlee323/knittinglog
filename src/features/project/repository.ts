@@ -55,7 +55,9 @@ export async function countByStatus(): Promise<Record<ProjectStatus, number>> {
     frogged: 0,
   };
   await db.projects.each((p) => {
-    counts[p.status] += 1;
+    // 낯선 상태(백업으로 들어온 값)면 세지 않는다. 전에는 undefined + 1이
+    // 되어 합계 전체가 NaN이 됐다 — 한 줄 틀리는 것과 다 틀리는 것은 다르다.
+    if (p.status in counts) counts[p.status] += 1;
   });
   return counts;
 }

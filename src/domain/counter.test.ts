@@ -155,13 +155,13 @@ describe("연동 카운터", () => {
   });
 });
 
-describe("생명줄", () => {
-  it("현재 단수 아래의 가장 가까운 생명줄을 찾는다", () => {
+describe("라이프라인", () => {
+  it("현재 단수 아래의 가장 가까운 라이프라인을 찾는다", () => {
     expect(lastLifelineBelow(62, [12, 30, 48])).toBe(48);
     expect(lastLifelineBelow(48, [12, 30, 48])).toBe(48);
   });
 
-  it("생명줄이 없으면 null", () => {
+  it("라이프라인이 없으면 null", () => {
     expect(lastLifelineBelow(10, [30, 48])).toBeNull();
     expect(lastLifelineBelow(10, [])).toBeNull();
   });

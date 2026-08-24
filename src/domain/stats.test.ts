@@ -321,3 +321,21 @@ describe("중단 이력", () => {
     expect(medianPauseDays([], D(1, 1))).toBeNull();
   });
 });
+
+describe("낯선 상태가 섞여 들어와도", () => {
+  it("합계를 무너뜨리지 않는다", () => {
+    /* 상태는 백업 파일에서 들어올 수 있고, 백업 검사는 봉투만 보고 레코드
+       내용은 보지 않는다. 전에는 undefined + 1 = NaN이 되어 이 항목만
+       틀리는 게 아니라 요약 전체가 NaN이 됐다. */
+    const counts = countByStatus([
+      { status: "active" },
+      { status: "active" },
+      { status: "wat" },
+      { status: "finished" },
+    ] as never);
+
+    expect(counts.active).toBe(2);
+    expect(counts.finished).toBe(1);
+    expect(Object.values(counts).some(Number.isNaN)).toBe(false);
+  });
+});
