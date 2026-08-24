@@ -25,31 +25,46 @@ export interface Base {
 /* --- 프로젝트 ------------------------------------------------------------- */
 
 /** 잠시멈춤(hibernating)은 실패가 아니라 정상 상태다. §1 참고 */
-export type ProjectStatus =
-  | "planning"
-  | "active"
-  | "hibernating"
-  | "finished"
-  | "frogged";
+/*
+  열거값은 **런타임 배열이 정본이고 타입이 파생**이다.
 
-export type PauseReason =
-  | "out-of-yarn"
-  | "gauge-failed"
-  | "bored"
-  | "too-hard"
-  | "needle-taken"
-  | "wrong-season"
-  | "other";
+  타입만 두면 "이 값이 우리가 아는 값인가"를 실행 중에 물어볼 수 없다. 그
+  질문이 필요한 곳이 실제로 있다 — 백업 파일에서 들어온 값은 컴파일러를
+  거치지 않는다(`domain/backup.ts`). 전에는 선택 목록을 컴포넌트마다 손으로
+  다시 적어서 유니온과 사본이 둘씩 돌아다녔다.
+*/
 
-export type ProjectCategory =
-  | "sweater"
-  | "hat"
-  | "socks"
-  | "shawl"
-  | "bag"
-  | "blanket"
-  | "accessory"
-  | "other";
+export const PROJECT_STATUSES = [
+  "planning",
+  "active",
+  "hibernating",
+  "finished",
+  "frogged",
+] as const;
+export type ProjectStatus = (typeof PROJECT_STATUSES)[number];
+
+export const PAUSE_REASONS = [
+  "out-of-yarn",
+  "gauge-failed",
+  "bored",
+  "too-hard",
+  "needle-taken",
+  "wrong-season",
+  "other",
+] as const;
+export type PauseReason = (typeof PAUSE_REASONS)[number];
+
+export const PROJECT_CATEGORIES = [
+  "sweater",
+  "hat",
+  "socks",
+  "shawl",
+  "bag",
+  "blanket",
+  "accessory",
+  "other",
+] as const;
+export type ProjectCategory = (typeof PROJECT_CATEGORIES)[number];
 
 /**
  * 프로젝트를 이루는 조각 — 몸판, 소매, 발.
@@ -330,7 +345,8 @@ export interface Counter extends Base {
 }
 
 /** lifeline은 이 서비스의 시그니처 — 되돌아갈 안전선 */
-export type CounterMarkKind = "note" | "lifeline" | "marker";
+export const COUNTER_MARK_KINDS = ["note", "lifeline", "marker"] as const;
+export type CounterMarkKind = (typeof COUNTER_MARK_KINDS)[number];
 
 export interface CounterMark extends Base {
   counterId: Id;
@@ -435,7 +451,8 @@ export interface YarnWeighIn extends Base {
   atRow?: number;
 }
 
-export type NeedleType = "straight" | "circular" | "dpn" | "hook";
+export const NEEDLE_TYPES = ["straight", "circular", "dpn", "hook"] as const;
+export type NeedleType = (typeof NEEDLE_TYPES)[number];
 
 export interface Needle extends Base {
   craft: Craft;

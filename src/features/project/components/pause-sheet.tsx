@@ -5,6 +5,14 @@ import { useStrings } from "@/i18n";
 import { cn } from "@/lib/utils";
 import type { PauseReason } from "@/types/entities";
 
+/*
+  보여줄 순서. `PAUSE_REASONS`(정본)와 순서가 다른 건 의도다 — 정본은 타입의
+  근거이고 여기는 **자주 있는 사유부터** 놓는다. 실이 떨어지거나 게이지가 안
+  맞아서 멈추는 일이 "계절이 지나서"보다 훨씬 흔하다.
+
+  타입이 `PauseReason[]`이라 정본에 없는 값은 컴파일이 막는다. 사유가 늘면
+  여기에도 넣어야 하는데, 그건 어디에 끼울지 사람이 정해야 하는 일이다.
+*/
 const REASONS: PauseReason[] = [
   "out-of-yarn",
   "gauge-failed",
