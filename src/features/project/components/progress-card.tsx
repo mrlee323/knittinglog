@@ -1,7 +1,8 @@
 import { Link } from "@tanstack/react-router";
 import { useLiveQuery } from "dexie-react-hooks";
 import { Button } from "@/components/ui/button";
-import { counterView, lastLifelineBelow } from "@/domain/counter";
+import { counterView } from "@/domain/counter";
+import { LifelineNote } from "@/features/counter/components/lifeline-note";
 import { FinishEstimate } from "./finish-estimate";
 import { lifelineRows, listCounters } from "@/features/counter/repository";
 import { useStrings } from "@/i18n";
@@ -44,7 +45,6 @@ export function ProgressCard({ projectId }: { projectId: Id }) {
   if (!main) return null;
 
   const view = counterView(main);
-  const lifeline = lastLifelineBelow(view.value, lifelines ?? []);
 
   return (
     <section className="border-line bg-surface mb-6 rounded-md border p-5">
@@ -78,12 +78,16 @@ export function ProgressCard({ projectId }: { projectId: Id }) {
       )}
 
       {/* 생명줄은 이 서비스의 시그니처다. 뜨기 화면에만 두면 "여기까지만 풀면
-          된다"는 안심이 정작 프로젝트를 다시 열 때 보이지 않는다. */}
-      <p className="text-text-2 text-small mt-3">
-        {lifeline === null
-          ? t.counter.lifelineNone
-          : t.counter.lifelineLast.replace("{row}", String(lifeline))}
-      </p>
+          된다"는 안심이 정작 프로젝트를 다시 열 때 보이지 않는다.
+
+          전에는 여기서 "마지막 생명줄 100단"까지만 말했다. 그건 사실이고
+          안심은 그 뒤(몇 단 풀면 되는지)인데, 읽는 사람이 뺄셈을 해야 했다.
+          뜨기 모드와 같은 문장을 쓴다. */}
+      <LifelineNote
+        value={view.value}
+        lifelines={lifelines ?? []}
+        className="mt-3"
+      />
 
       {/* 완성 예상은 진행도의 일부다 — "어디까지 왔나" 다음 질문이 "언제
           끝나나"이고, 마감이 있는 사람에게는 그게 계획의 근거가 된다. */}
