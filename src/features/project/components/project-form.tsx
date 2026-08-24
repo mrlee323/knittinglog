@@ -6,17 +6,7 @@ import {
   projectFormSchema,
   type ProjectFormValues,
 } from "@/features/project/repository";
-
-const CATEGORIES = [
-  "sweater",
-  "hat",
-  "socks",
-  "shawl",
-  "bag",
-  "blanket",
-  "accessory",
-  "other",
-] as const;
+import { PROJECT_CATEGORIES } from "@/types/entities";
 
 const EMPTY: ProjectFormValues = {
   name: "",
@@ -97,7 +87,10 @@ export function ProjectForm({
         onChange={(e) =>
           set("category", e.target.value as ProjectFormValues["category"])
         }
-        options={CATEGORIES.map((c) => ({ value: c, label: t.category[c] }))}
+        options={PROJECT_CATEGORIES.map((c) => ({
+          value: c,
+          label: t.category[c],
+        }))}
       />
 
       <TextAreaField

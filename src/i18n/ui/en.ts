@@ -557,6 +557,9 @@ export const en: UIStrings = {
     deleteConfirm: "Delete this chart?",
   },
   backup: {
+    invalid: "{n} records were malformed and could not be added",
+    unknownValues:
+      "{n} values this version does not recognise. They were kept as they are, so exporting again returns them unchanged.",
     title: "Backup",
     hint: "There's no account, so your records live only on this device. Export a file and you can move them.",
     exportTitle: "Export",

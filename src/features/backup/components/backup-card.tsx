@@ -124,6 +124,18 @@ export function BackupCard() {
                 .replace("{skipped}", String(plan.skipped))
             : t.backup.imported.replace("{n}", String(plan.added)),
       ];
+      /* 버린 것도 조용히 넘기지 않는다. 세어놓고 말하지 않으면 검증하지 않은
+         것과 사용자에게는 같다 — "왜 기록이 몇 개 없지"가 남는다. */
+      if (plan.invalid > 0) {
+        lines.push(t.backup.invalid.replace("{n}", String(plan.invalid)));
+      }
+      /* 모르는 값은 그대로 넣었다는 걸 함께 말한다. 값을 바꾸지 않았으므로
+         다시 내보내면 원래대로 나온다 — 그게 안심의 근거다. */
+      if (plan.unknownValues > 0) {
+        lines.push(
+          t.backup.unknownValues.replace("{n}", String(plan.unknownValues))
+        );
+      }
       // 모르는 테이블은 조용히 버리지 않는다 — 덜 복원됐는지 알 수 없게 된다
       if (plan.unknownTables.length > 0) {
         lines.push(
@@ -133,7 +145,10 @@ export function BackupCard() {
           )
         );
       }
-      setStatus(lines.join(" "));
+      /* 줄바꿈으로 잇는다. 사실이 넷(넣은 수 · 건너뛴 수 · 버린 수 · 모르는
+         값)까지 늘어나면서 한 칸으로 이으면 폰에서 네 줄짜리 한 덩어리가
+         됐다. 각각이 다른 사실이므로 줄도 나눈다. */
+      setStatus(lines.join("\n"));
     } finally {
       setBusy(undefined);
       setPending(undefined);
@@ -222,7 +237,11 @@ export function BackupCard() {
         <p className="text-text-3 text-caption mt-1.5">{t.backup.importHint}</p>
       </div>
 
-      {status && <p className="text-text-2 text-small mb-4">{status}</p>}
+      {status && (
+        <p className="text-text-2 text-small mb-4 whitespace-pre-line">
+          {status}
+        </p>
+      )}
 
       {/* 저장 공간 */}
       <div className="border-line mb-4 border-t pt-4">

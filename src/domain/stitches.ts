@@ -9,7 +9,8 @@
  * 있고(§4), 오탈자로 몇 시간을 날리는 일을 막는다.
  */
 
-export type Craft = "knit" | "crochet";
+export const CRAFTS = ["knit", "crochet"] as const;
+export type Craft = (typeof CRAFTS)[number];
 
 export interface StitchDelta {
   /** 전단에서 소비하는 코수 */

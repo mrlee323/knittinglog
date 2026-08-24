@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  BACKUP_APP,
   BACKUP_FORMAT,
   backupFileName,
   checkBackup,
@@ -199,11 +200,25 @@ describe("병합 계획", () => {
     expect(plan.unknownTables).toEqual([]);
   });
 
-  it("id가 없는 레코드는 넣는다 — 판단할 근거가 없으면 잃지 않는 쪽으로", () => {
+  it("id가 없는 레코드는 버린다 — 넣으면 나머지까지 잃는다", () => {
+    /*
+      전에는 이 자리에 "id가 없어도 넣는다 — 판단할 근거가 없으면 잃지 않는
+      쪽으로"라고 적혀 있었다. 뜻은 옳지만 전제가 틀렸다. `id`는 Dexie의 기본
+      키이고, 키를 만들 수 없는 레코드를 `put`하면 **동기적으로 DataError를
+      던진다**(실제 IndexedDB에서 확인했다). 즉 "넣는다"가 불가능하다.
+
+      게다가 가져오기는 한 트랜잭션이라, 그 예외가 트랜잭션을 되돌린다. 망가진
+      한 줄을 살리려다 **나머지 천 줄을 잃는다.** 잃지 않는 쪽은 버리는 쪽이다.
+
+      id를 새로 만들어 넣는 방법도 있지만 하지 않는다. id가 없는 레코드는 우리
+      파일이 아닐 가능성이 크고, 만들어 넣으면 다음에 같은 파일을 다시
+      가져올 때 같은 것이 또 하나 생긴다(중복을 걸러낼 키가 없다).
+    */
     const plan = planImport(file({ projects: [{ name: "x" }] }), "merge", [
       known("projects", ["a"]),
     ]);
-    expect(plan.added).toBe(1);
+    expect(plan.added).toBe(0);
+    expect(plan.invalid).toBe(1);
   });
 
   it("빈 백업도 계획이 나온다", () => {
@@ -253,5 +268,92 @@ describe("파일 이름", () => {
 
   it("기록만 담은 파일은 이름에서 구별된다", () => {
     expect(backupFileName(day, false)).toBe("knittinglog-20260819-기록만.json");
+  });
+});
+
+describe("가져올 값 검사", () => {
+  const known = [
+    { table: "projects", existingIds: new Set<string>() },
+    { table: "counterMarks", existingIds: new Set<string>() },
+  ];
+  const file = (tables: Record<string, unknown[]>) =>
+    ({ app: BACKUP_APP, format: BACKUP_FORMAT, tables }) as never;
+
+  it("키를 만들 수 없는 레코드를 버리고 센다", () => {
+    /* 하나라도 들어가면 bulkPut이 던지고, 가져오기는 한 트랜잭션이라
+       나머지 천 줄도 못 들어온다. */
+    const plan = planImport(
+      file({
+        projects: [
+          { id: "ok", name: "스웨터" },
+          { id: "", name: "빈 id" },
+          { name: "id 없음" },
+          null,
+          "문자열",
+          [],
+        ],
+      }),
+      "merge",
+      known
+    );
+
+    expect(plan.added).toBe(1);
+    expect(plan.invalid).toBe(5);
+  });
+
+  it("덮어쓰기에서도 검사한다", () => {
+    // 전에는 덮어쓰기가 행을 그대로 밀어넣었다
+    const plan = planImport(
+      file({ projects: [{ id: "ok" }, { name: "id 없음" }] }),
+      "replace",
+      known
+    );
+
+    expect(plan.added).toBe(1);
+    expect(plan.invalid).toBe(1);
+  });
+
+  it("모르는 열거값은 세지만 값을 바꾸지 않는다", () => {
+    /* 바꾸면 새 버전 백업을 구 버전에서 열었다가 다시 내보낼 때 원래 값이
+       영구히 사라진다. 내보내고 가져오고 다시 내보내도 잃는 게 없어야 한다. */
+    const plan = planImport(
+      file({
+        projects: [{ id: "p", status: "hibernating", category: "poncho" }],
+      }),
+      "merge",
+      known
+    );
+
+    expect(plan.unknownValues).toBe(1);
+    expect(plan.added).toBe(1);
+    expect(plan.tables[0]?.add[0]).toEqual({
+      id: "p",
+      status: "hibernating",
+      category: "poncho",
+    });
+  });
+
+  it("아는 값만 있으면 아무것도 세지 않는다", () => {
+    const plan = planImport(
+      file({
+        projects: [
+          { id: "p", status: "active", category: "sweater", craft: "knit" },
+        ],
+        counterMarks: [{ id: "m", kind: "lifeline" }],
+      }),
+      "merge",
+      known
+    );
+
+    expect(plan.invalid).toBe(0);
+    expect(plan.unknownValues).toBe(0);
+    expect(plan.added).toBe(2);
+  });
+
+  it("없는 칸은 문제로 세지 않는다", () => {
+    // 선택 항목이거나 옛 형식일 수 있다
+    const plan = planImport(file({ projects: [{ id: "p" }] }), "merge", known);
+    expect(plan.unknownValues).toBe(0);
+    expect(plan.invalid).toBe(0);
   });
 });

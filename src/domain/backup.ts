@@ -9,6 +9,15 @@
  * 남는다 — 기획이 "락인 없음"이라고 적은 것이 이 뜻이다.
  */
 
+import {
+  COUNTER_MARK_KINDS,
+  NEEDLE_TYPES,
+  PAUSE_REASONS,
+  PROJECT_CATEGORIES,
+  PROJECT_STATUSES,
+} from "@/types/entities";
+import { CRAFTS } from "./stitches";
+
 /** 백업 파일 형식의 버전. 구조를 바꾸면 올린다. */
 export const BACKUP_FORMAT = 1;
 
@@ -174,6 +183,10 @@ export interface TablePlan {
   add: unknown[];
   /** 이미 있어서 건너뛴 수 */
   skipped: number;
+  /** 키를 만들 수 없어 버린 수 */
+  invalid: number;
+  /** 이 버전이 모르는 열거값이 든 칸의 수. 값은 그대로 넣었다. */
+  unknownValues: number;
 }
 
 export interface ImportPlan {
@@ -181,6 +194,10 @@ export interface ImportPlan {
   tables: TablePlan[];
   added: number;
   skipped: number;
+  /** 키를 만들 수 없어 버린 레코드 수 */
+  invalid: number;
+  /** 이 버전이 모르는 열거값의 수. 값은 그대로 넣었다. */
+  unknownValues: number;
   /** 백업 파일에는 있지만 이 앱이 모르는 테이블 */
   unknownTables: string[];
 }
@@ -196,6 +213,68 @@ export interface ImportPlan {
  * 앱이 모르는 테이블은 넣지 않고 이름만 돌려준다. 형식 확인을 통과했는데도
  * 모르는 테이블이 있을 수 있다(같은 format에서 테이블만 추가된 경우).
  */
+/* --- 가져올 값 검사 ------------------------------------------------------ */
+
+/**
+ * 저장할 수 있는 레코드인가.
+ *
+ * Dexie는 `id`를 기본 키로 쓴다. 키를 만들 수 없는 레코드가 하나라도 섞이면
+ * `bulkPut`이 던지고, 가져오기는 **한 트랜잭션**이므로 전체가 되돌아간다 —
+ * 파일에 망가진 한 줄이 있으면 나머지 천 줄도 못 들어오고, 사용자는 왜
+ * 실패했는지 알 수 없다. 그래서 미리 걸러 세어둔다.
+ */
+export function isStorableRecord(row: unknown): boolean {
+  if (typeof row !== "object" || row === null || Array.isArray(row))
+    return false;
+  const id = (row as { id?: unknown }).id;
+  return typeof id === "string" && id.length > 0;
+}
+
+/**
+ * 테이블마다 "우리가 아는 값"이 정해진 칸.
+ *
+ * 정본은 각 열거 배열이다(`types/entities.ts`). 여기서 목록을 다시 적으면
+ * 사본이 하나 더 생기고, 둘 중 하나만 바뀐다.
+ */
+const ENUM_FIELDS: Record<string, Record<string, readonly string[]>> = {
+  projects: {
+    status: PROJECT_STATUSES,
+    category: PROJECT_CATEGORIES,
+    craft: CRAFTS,
+  },
+  counterMarks: { kind: COUNTER_MARK_KINDS },
+  needles: { craft: CRAFTS, type: NEEDLE_TYPES },
+  pauseEvents: { reason: PAUSE_REASONS },
+  gauges: { craft: CRAFTS },
+  patterns: { craft: CRAFTS },
+};
+
+/**
+ * 이 버전이 모르는 열거값을 센다. **바꾸지는 않는다.**
+ *
+ * 고치고 싶은 유혹이 있다 — 모르는 카테고리를 "기타"로 바꾸면 화면이
+ * 깔끔해진다. 하지만 그러면 새 버전에서 만든 백업을 구 버전으로 열었다가
+ * 다시 내보낼 때 **원래 값이 영구히 사라진다.** 내보내고 가져오고 다시
+ * 내보내도 잃는 것이 없어야 한다.
+ *
+ * 화면 쪽은 낯선 값에 죽지 않게 이미 막아뒀다(`piece-section`,
+ * `countByStatus`). 그러니 값은 그대로 두고 **몇 개인지만 말한다** — 사용자가
+ * "이 파일에 이 버전이 모르는 게 있다"를 알면 그걸로 충분하다.
+ */
+export function countUnknownValues(table: string, row: unknown): number {
+  const fields = ENUM_FIELDS[table];
+  if (!fields || typeof row !== "object" || row === null) return 0;
+
+  let unknown = 0;
+  for (const [field, allowed] of Object.entries(fields)) {
+    const value = (row as Record<string, unknown>)[field];
+    // 없는 칸은 문제가 아니다. 선택 항목이거나 옛 형식일 수 있다.
+    if (value === undefined || value === null) continue;
+    if (typeof value !== "string" || !allowed.includes(value)) unknown += 1;
+  }
+  return unknown;
+}
+
 export function planImport(
   file: BackupFile,
   mode: ImportMode,
@@ -213,19 +292,26 @@ export function planImport(
     }
     if (!Array.isArray(rows)) continue;
 
-    if (mode === "replace") {
-      tables.push({ table, add: rows, skipped: 0 });
-      continue;
-    }
-
     const add: unknown[] = [];
     let skipped = 0;
+    let invalid = 0;
+    let unknownValues = 0;
+
     for (const row of rows) {
-      const id = (row as { id?: unknown })?.id;
-      if (typeof id === "string" && target.existingIds.has(id)) skipped += 1;
+      /* 검사가 덮어쓰기·합치기 **양쪽**에 걸린다. 전에는 덮어쓰기가 행을
+         그대로 밀어넣어서, 망가진 한 줄이 트랜잭션 전체를 되돌렸다. */
+      if (!isStorableRecord(row)) {
+        invalid += 1;
+        continue;
+      }
+      unknownValues += countUnknownValues(table, row);
+
+      const id = (row as { id: string }).id;
+      if (mode === "merge" && target.existingIds.has(id)) skipped += 1;
       else add.push(row);
     }
-    tables.push({ table, add, skipped });
+
+    tables.push({ table, add, skipped, invalid, unknownValues });
   }
 
   return {
@@ -233,6 +319,8 @@ export function planImport(
     tables,
     added: tables.reduce((sum, t) => sum + t.add.length, 0),
     skipped: tables.reduce((sum, t) => sum + t.skipped, 0),
+    invalid: tables.reduce((sum, t) => sum + t.invalid, 0),
+    unknownValues: tables.reduce((sum, t) => sum + t.unknownValues, 0),
     unknownTables,
   };
 }
