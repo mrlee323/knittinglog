@@ -246,7 +246,7 @@ export function counterBlueprints(
 }
 
 /**
- * 현재 단수 기준으로 가장 가까운 아래쪽 생명줄을 찾는다.
+ * 현재 단수 기준으로 가장 가까운 아래쪽 라이프라인을 찾는다.
  *
  * 실수했을 때 "여기까지만 풀면 된다"를 말해주는 값이다.
  * 이 서비스의 "멈춰도 안전하다"는 태도가 기능이 된 지점.
@@ -259,7 +259,7 @@ export function lastLifelineBelow(
   return below.length > 0 ? Math.max(...below) : null;
 }
 
-/** 생명줄까지 풀어야 할 단수 */
+/** 라이프라인까지 풀어야 할 단수 */
 export function rowsToUnravel(value: number, lifelineRow: number): number {
   return Math.max(0, value - lifelineRow);
 }

@@ -316,7 +316,7 @@ function KnitMode() {
           )}
         </div>
 
-        {/* 생명줄 — 실수해도 여기까지만 풀면 된다는 안전선 */}
+        {/* 라이프라인 — 실수해도 여기까지만 풀면 된다는 안전선 */}
         <LifelineNote
           value={selected?.value ?? 0}
           lifelines={lifelines ?? []}

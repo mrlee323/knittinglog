@@ -125,7 +125,11 @@ export function countByStatus(projects: ProjectLike[]): StatusCounts {
     finished: 0,
     frogged: 0,
   };
-  for (const project of projects) counts[project.status] += 1;
+  // 낯선 상태는 세지 않는다. undefined + 1은 NaN이고, 그러면 이 항목만
+  // 틀리는 게 아니라 합계가 전부 무너진다.
+  for (const project of projects) {
+    if (project.status in counts) counts[project.status] += 1;
+  }
   return counts;
 }
 

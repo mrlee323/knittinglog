@@ -205,7 +205,7 @@ export async function reconcileProject(projectId: Id) {
   return updates;
 }
 
-/* --- 마크 · 생명줄 -------------------------------------------------------- */
+/* --- 마크 · 라이프라인 -------------------------------------------------------- */
 
 export async function addMark(
   counterId: Id,
