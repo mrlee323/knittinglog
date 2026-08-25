@@ -92,6 +92,12 @@ export const en: UIStrings = {
     reasonOpen: "{n} still on hold",
   },
   counter: {
+    linkDiagramFollowed: "rows",
+    linkDiagramThis: "this one",
+    linkDiagramAlt:
+      "Rows on the left, this counter on the right. The right side goes up by 1 every so many rows.",
+    linkDiagramNote:
+      'As you count the left side, the right side rises once every few rows. Use it to track how many times you worked "increase every 2nd row".',
     repeatDiagramNote:
       "A chart stacks the same block upward. This value is how many rows one block takes.",
     repeatDiagramLabel: "{n}-row repeat",

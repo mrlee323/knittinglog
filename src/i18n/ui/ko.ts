@@ -97,6 +97,12 @@ export const ko = {
     reasonOpen: "{n}개 멈춤 중",
   },
   counter: {
+    linkDiagramFollowed: "세는 단",
+    linkDiagramThis: "이 카운터",
+    linkDiagramAlt:
+      "왼쪽은 세는 단, 오른쪽은 이 카운터. 정해진 단수마다 오른쪽이 1씩 올라가요.",
+    linkDiagramNote:
+      '왼쪽을 셀 때 오른쪽은 정해진 단수마다 한 번만 올라요. "2단마다 1번 늘리기"를 몇 번 했는지 따로 세고 싶을 때 써요.',
     repeatDiagramNote:
       "도안은 같은 덩어리를 위로 쌓아요. 그 한 덩어리가 몇 단인지가 이 값이에요.",
     repeatDiagramLabel: "{n}단 1무늬",
