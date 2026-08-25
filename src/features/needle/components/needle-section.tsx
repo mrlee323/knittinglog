@@ -10,10 +10,13 @@ import {
   NeedleDetail,
   NeedleSize,
 } from "@/features/needle/components/needle-label";
+import { NeedleFormSheet } from "@/features/needle/components/needle-form-sheet";
 import {
+  createNeedle,
   listNeedles,
   occupyNeedle,
   releaseNeedle,
+  type NeedleFormValues,
 } from "@/features/needle/repository";
 import { db } from "@/lib/db";
 import { useStrings } from "@/i18n";
@@ -39,6 +42,7 @@ export function NeedleSection({ projectId }: { projectId: Id }) {
 
   const [picking, setPicking] = useState(false);
   const [confirmMove, setConfirmMove] = useState<Needle>();
+  const [adding, setAdding] = useState(false);
 
   if (!needles || !projects) return null;
 
@@ -46,6 +50,23 @@ export function NeedleSection({ projectId }: { projectId: Id }) {
   // 게이지에 적힌 바늘 굵기가 이 프로젝트가 요구하는 굵기다. 스와치를 뜰 때
   // 쓴 바늘이므로 그 굵기로 떠야 게이지가 맞는다.
   const wantedMm = gauges?.find((g) => g.needleMm)?.needleMm;
+
+  /**
+   * 서랍에 없는 바늘을 여기서 등록하고 바로 물린다.
+   *
+   * 전에는 서랍이 비어 있으면 이 버튼이 아예 눌리지 않았다. "먼저 바늘을
+   * 등록해주세요"라고만 하고 끝났는데, 그러면 바늘 화면으로 갔다가 등록하고
+   * 프로젝트로 돌아와야 한다 — 의도가 생긴 자리에서 막다른 길이다.
+   *
+   * 등록만 하고 마는 것도 아니다. 여기서 넣은 바늘은 서랍에도 남는다. 프로젝트
+   * 안에서만 아는 바늘이 생기면 다음 작품에서 충돌 경고를 할 수 없다.
+   */
+  async function addAndAssign(values: NeedleFormValues) {
+    const id = await createNeedle(values);
+    await occupyNeedle(id, projectId);
+    setAdding(false);
+    setPicking(false);
+  }
 
   async function assign(needle: Needle) {
     if (isTakenByOther(needle, projectId)) {
@@ -64,8 +85,9 @@ export function NeedleSection({ projectId }: { projectId: Id }) {
           icon
           variant="ghost"
           aria-label={t.needle.assign}
-          disabled={needles.length === 0}
-          onClick={() => setPicking(true)}
+          onClick={() =>
+            needles.length === 0 ? setAdding(true) : setPicking(true)
+          }
         >
           <Plus size={18} />
         </Button>
@@ -73,7 +95,7 @@ export function NeedleSection({ projectId }: { projectId: Id }) {
 
       {mine.length === 0 ? (
         <p className="text-text-3 text-small">
-          {needles.length === 0 ? t.needle.noStash : t.needle.none}
+          {needles.length === 0 ? t.needle.noneAddHere : t.needle.none}
         </p>
       ) : (
         <ul className="space-y-2">
@@ -120,13 +142,22 @@ export function NeedleSection({ projectId }: { projectId: Id }) {
       {/* 경고가 뜨는 동안에는 고르기 목록을 접는다. 다이얼로그가 두 겹으로
           겹치면 어느 쪽의 취소를 누른 건지 알 수 없다. 경고를 취소하면
           고르기로 돌아온다 — picking은 그대로 살아 있다. */}
-      {picking && !confirmMove && (
+      {adding && (
+        <NeedleFormSheet
+          existing={needles}
+          onSubmit={addAndAssign}
+          onCancel={() => setAdding(false)}
+        />
+      )}
+
+      {picking && !confirmMove && !adding && (
         <NeedlePicker
           needles={needles}
           projectId={projectId}
           projectName={(id) => projects.find((p) => p.id === id)?.name ?? ""}
           wantedMm={wantedMm}
           onPick={(needle) => void assign(needle)}
+          onAddNew={() => setAdding(true)}
           onCancel={() => setPicking(false)}
         />
       )}
@@ -165,6 +196,7 @@ function NeedlePicker({
   projectName,
   wantedMm,
   onPick,
+  onAddNew,
   onCancel,
 }: {
   needles: Needle[];
@@ -172,6 +204,7 @@ function NeedlePicker({
   projectName: (id: string) => string;
   wantedMm?: number;
   onPick: (needle: Needle) => void;
+  onAddNew: () => void;
   onCancel: () => void;
 }) {
   const t = useStrings();
@@ -239,9 +272,17 @@ function NeedlePicker({
             })}
         </ul>
 
-        <Button variant="secondary" className="mt-4" onClick={onCancel}>
-          {t.action.cancel}
-        </Button>
+        {/* 서랍에 없는 바늘을 방금 샀을 수도 있다. 목록에 없다고 여기서
+            끝나면 다시 바늘 화면으로 갔다 와야 한다. */}
+        <div className="mt-4 flex gap-2">
+          <Button variant="secondary" onClick={onAddNew}>
+            <Plus size={16} />
+            {t.needle.addHere}
+          </Button>
+          <Button variant="ghost" onClick={onCancel}>
+            {t.action.cancel}
+          </Button>
+        </div>
       </div>
     </div>
   );
