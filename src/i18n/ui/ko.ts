@@ -266,13 +266,15 @@ export const ko = {
     aliases: "다른 이름",
   },
   allocation: {
+    noneAddHere: "여기서 바로 등록할 수 있어요. 넣어두면 스태시에도 남아요.",
+    registerHere: "스태시에 없는 실인가요? 여기서 등록하기",
+    registerAndAdd: "등록하고 이 작품에 쓰기",
     title: "쓰는 실",
     add: "실 배정",
     none: "배정된 실이 없어요",
     pick: "어떤 실을 쓸까요?",
     skeins: "몇 타래",
     remove: "배정 해제",
-    noStash: "먼저 스태시에 실을 등록해주세요",
   },
   weighIn: {
     title: "실 잔량",
@@ -981,6 +983,8 @@ export const ko = {
     deleteVideoConfirm: "이 영상 링크를 지울까요?",
   },
   needle: {
+    noneAddHere: "여기서 바로 등록할 수 있어요. 넣어두면 바늘 서랍에도 남아요.",
+    addHere: "새 바늘 등록",
     title: "바늘",
     add: "바늘 추가",
     edit: "바늘 수정",
@@ -1010,7 +1014,6 @@ export const ko = {
     projectTitle: "쓰는 바늘",
     assign: "바늘 물리기",
     none: "물린 바늘이 없어요",
-    noStash: "먼저 바늘을 등록해주세요",
     pick: "어떤 바늘을 쓸까요?",
     release: "빼기",
     takenTitle: "이 바늘은 다른 작품에 물려 있어요",

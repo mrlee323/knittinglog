@@ -6,13 +6,16 @@ import { Button } from "@/components/ui/button";
 import { SelectField, TextField } from "@/components/ui/field";
 import { YarnTile } from "./yarn-swatch";
 import { WeighSheet } from "./weigh-sheet";
+import { YarnForm } from "./yarn-form";
 import {
   allocateYarn,
+  createYarn,
   deallocateYarn,
   listAllocationsForProject,
   listWeighIns,
   listYarns,
   measurableWeighIns,
+  type YarnFormValues,
 } from "@/features/yarn/repository";
 import { counterView } from "@/domain/counter";
 import { forecastYarn } from "@/domain/yarn";
@@ -37,6 +40,7 @@ export function AllocationSection({ projectId }: { projectId: Id }) {
   );
   // 잔량 예측은 지금 단수와 목표 단수를 알아야 성립한다. 메인 카운터는
   // 연동이 아닌 첫 카운터다 — 진행도 카드와 같은 기준을 쓴다.
+  const [registering, setRegistering] = useState(false);
   const counters = useLiveQuery(() => listCounters(projectId), [projectId]);
   const main = counters?.find((c) => !c.linkedCounterId) ?? counters?.[0];
   const view = main ? counterView(main) : undefined;
@@ -55,8 +59,9 @@ export function AllocationSection({ projectId }: { projectId: Id }) {
           icon
           variant="ghost"
           aria-label={t.allocation.add}
-          disabled={yarns.length === 0}
-          onClick={() => setAdding(true)}
+          onClick={() =>
+            yarns.length === 0 ? setRegistering(true) : setAdding(true)
+          }
         >
           <Plus size={18} />
         </Button>
@@ -64,7 +69,7 @@ export function AllocationSection({ projectId }: { projectId: Id }) {
 
       {assigned.length === 0 ? (
         <p className="text-text-2 text-small">
-          {yarns.length === 0 ? t.allocation.noStash : t.allocation.none}
+          {yarns.length === 0 ? t.allocation.noneAddHere : t.allocation.none}
         </p>
       ) : (
         <ul className="space-y-2">
@@ -81,15 +86,38 @@ export function AllocationSection({ projectId }: { projectId: Id }) {
         </ul>
       )}
 
-      {adding && (
+      {adding && !registering && (
         <AllocateSheet
           projectId={projectId}
           onClose={() => setAdding(false)}
+          onRegister={() => setRegistering(true)}
           yarns={yarns.map((y) => ({
             id: y.id,
             name: y.name,
             colorHex: y.colorHex,
           }))}
+        />
+      )}
+
+      {/*
+        스태시에 없는 실을 여기서 등록하고 바로 배정한다.
+
+        전에는 스태시가 비어 있으면 이 섹션의 + 가 눌리지 않았다. "먼저
+        스태시에 실을 등록해주세요"라고만 하고 끝났는데, 그러면 실 화면으로
+        갔다가 등록하고 프로젝트로 돌아와야 한다 — 의도가 생긴 자리에서
+        막다른 길이다.
+
+        등록한 실은 스태시에도 남는다. 프로젝트 안에서만 아는 실이 생기면
+        잔량도 부족 예측도 할 수 없다.
+      */}
+      {registering && (
+        <YarnRegisterSheet
+          projectId={projectId}
+          onDone={() => {
+            setRegistering(false);
+            setAdding(false);
+          }}
+          onCancel={() => setRegistering(false)}
         />
       )}
     </section>
@@ -190,10 +218,12 @@ function AllocationRow({
 function AllocateSheet({
   projectId,
   yarns,
+  onRegister,
   onClose,
 }: {
   projectId: Id;
   yarns: { id: Id; name: string; colorHex?: string }[];
+  onRegister: () => void;
   onClose: () => void;
 }) {
   const t = useStrings();
@@ -250,6 +280,65 @@ function AllocateSheet({
             {t.action.cancel}
           </Button>
         </div>
+
+        {/* 스태시에 없는 실을 방금 샀을 수도 있다. 목록에 없다고 여기서
+            끝나면 다시 실 화면으로 갔다 와야 한다. */}
+        <button
+          type="button"
+          onClick={onRegister}
+          className="text-text-2 hover:text-text text-caption mt-3 underline underline-offset-4"
+        >
+          {t.allocation.registerHere}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * 실을 등록하고 곧바로 이 프로젝트에 배정한다.
+ *
+ * 등록 폼은 `/yarn/new`와 같은 것을 쓴다. 여기에 작은 폼을 따로 만들면 칸이
+ * 갈라져서, 한쪽에만 로트번호가 생기는 식으로 어긋난다. 폼이 스스로 "이름과
+ * 무게·길이면 충분해요"라고 말하므로 길이도 문제가 되지 않는다.
+ */
+function YarnRegisterSheet({
+  projectId,
+  onDone,
+  onCancel,
+}: {
+  projectId: Id;
+  onDone: () => void;
+  onCancel: () => void;
+}) {
+  const t = useStrings();
+
+  async function submit(values: YarnFormValues) {
+    const yarnId = await createYarn(values);
+    /* 가진 타래를 전부 이 작품에 배정한다. 여기서 등록했다는 건 이 작품에
+       쓰려고 산 실이라는 뜻이다. 나중에 줄이는 건 배정 목록에서 할 수 있다. */
+    await allocateYarn(yarnId, projectId, values.skeinCount ?? 1);
+    onDone();
+  }
+
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label={t.yarn.add}
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 sm:items-center"
+      onClick={onCancel}
+    >
+      <div
+        className="shadow-overlay pb-safe bg-surface max-h-[85dvh] w-full max-w-lg overflow-y-auto rounded-t-lg p-5 sm:rounded-lg"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <h2 className="text-heading mb-4 font-semibold">{t.yarn.add}</h2>
+        <YarnForm
+          submitLabel={t.allocation.registerAndAdd}
+          onSubmit={submit}
+          onCancel={onCancel}
+        />
       </div>
     </div>
   );

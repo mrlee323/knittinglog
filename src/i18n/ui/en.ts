@@ -255,13 +255,15 @@ export const en: UIStrings = {
     aliases: "Also called",
   },
   allocation: {
+    noneAddHere: "Add one right here — it goes into your stash too.",
+    registerHere: "Not in your stash? Add it here",
+    registerAndAdd: "Add it and use it here",
     title: "Yarn used",
     add: "Assign yarn",
     none: "No yarn assigned",
     pick: "Which yarn?",
     skeins: "How many skeins",
     remove: "Unassign",
-    noStash: "Add yarn to your stash first",
   },
   weighIn: {
     title: "Yarn left",
@@ -895,6 +897,8 @@ export const en: UIStrings = {
     deleteVideoConfirm: "Delete this video link?",
   },
   needle: {
+    noneAddHere: "Add one right here — it goes into your needle drawer too.",
+    addHere: "Add a needle",
     title: "Needles",
     add: "Add needle",
     edit: "Edit needle",
@@ -924,7 +928,6 @@ export const en: UIStrings = {
     projectTitle: "Needles in use",
     assign: "Assign a needle",
     none: "No needle assigned",
-    noStash: "Add a needle first",
     pick: "Which needle?",
     release: "Remove",
     takenTitle: "That needle is on another project",
