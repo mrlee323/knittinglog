@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { LinkDiagram } from "./link-diagram";
 import { RepeatDiagram } from "./repeat-diagram";
 import { SelectField, TextField } from "@/components/ui/field";
 import { useStrings } from "@/i18n";
@@ -164,6 +165,16 @@ export function CounterFormSheet({
             <SelectField
               label={t.counter.linkTo}
               hint={t.counter.linkToHint}
+              /* 이 앱에서 가장 설명하기 어려운 기능이다. 두 숫자가 다른
+                 속도로 움직인다는 걸 글로만 말하면 잡히지 않는다. */
+              info={
+                <>
+                  <LinkDiagram ratio={num(linkRatio) ?? 2} />
+                  <p className="text-text-2 text-caption mt-2">
+                    {t.counter.linkDiagramNote}
+                  </p>
+                </>
+              }
               value={linkedCounterId}
               onChange={(e) => setLinkedCounterId(e.target.value)}
               options={[
