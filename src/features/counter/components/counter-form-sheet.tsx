@@ -74,7 +74,13 @@ export function CounterFormSheet({
         className="shadow-overlay pb-safe bg-surface max-h-[85dvh] w-full max-w-lg overflow-y-auto rounded-t-lg p-5"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="text-heading mb-4 font-semibold">{t.counter.add}</h2>
+        <h2 className="text-heading mb-3 font-semibold">{t.counter.add}</h2>
+
+        {/* 칸부터 보여주면 무엇을 만드는 건지 모른다. 카운터가 무엇이고
+            무엇만 있으면 되는지를 먼저 말한다 — 실 등록 폼과 같은 방식이다. */}
+        <p className="border-line bg-sunken text-small mb-5 rounded-md border p-3">
+          {t.counter.addIntro}
+        </p>
 
         <TextField
           label={t.counter.label}
@@ -115,6 +121,7 @@ export function CounterFormSheet({
 
         <TextField
           label={t.counter.target}
+          hint={t.counter.targetHint}
           inputMode="numeric"
           value={target}
           onChange={(e) => setTarget(e.target.value)}
@@ -124,6 +131,7 @@ export function CounterFormSheet({
           <div className="flex-1">
             <TextField
               label={t.counter.repeatLength}
+              hint={t.counter.repeatLengthHint}
               inputMode="numeric"
               value={repeatLength}
               onChange={(e) => setRepeatLength(e.target.value)}
@@ -132,6 +140,7 @@ export function CounterFormSheet({
           <div className="flex-1">
             <TextField
               label={t.counter.repeatTarget}
+              hint={t.counter.repeatTargetHint}
               inputMode="numeric"
               value={repeatTarget}
               onChange={(e) => setRepeatTarget(e.target.value)}
@@ -143,6 +152,7 @@ export function CounterFormSheet({
           <>
             <SelectField
               label={t.counter.linkTo}
+              hint={t.counter.linkToHint}
               value={linkedCounterId}
               onChange={(e) => setLinkedCounterId(e.target.value)}
               options={[
@@ -154,6 +164,7 @@ export function CounterFormSheet({
               <>
                 <TextField
                   label={t.counter.linkRatio}
+                  hint={t.counter.linkRatioHint}
                   inputMode="numeric"
                   value={linkRatio}
                   onChange={(e) => setLinkRatio(e.target.value)}

@@ -97,6 +97,8 @@ export const ko = {
     reasonOpen: "{n}개 멈춤 중",
   },
   counter: {
+    addIntro:
+      "어디까지 떴는지 세는 곳이에요. 이름만 있으면 만들 수 있고, 아래 칸은 알 때 채우면 돼요.",
     lifelineAt: "지금 라이프라인 자리에 있어요",
     fromPiece: "조각에서 가져오기",
     title: "카운터",
@@ -105,11 +107,19 @@ export const ko = {
     label: "이름",
     labelPlaceholder: "몸판",
     target: "목표 단수",
+    targetHint:
+      "다 뜨면 몇 단이 되는지. 몰라도 괜찮아요 — 비워두면 세기만 해요.",
     repeatLength: "무늬 반복 단수",
+    repeatLengthHint:
+      '무늬 한 번이 몇 단인지예요. 도안에 "8단 1무늬"처럼 적혀 있어요. 넣어두면 지금 무늬의 몇 단째인지 알려드려요.',
     repeatTarget: "반복 횟수",
+    repeatTargetHint: "그 무늬를 몇 번 반복하는지예요.",
     linkTo: "따라갈 카운터",
+    linkToHint:
+      '다른 카운터를 셀 때 이것도 같이 오르게 해요. 몸판을 세면서 "2단마다 1번 늘리기"를 따로 세고 싶을 때 써요.',
     linkNone: "연동 안 함",
     linkRatio: "몇 단마다 1회",
+    linkRatioHint: "따라갈 카운터가 이만큼 오를 때마다 이 카운터가 1 올라요.",
     linkedHint: "{main} {ratio}단마다 1 오릅니다",
     // 카운터 이름은 사용자가 짓는다. 조사(을/를)를 붙이면 어색해지므로 피한다.
     linkedReadOnly: "{main} {ratio}단마다 자동으로 올라가요",
@@ -119,8 +129,9 @@ export const ko = {
     emptyHint: "몸판, 소매, 무늬 반복처럼 세고 싶은 만큼 만들 수 있어요",
     rows: "단",
     remaining: "{n}단 남음",
-    repeatProgress: "{done}회 완료 · {row}/{len}단",
-    repeatOf: "{done}/{target}회",
+    repeatProgress: "이번 무늬 {row}/{len}단",
+    repeatDone: "무늬 {done}회 떴어요",
+    repeatOf: "무늬 {done}/{target}회",
     done: "목표 도달",
     undo: "되돌리기",
     lifeline: "라이프라인",
