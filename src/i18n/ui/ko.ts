@@ -97,6 +97,11 @@ export const ko = {
     reasonOpen: "{n}개 멈춤 중",
   },
   counter: {
+    repeatDiagramNote:
+      "도안은 같은 덩어리를 위로 쌓아요. 그 한 덩어리가 몇 단인지가 이 값이에요.",
+    repeatDiagramLabel: "{n}단 1무늬",
+    repeatDiagramAlt:
+      "도안이 같은 덩어리를 세로로 쌓은 그림. 맨 아래 한 덩어리가 1무늬로 묶여 있어요.",
     addIntro:
       "어디까지 떴는지 세는 곳이에요. 이름만 있으면 만들 수 있고, 아래 칸은 알 때 채우면 돼요.",
     lifelineAt: "지금 라이프라인 자리에 있어요",

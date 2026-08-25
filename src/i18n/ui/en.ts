@@ -92,6 +92,11 @@ export const en: UIStrings = {
     reasonOpen: "{n} still on hold",
   },
   counter: {
+    repeatDiagramNote:
+      "A chart stacks the same block upward. This value is how many rows one block takes.",
+    repeatDiagramLabel: "{n}-row repeat",
+    repeatDiagramAlt:
+      "A chart stacking the same block vertically, with one block bracketed as a single repeat.",
     addIntro:
       "This is where you track how far you have got. A name is all you need — fill in the rest when you know it.",
     lifelineAt: "You are on the lifeline",
