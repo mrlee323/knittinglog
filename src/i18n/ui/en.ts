@@ -92,6 +92,8 @@ export const en: UIStrings = {
     reasonOpen: "{n} still on hold",
   },
   counter: {
+    addIntro:
+      "This is where you track how far you have got. A name is all you need — fill in the rest when you know it.",
     lifelineAt: "You are on the lifeline",
     fromPiece: "Take from a piece",
     title: "Counters",
@@ -100,11 +102,20 @@ export const en: UIStrings = {
     label: "Name",
     labelPlaceholder: "Body",
     target: "Target rows",
+    targetHint:
+      "How many rows when it is finished. Leave it blank if you do not know — it will just count.",
     repeatLength: "Rows per repeat",
+    repeatLengthHint:
+      'How many rows one repeat takes. Patterns write it as "8-row repeat". Fill it in and we show which row of the repeat you are on.',
     repeatTarget: "Number of repeats",
+    repeatTargetHint: "How many times the repeat is worked.",
     linkTo: "Follows counter",
+    linkToHint:
+      'Make this counter rise along with another. Useful for "increase every 2nd row" while you count the body.',
     linkNone: "Not linked",
     linkRatio: "Every N rows",
+    linkRatioHint:
+      "This counter goes up by 1 each time the followed counter rises this much.",
     linkedHint: "Goes up 1 every {ratio} rows of {main}",
     linkedReadOnly: "Counts up on its own every {ratio} rows of {main}",
     empty: "No counters yet",
@@ -114,8 +125,9 @@ export const en: UIStrings = {
       "Make one for each thing you count — body, sleeves, pattern repeats",
     rows: "rows",
     remaining: "{n} rows to go",
-    repeatProgress: "{done} done · row {row}/{len}",
-    repeatOf: "{done}/{target} repeats",
+    repeatProgress: "row {row}/{len} of this repeat",
+    repeatDone: "{done} repeats knitted",
+    repeatOf: "repeat {done}/{target}",
     done: "Target reached",
     undo: "Undo",
     lifeline: "Lifeline",

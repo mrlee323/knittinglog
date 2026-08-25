@@ -4,6 +4,7 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { Columns2, LifeBuoy, Plus, Minus, Undo2, X, Sun } from "lucide-react";
 import { counterView, isLinked } from "@/domain/counter";
 import { LifelineNote } from "@/features/counter/components/lifeline-note";
+import { RepeatLine } from "@/features/counter/components/repeat-line";
 import { haptic, useWakeLock } from "@/hooks/useWakeLock";
 import {
   addMark,
@@ -298,22 +299,7 @@ function KnitMode() {
           {view?.done && (
             <p className="text-accent font-medium">{t.counter.done}</p>
           )}
-          {view?.repeat && (
-            <p>
-              {t.counter.repeatProgress
-                .replace("{done}", String(view.repeat.completed))
-                .replace("{row}", String(view.repeat.rowInRepeat))
-                .replace("{len}", String(view.repeat.length))}
-              {view.repeat.target && (
-                <>
-                  {" · "}
-                  {t.counter.repeatOf
-                    .replace("{done}", String(view.repeat.completed))
-                    .replace("{target}", String(view.repeat.target))}
-                </>
-              )}
-            </p>
-          )}
+          {view?.repeat && <RepeatLine repeat={view.repeat} />}
         </div>
 
         {/* 라이프라인 — 실수해도 여기까지만 풀면 된다는 안전선 */}

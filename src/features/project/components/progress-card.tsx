@@ -3,6 +3,7 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { Button } from "@/components/ui/button";
 import { counterView } from "@/domain/counter";
 import { LifelineNote } from "@/features/counter/components/lifeline-note";
+import { RepeatLine } from "@/features/counter/components/repeat-line";
 import { FinishEstimate } from "./finish-estimate";
 import { lifelineRows, listCounters } from "@/features/counter/repository";
 import { useStrings } from "@/i18n";
@@ -76,6 +77,10 @@ export function ProgressCard({ projectId }: { projectId: Id }) {
           />
         </div>
       )}
+
+      {/* 반복을 넣어두고도 이 화면에는 흔적이 없었다. 값을 넣은 사람이
+          그게 어디서 쓰이는지 볼 데가 없으면, 넣을 이유도 알 수 없다. */}
+      {view.repeat && <RepeatLine repeat={view.repeat} className="mt-2" />}
 
       {/* 라이프라인은 이 서비스의 시그니처다. 뜨기 화면에만 두면 "여기까지만 풀면
           된다"는 안심이 정작 프로젝트를 다시 열 때 보이지 않는다.
