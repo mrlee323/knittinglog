@@ -4,7 +4,8 @@ import type {
   SelectHTMLAttributes,
   TextareaHTMLAttributes,
 } from "react";
-import { useId } from "react";
+import { useId, useState } from "react";
+import { Info } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 /**
@@ -22,23 +23,58 @@ function Wrapper({
   label,
   hint,
   error,
+  info,
   htmlFor,
   children,
 }: {
   label: string;
   hint?: string;
   error?: string;
+  /** 글로는 잘 안 와닿는 값에 붙이는 그림. 라벨 옆 (i)로 펼친다. */
+  info?: ReactNode;
   htmlFor: string;
   children: ReactNode;
 }) {
+  const [open, setOpen] = useState(false);
+  const panelId = useId();
+
   return (
     <div className="mb-4">
-      <label
-        htmlFor={htmlFor}
-        className="text-text-2 text-caption mb-1.5 block"
-      >
-        {label}
-      </label>
+      <div className="mb-1.5 flex items-center gap-1.5">
+        <label htmlFor={htmlFor} className="text-text-2 text-caption">
+          {label}
+        </label>
+        {info && (
+          <button
+            type="button"
+            aria-expanded={open}
+            aria-controls={panelId}
+            aria-label={label}
+            onClick={() => setOpen((v) => !v)}
+            className="text-text-3 hover:text-text -my-2 flex size-8 items-center justify-center rounded-md transition"
+          >
+            <Info size={14} />
+          </button>
+        )}
+      </div>
+
+      {/*
+        떠 있는 툴팁이 아니라 그 자리에서 펼친다. 이 필드들이 쓰이는 곳이
+        `overflow-y: auto`인 시트라서, 떠 있는 상자는 잘리거나 화면 밖으로
+        나간다. 펼치면 아래 내용이 밀릴 뿐 잘리지 않는다.
+
+        기본은 접힘이다. 그림이 늘 펼쳐져 있으면 아는 사람에게는 폼이
+        두 배로 길어진다 — 아는 사람은 건너뛸 수 있어야 한다.
+      */}
+      {info && open && (
+        <div
+          id={panelId}
+          className="border-line bg-sunken mb-2 rounded-md border p-3"
+        >
+          {info}
+        </div>
+      )}
+
       {children}
       {/* 힌트와 에러는 같은 자리를 쓴다. 에러가 있으면 힌트는 물러난다. */}
       {error ? (
@@ -82,6 +118,7 @@ export function TextField({
   label,
   hint,
   error,
+  info,
   before,
   after,
   className,
@@ -90,12 +127,13 @@ export function TextField({
   label: string;
   hint?: string;
   error?: string;
+  info?: ReactNode;
   before?: ReactNode;
   after?: ReactNode;
 }) {
   const id = useId();
   return (
-    <Wrapper label={label} hint={hint} error={error} htmlFor={id}>
+    <Wrapper label={label} hint={hint} error={error} info={info} htmlFor={id}>
       <ControlRow before={before} after={after}>
         <input
           id={id}
@@ -136,6 +174,7 @@ export function SelectField({
   label,
   hint,
   error,
+  info,
   options,
   before,
   after,
@@ -145,13 +184,14 @@ export function SelectField({
   label: string;
   hint?: string;
   error?: string;
+  info?: ReactNode;
   options: { value: string; label: string }[];
   before?: ReactNode;
   after?: ReactNode;
 }) {
   const id = useId();
   return (
-    <Wrapper label={label} hint={hint} error={error} htmlFor={id}>
+    <Wrapper label={label} hint={hint} error={error} info={info} htmlFor={id}>
       <ControlRow before={before} after={after}>
         <select id={id} className={cn(CONTROL, className)} {...props}>
           {options.map((o) => (

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { RepeatDiagram } from "./repeat-diagram";
 import { SelectField, TextField } from "@/components/ui/field";
 import { useStrings } from "@/i18n";
 import type { CounterInput } from "@/features/counter/repository";
@@ -132,6 +133,16 @@ export function CounterFormSheet({
             <TextField
               label={t.counter.repeatLength}
               hint={t.counter.repeatLengthHint}
+              /* 이 값만 그림을 붙인다. "목표 단수"는 글로 충분하고, 아무것도
+                 더 알려주지 않는 (i)가 늘어나면 진짜 필요한 것도 안 눌린다. */
+              info={
+                <>
+                  <RepeatDiagram length={num(repeatLength) ?? 4} />
+                  <p className="text-text-2 text-caption mt-2">
+                    {t.counter.repeatDiagramNote}
+                  </p>
+                </>
+              }
               inputMode="numeric"
               value={repeatLength}
               onChange={(e) => setRepeatLength(e.target.value)}
