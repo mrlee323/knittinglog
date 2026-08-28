@@ -2,6 +2,11 @@ import { useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
 import { Plus, RefreshCw, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { counterView } from "@/domain/counter";
+import {
+  createCounter,
+  listCountersForPiece,
+} from "@/features/counter/repository";
 import { TextField } from "@/components/ui/field";
 import { ConfirmSheet } from "@/components/ui/confirm-sheet";
 import {
@@ -216,6 +221,14 @@ function PieceRow({
         </button>
       </div>
 
+      {/* 이 조각을 세는 카운터.
+
+          전에는 조각·카운터·게이지가 평평한 형제 셋이었다. "몸판"이라는 같은
+          것을 세 군데에 따로 적고, 어느 카운터가 어느 조각의 것인지는 사람이
+          이름으로 맞춰야 했다. 조각이 이미 자기 게이지를 가리키고 있었으므로
+          (`ProjectPiece.gaugeId`) 카운터만 이어 붙이면 관계가 완성된다. */}
+      <PieceCounters piece={piece} />
+
       {/* 어긋남은 양쪽 숫자를 함께 보여준다. "다시 계산하세요"만 말하면
           무엇이 얼마나 달라지는지 모른 채 누르게 된다. */}
       {drift && (
@@ -390,5 +403,74 @@ function PieceSheet({
         </div>
       </div>
     </div>
+  );
+}
+
+/**
+ * 조각 아래에 그 조각의 카운터.
+ *
+ * 없으면 만드는 문을 준다 — 조각을 계획한 자리에서 바로 세기 시작할 수 있어야
+ * 한다. 계획한 단수를 목표로 함께 넘기므로, 목표 단수를 손으로 옮겨 적지
+ * 않는다(전에는 카운터 시트에서 조각 칩을 눌러 가져와야 했다).
+ */
+function PieceCounters({ piece }: { piece: ProjectPiece }) {
+  const t = useStrings();
+  const [making, setMaking] = useState(false);
+  const counters = useLiveQuery(
+    () => listCountersForPiece(piece.id),
+    [piece.id]
+  );
+
+  if (!counters) return null;
+
+  if (counters.length === 0) {
+    return (
+      <div className="border-line mt-2 border-t pt-2">
+        <Button
+          variant="secondary"
+          className="!text-caption !min-h-9 !px-3"
+          disabled={making}
+          onClick={async () => {
+            setMaking(true);
+            try {
+              await createCounter(piece.projectId, {
+                label: piece.name,
+                pieceId: piece.id,
+                target: piece.rows,
+              });
+            } finally {
+              setMaking(false);
+            }
+          }}
+        >
+          <Plus size={14} />
+          {t.piece.countThis}
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <ul className="border-line mt-2 space-y-1 border-t pt-2">
+      {counters.map((counter) => {
+        const view = counterView(counter);
+        return (
+          <li key={counter.id} className="flex items-baseline gap-2">
+            <span className="text-text-2 text-caption min-w-0 flex-1 truncate">
+              {counter.label}
+            </span>
+            <span className="text-small font-medium tabular-nums">
+              {view.value}
+              {view.target !== undefined && (
+                <span className="text-text-3 font-normal">
+                  {" / "}
+                  {view.target}
+                </span>
+              )}
+            </span>
+          </li>
+        );
+      })}
+    </ul>
   );
 }

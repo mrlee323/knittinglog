@@ -134,6 +134,13 @@ export class KnittinglogDB extends Dexie {
     this.version(9).stores({
       projectPieces: "id, projectId, sortOrder",
     });
+
+    // v10 — 카운터가 어느 조각을 세는지. 조각 아래에 그 조각의 카운터만
+    // 모아 보여주므로 pieceId로 골라낼 수 있어야 한다. 기존 카운터는
+    // pieceId가 비어 있고, 그건 "프로젝트 전체"라는 정상 상태다.
+    this.version(10).stores({
+      counters: "id, projectId, pieceId, sortOrder",
+    });
   }
 }
 
