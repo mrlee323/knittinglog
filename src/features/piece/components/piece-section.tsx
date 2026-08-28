@@ -21,9 +21,9 @@ import {
 import { listGaugesForProject } from "@/features/gauge/repository";
 import { getProject } from "@/features/project/repository";
 import { pieceCounts, pieceDrift, SUGGESTED_PIECES } from "@/domain/piece";
-import type { Gauge } from "@/domain/gauge";
+import { toGauge, type Gauge } from "@/domain/gauge";
 import { useStrings } from "@/i18n";
-import type { Id, ProjectPiece } from "@/types/entities";
+import type { GaugeRecord, Id, ProjectPiece } from "@/types/entities";
 
 /**
  * 조각 계획.
@@ -51,15 +51,12 @@ export function PieceSection({ projectId }: { projectId: Id }) {
 
   if (!pieces || !project) return null;
 
-  // 블로킹 후 값이 있으면 그쪽이 완성 치수의 기준이다
   const swatch = gauges?.[0];
-  const gauge: Gauge | undefined = swatch
-    ? {
-        stitchesPer10cm:
-          swatch.blockedStitchesPer10cm ?? swatch.stitchesPer10cm,
-        rowsPer10cm: swatch.blockedRowsPer10cm ?? swatch.rowsPer10cm,
-      }
-    : undefined;
+  /* 시트에서 치수를 넣는 동안 코수를 미리 보여주는 데 쓴다. 고치는 중이면
+     그 조각의 게이지로 봐야 한다 — 다른 스와치로 미리 보면 저장 직후
+     어긋남이 뜬다. */
+  const sheetSource = gauges?.find((g) => g.id === editing?.gaugeId) ?? swatch;
+  const sheetGauge = sheetSource ? toGauge(sheetSource) : undefined;
 
   // 계산기에서 저장한 조각은 kind가 없다 — 이름이 같아도 "몸판을 추가하라"고
   // 제안하면 이상하므로 이름으로도 거른다.
@@ -96,8 +93,8 @@ export function PieceSection({ projectId }: { projectId: Id }) {
             <PieceRow
               key={piece.id}
               piece={piece}
-              gauge={gauge}
-              gaugeId={swatch?.id}
+              gauges={gauges ?? []}
+              fallbackGaugeId={swatch?.id}
               onEdit={() => setEditing(piece)}
               onDelete={() => setPendingDelete(piece)}
             />
@@ -134,16 +131,22 @@ export function PieceSection({ projectId }: { projectId: Id }) {
       {(adding || editing) && (
         <PieceSheet
           piece={editing}
-          gauge={gauge}
+          gauge={sheetGauge}
           onClose={() => {
             setAdding(false);
             setEditing(undefined);
           }}
           onSubmit={async (values) => {
             if (editing)
-              await updatePiece(editing.id, { ...values, gaugeId: swatch?.id });
+              await updatePiece(editing.id, {
+                ...values,
+                gaugeId: sheetSource?.id,
+              });
             else
-              await createPiece(projectId, { ...values, gaugeId: swatch?.id });
+              await createPiece(projectId, {
+                ...values,
+                gaugeId: sheetSource?.id,
+              });
           }}
         />
       )}
@@ -166,18 +169,34 @@ export function PieceSection({ projectId }: { projectId: Id }) {
 
 function PieceRow({
   piece,
-  gauge,
-  gaugeId,
+  gauges,
+  fallbackGaugeId,
   onEdit,
   onDelete,
 }: {
   piece: ProjectPiece;
-  gauge: Gauge | undefined;
-  gaugeId?: Id;
+  gauges: GaugeRecord[];
+  /** 조각에 게이지가 안 적혀 있을 때 쓸 것 — 이 프로젝트의 첫 스와치 */
+  fallbackGaugeId?: Id;
   onEdit: () => void;
   onDelete: () => void;
 }) {
   const t = useStrings();
+
+  /*
+    어긋남은 **이 조각의 숫자를 만든 게이지**와 비교해야 한다.
+
+    전에는 프로젝트의 첫 스와치(`gauges[0]`)로만 비교했다. `piece.gaugeId`를
+    저장해두고도 읽지 않았다. 스와치가 하나면 같은 값이라 드러나지 않지만,
+    두 개가 되면 — 다시 뜬 스와치로 계산한 조각을 첫 스와치와 비교해 **없는
+    어긋남**을 띄운다. 거기서 "다시 계산"을 누르면 맞던 숫자가 틀린 값으로
+    덮인다. 잃는 쪽으로 조용히 틀리는 자리였다.
+  */
+  const source =
+    gauges.find((g) => g.id === piece.gaugeId) ??
+    gauges.find((g) => g.id === fallbackGaugeId);
+  const gaugeId = source?.id;
+  const gauge = source ? toGauge(source) : undefined;
   const drift = gauge ? pieceDrift(piece, gauge) : null;
 
   const counts =
@@ -220,6 +239,31 @@ function PieceRow({
           <X size={15} />
         </button>
       </div>
+
+      {/* 이 조각의 숫자가 어느 스와치에서 나왔는지.
+
+          데이터는 진작 연결돼 있었는데(`gaugeId`) 화면이 드러내지 않아서,
+          어긋남 경고가 떠도 무엇과 비교한 것인지 알 수 없었다. 스와치가
+          둘 이상이면 바꿀 수 있다 — 다른 스와치로 뜨기로 했으면 코수도
+          그쪽에서 다시 나와야 한다. */}
+      {gauges.length > 0 && (
+        <PieceGauge
+          piece={piece}
+          gauges={gauges}
+          current={source}
+          onPick={async (next) => {
+            const counts = pieceCounts(piece, toGauge(next));
+            await applyPieceCounts(
+              piece.id,
+              {
+                stitches: counts.stitches ?? piece.stitches,
+                rows: counts.rows ?? piece.rows,
+              },
+              next.id
+            );
+          }}
+        />
+      )}
 
       {/* 이 조각을 세는 카운터.
 
@@ -472,5 +516,62 @@ function PieceCounters({ piece }: { piece: ProjectPiece }) {
         );
       })}
     </ul>
+  );
+}
+
+/**
+ * 이 조각이 어느 스와치를 기준으로 계산됐는지.
+ *
+ * 스와치가 하나면 고를 것이 없으므로 읽기만 한다 — 하나뿐인 선택지를 셀렉트로
+ * 두면 누를 수 있어 보이는데 아무 일도 안 일어난다.
+ *
+ * 여러 조각이 **같은 스와치를 공유하는 것이 정상**이다. 몸판과 소매를 같은
+ * 실·같은 바늘로 뜨면 게이지는 하나다. 그래서 조각마다 스와치를 만들게
+ * 하지 않고, 기록된 것 중에서 고르게 한다.
+ */
+function PieceGauge({
+  piece,
+  gauges,
+  current,
+  onPick,
+}: {
+  piece: ProjectPiece;
+  gauges: GaugeRecord[];
+  current?: GaugeRecord;
+  onPick: (next: GaugeRecord) => Promise<void>;
+}) {
+  const t = useStrings();
+  const label = (g: GaugeRecord) => {
+    const v = toGauge(g);
+    return t.gauge.summary
+      .replace("{sts}", String(v.stitchesPer10cm))
+      .replace("{rows}", String(v.rowsPer10cm));
+  };
+
+  if (gauges.length === 1 || !piece.widthCm) {
+    return (
+      <p className="text-text-3 text-caption mt-1.5">
+        {current ? label(current) : t.piece.gaugeUnknown}
+      </p>
+    );
+  }
+
+  return (
+    <select
+      aria-label={t.piece.gaugeOf}
+      className="text-text-3 text-caption border-line mt-1.5 w-full rounded-md border bg-transparent px-2 py-1"
+      value={current?.id ?? ""}
+      onChange={(e) => {
+        const next = gauges.find((g) => g.id === e.target.value);
+        if (next) void onPick(next);
+      }}
+    >
+      {!current && <option value="">{t.piece.gaugeUnknown}</option>}
+      {gauges.map((g) => (
+        <option key={g.id} value={g.id}>
+          {g.label ? `${g.label} · ${label(g)}` : label(g)}
+        </option>
+      ))}
+    </select>
   );
 }

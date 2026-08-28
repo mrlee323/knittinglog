@@ -154,6 +154,8 @@ export const en: UIStrings = {
     deleteConfirm: "Delete this counter with its marks and sessions?",
   },
   piece: {
+    gaugeOf: "Swatch this piece is based on",
+    gaugeUnknown: "No swatch recorded for this piece",
     countThis: "Count this piece",
     title: "Pieces",
     hint: "Save the counts here and your charts and counters use the same numbers",

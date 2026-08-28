@@ -14,6 +14,25 @@ export interface Gauge {
   rowsPer10cm: number;
 }
 
+/**
+ * 기록한 스와치에서 계산에 쓸 게이지를 꺼낸다.
+ *
+ * **블로킹 후 값이 있으면 그쪽이 기준이다.** 물에 담가 말리면 편물이 자리를
+ * 잡으면서 치수가 달라지고, 완성 치수를 정하는 건 그 값이다.
+ *
+ * 이 한 줄이 여섯 군데에 복사돼 있었다. 규칙이 흩어지면 한 곳만 바뀌고,
+ * 그러면 화면마다 다른 코수를 말한다.
+ */
+export const toGauge = (swatch: {
+  stitchesPer10cm: number;
+  rowsPer10cm: number;
+  blockedStitchesPer10cm?: number;
+  blockedRowsPer10cm?: number;
+}): Gauge => ({
+  stitchesPer10cm: swatch.blockedStitchesPer10cm ?? swatch.stitchesPer10cm,
+  rowsPer10cm: swatch.blockedRowsPer10cm ?? swatch.rowsPer10cm,
+});
+
 const assertPositive = (g: Gauge) => {
   if (g.stitchesPer10cm <= 0 || g.rowsPer10cm <= 0) {
     throw new RangeError("게이지의 코수·단수는 0보다 커야 합니다");
