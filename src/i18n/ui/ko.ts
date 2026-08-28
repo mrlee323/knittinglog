@@ -158,6 +158,8 @@ export const ko = {
     deleteConfirm: "이 카운터와 마크·세션 기록을 지울까요?",
   },
   piece: {
+    gaugeOf: "이 조각의 기준 스와치",
+    gaugeUnknown: "기준 스와치가 적혀 있지 않아요",
     countThis: "이 조각 세기",
     title: "조각",
     /* 계산기가 만든 숫자가 사라지는 걸 막는 자리다 */
