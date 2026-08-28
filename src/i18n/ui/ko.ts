@@ -97,6 +97,7 @@ export const ko = {
     reasonOpen: "{n}개 멈춤 중",
   },
   counter: {
+    allInPieces: "카운터가 모두 조각에 붙어 있어요. 위 조각에서 볼 수 있어요.",
     linkDiagramFollowed: "세는 단",
     linkDiagramThis: "이 카운터",
     linkDiagramAlt:
@@ -157,6 +158,7 @@ export const ko = {
     deleteConfirm: "이 카운터와 마크·세션 기록을 지울까요?",
   },
   piece: {
+    countThis: "이 조각 세기",
     title: "조각",
     /* 계산기가 만든 숫자가 사라지는 걸 막는 자리다 */
     hint: "계산한 코수를 여기 남겨두면 도안과 카운터가 같은 숫자를 써요",

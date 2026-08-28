@@ -92,6 +92,7 @@ export const en: UIStrings = {
     reasonOpen: "{n} still on hold",
   },
   counter: {
+    allInPieces: "Every counter belongs to a piece — find them above.",
     linkDiagramFollowed: "rows",
     linkDiagramThis: "this one",
     linkDiagramAlt:
@@ -153,6 +154,7 @@ export const en: UIStrings = {
     deleteConfirm: "Delete this counter with its marks and sessions?",
   },
   piece: {
+    countThis: "Count this piece",
     title: "Pieces",
     hint: "Save the counts here and your charts and counters use the same numbers",
     none: "No pieces yet",

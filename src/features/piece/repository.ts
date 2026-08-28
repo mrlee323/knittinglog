@@ -76,4 +76,24 @@ export const applyPieceCounts = (
   gaugeId?: Id
 ) => db.projectPieces.update(id, touch({ ...counts, gaugeId }));
 
-export const deletePiece = (id: Id) => db.projectPieces.delete(id);
+/**
+ * 조각을 지운다. **그 조각의 카운터는 지우지 않는다.**
+ *
+ * 조각은 계획이고 카운터에 쌓인 단수는 실제로 뜬 결과다. 계획을 지웠다고
+ * 뜬 것을 지우면 되돌릴 수 없는 것을 잃는다. 대신 연결만 끊어서 프로젝트
+ * 전체를 세는 카운터로 남긴다 — 조각이 사라진 뒤에도 화면에 남아야 한다
+ * (가리키는 조각이 없는 pieceId는 유령 참조가 되어 어디에도 안 보인다).
+ *
+ * 한 트랜잭션에서 한다. 조각만 지워지고 연결이 남으면 그 유령이 생긴다.
+ */
+export async function deletePiece(id: Id) {
+  await db.transaction("rw", db.projectPieces, db.counters, async () => {
+    await db.counters
+      .where("pieceId")
+      .equals(id)
+      .modify((counter) => {
+        delete counter.pieceId;
+      });
+    await db.projectPieces.delete(id);
+  });
+}

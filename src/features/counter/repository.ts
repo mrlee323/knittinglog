@@ -18,6 +18,11 @@ export function listCounters(projectId: Id) {
   return db.counters.where("projectId").equals(projectId).sortBy("sortOrder");
 }
 
+/** 이 조각을 세는 카운터들. 조각 카드가 자기 카운터만 보여준다. */
+export function listCountersForPiece(pieceId: Id) {
+  return db.counters.where("pieceId").equals(pieceId).sortBy("sortOrder");
+}
+
 export function listMarks(counterId: Id) {
   return db.counterMarks.where("counterId").equals(counterId).sortBy("atRow");
 }
@@ -34,6 +39,8 @@ export async function lifelineRows(counterId: Id): Promise<number[]> {
 
 export interface CounterInput {
   label: string;
+  /** 어느 조각을 세는지. 조각 카드에서 만들면 채워진다. */
+  pieceId?: Id;
   target?: number;
   repeatLength?: number;
   repeatTarget?: number;

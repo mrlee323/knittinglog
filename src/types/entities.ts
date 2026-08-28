@@ -327,6 +327,18 @@ export interface StitchChartRecord extends Base {
 
 export interface Counter extends Base {
   projectId: Id;
+  /**
+   * 어느 조각을 세는 카운터인가.
+   *
+   * 조각은 이미 자기 게이지를 가리킨다(`ProjectPiece.gaugeId`). 카운터에만
+   * 이 연결이 없어서 화면에서 조각·카운터·게이지가 평평한 형제로 보였고,
+   * "몸판"이라는 같은 것을 세 군데에 따로 적어야 했다.
+   *
+   * 비어 있을 수 있다. 조각을 나누지 않고 하나로 뜨는 작품도 있고, 조각을
+   * 만들기 전에 세기부터 시작하는 사람도 있다. 그때는 프로젝트 전체를 세는
+   * 카운터다.
+   */
+  pieceId?: Id;
   label: string;
   value: number;
   target?: number;
