@@ -64,11 +64,16 @@ try {
     const fm = frontMatter(text);
     if (!fm) continue;
     if (fm.turn !== me) continue;
-    if (fm.status && fm.status !== "open") continue;
+    const st = fm.status || "open";
+    // `decided`인데 차례가 남아 있으면 **규칙 7 확인**이 안 끝난 것이다.
+    // 여기서 걸러버리면 닫힌 뒤의 확인은 아무도 깨우지 못한다 — 003에서 실제로
+    // 그랬다. 확인이 끝나면 `turn`을 비우고, 그러면 저절로 조용해진다.
+    if (st !== "open" && st !== "decided") continue;
     mine.push({
       file: `docs/discuss/${name}`,
       title: fm.title || name,
       rounds: Number(fm.rounds || 0),
+      closed: st === "decided",
       last: lastEntry(text),
     });
   }
@@ -81,7 +86,11 @@ if (mine.length === 0) process.exit(0);
 
 const lines = ["논의 스레드에 내 차례가 있습니다. 이 턴에서 먼저 처리합니다.", ""];
 for (const t of mine) {
-  lines.push(`- ${t.file} — "${t.title}" (${t.rounds}왕복)`);
+  lines.push(
+    t.closed
+      ? `- ${t.file} — "${t.title}" (닫힘 · 규칙 7 확인이 남았습니다)`
+      : `- ${t.file} — "${t.title}" (${t.rounds}왕복)`,
+  );
   if (t.last) lines.push(`  상대의 마지막 말: ${t.last}`);
 }
 lines.push(

@@ -33,3 +33,6 @@ public/pdfjs/
 # oh-my-design 레퍼런스 카탈로그 — codex 채널 사본(.claude/data와 내용이 겹친다)
 # 필요하면 `npx oh-my-design-cli install-skills --agent codex --all`로 다시 받는다
 .codex/data
+
+# 세션마다 다른 값(DISCUSS_ME 등). 공유하면 두 세션이 같은 자리가 된다
+.claude/settings.local.json

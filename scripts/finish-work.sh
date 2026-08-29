@@ -4,6 +4,9 @@
 #
 #   ./scripts/finish-work.sh --yes
 #
+# **머지는 검증이 한다.** 규칙 7 확인을 하는 자리가 그대로 main의 문을 지킨다 —
+# 확인과 머지 사이에 자리를 넘기면 그 틈에서 확인이 빠진다.
+#
 # **--yes 없이는 무엇을 할지 보여주기만 한다.** main에 머지하는 것은 되돌리기
 # 번거롭고, 세 자리가 같은 워킹 트리를 쓰므로 브랜치 전환이 나머지 둘에게도
 # 영향을 준다. 눌러보고 나서 알게 되면 안 된다.
@@ -39,6 +42,27 @@ if [ -n "$open_threads" ]; then
   echo
 fi
 
+# **닫혔는데 차례가 남아 있으면 규칙 7 확인이 안 끝난 것이다.** 확인이 끝나면
+# 확인한 자리가 turn을 비운다. 비어 있지 않은 채 머지하면 "문서에 실제로 들어갔나"를
+# 아무도 안 본 채 main에 들어간다.
+unverified=""
+for f in docs/discuss/[0-9]*.md; do
+  [ -e "$f" ] || continue
+  st=$(sed -n 's/^status: *//p' "$f" | sed 's/[[:space:]]*#.*$//' | tr -d '[:space:]')
+  tn=$(sed -n 's/^turn: *//p' "$f" | sed 's/[[:space:]]*#.*$//' | tr -d '[:space:]')
+  [ "$st" = "decided" ] || continue
+  # 확인은 자리가 하는 일이다. `사람`이나 옛 이름(001의 `human` 등)이 남아 있는
+  # 것은 확인 대기가 아니라 그때의 기록이다 — 001은 규칙 2대로 고치지 않는다.
+  case "$tn" in 기획|구현|검증) ;; *) continue ;; esac
+  unverified="$unverified  $f (확인할 자리: $tn)\n"
+done
+if [ -n "$unverified" ]; then
+  echo "경고: 닫혔지만 규칙 7 확인이 안 끝난 논의가 있습니다 —"
+  printf "$unverified"
+  echo "확인한 자리가 turn을 비우면 이 경고가 사라집니다."
+  echo
+fi
+
 git fetch -q origin main 2>/dev/null
 AHEAD=$(git rev-list --count origin/main..HEAD)
 echo "브랜치: $BRANCH"
@@ -69,4 +93,4 @@ git push -q origin main || { echo "중단: main push 실패."; exit 1; }
 
 echo
 echo "머지했습니다: $BRANCH → main (origin 반영)"
-echo "다음 작업은:  ./scripts/new-work.sh <새-브랜치명>"
+echo "다음 작업 브랜치는 **기획**이 엽니다:  ./scripts/new-work.sh <새-브랜치명>"

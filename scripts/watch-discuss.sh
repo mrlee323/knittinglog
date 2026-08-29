@@ -44,19 +44,31 @@ self_hash=$(shasum "$0" | cut -d' ' -f1)
 told_stale=0
 
 # 머리말을 읽고 내 차례면 한 줄 알린다. $1=출처 라벨 $2=파일경로 $3=머리말
+# 머리말의 `키: 값`에서 값만 꺼낸다. 뒤의 `# 주석`은 뗀다.
+field() { printf '%s' "$2" | sed -n "s/^$1: *//p" | sed 's/[[:space:]]*#.*$//' | tr -d '[:space:]'; }
+
 consider() {
-  local where="$1" file="$2" head="$3" hash title rounds
+  local where="$1" file="$2" head="$3" hash title rounds turn status
   hash=$(printf '%s' "$head" | shasum | cut -d' ' -f1)
   case " $seen " in *" $hash "*) return ;; esac
   seen="$seen $hash"
-  printf '%s' "$head" | grep -q '^status: *open' || return
-  # 값 뒤의 `# 주석`을 떼고 정확히 비교한다. 접두사 매칭은 다른 이름을 오인한다.
-  local turn
-  turn=$(printf '%s' "$head" | sed -n 's/^turn: *//p' | sed 's/[[:space:]]*#.*$//' | tr -d '[:space:]')
+
+  turn=$(field turn "$head")
   [ "$turn" = "$ME" ] || return
+
+  # `decided`인데 차례가 남아 있으면 **규칙 7 확인**이 안 끝난 것이다. `open`만
+  # 보면 닫힌 뒤의 확인은 아무도 깨우지 못한다 — 003에서 실제로 그랬다. 확인이
+  # 끝나면 turn을 비우고, 그러면 저절로 조용해진다. `parked`는 넘긴다.
+  status=$(field status "$head")
+  [ "$status" = "open" ] || [ "$status" = "decided" ] || return
+
   title=$(printf '%s' "$head" | sed -n 's/^title: *//p' | sed 's/[[:space:]]*#.*$//')
-  rounds=$(printf '%s' "$head" | sed -n 's/^rounds: *//p' | sed 's/[[:space:]]*#.*$//' | tr -d '[:space:]')
-  echo "$ME 차례입니다 — $file · \"$title\" · ${rounds:-?}왕복 ($where). docs/discuss/README.md 규약대로 답하세요."
+  rounds=$(field rounds "$head")
+  if [ "$status" = "decided" ]; then
+    echo "$ME 차례입니다 — $file · \"$title\" · 닫힘, 규칙 7 확인이 남았습니다 ($where). 문서에 실제로 들어갔는지 보고 turn을 비우세요."
+  else
+    echo "$ME 차례입니다 — $file · \"$title\" · ${rounds:-?}왕복 ($where). docs/discuss/README.md 규약대로 답하세요."
+  fi
 }
 
 while true; do
