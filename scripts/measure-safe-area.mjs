@@ -42,7 +42,17 @@ try {
 
 const BASE = process.env.SHOT_BASE ?? "http://localhost:5173/knittinglog";
 const 여유_최소 = 24;    // 터치 목표 44px의 절반 (003 · 기획)
-const 둘째_최소 = 100;   // 001이 상한을 정할 때 쓴 조건. 아직 사람이 재확인하지 않았다
+/**
+ * 둘째 카드가 보여야 하는 높이. **사람이 100px로 확정했다**(003).
+ *
+ * 무엇으로 이루어진 값인지는 재뒀다 — 기다리는 줄 하나가 65px, 줄 간격이 8px이다.
+ * 그러니 100px은 **한 줄 + 간격 + 다음 줄의 27px**이다. 줄 높이가 바뀌면 이 값이
+ * 무엇을 보장하는지도 바뀌므로 그때 다시 재야 한다.
+ */
+const 둘째_최소 = 100;
+
+/** 결정된 상한(003). 이 비율이 모든 기기를 통과하지 못하면 관문 실패다. */
+const 상한 = "4:3";
 
 /**
  * 기기. **뷰포트와 safe-area를 같은 줄에 둔다.**
@@ -209,7 +219,8 @@ const survivors = RATIOS.filter(([n]) => n !== "없음").filter(([n]) =>
   rows.filter((r) => r.rname === n).every((r) => r.ok),
 );
 console.log(`\n모든 기기를 통과하는 비율: ${survivors.length ? survivors.map(([n]) => n).join(", ") : "없음"}`);
-if (!survivors.some(([n]) => n === "1:1")) fail.push("1:1이 모든 기기를 통과하지 못한다");
+if (!survivors.some(([n]) => n === 상한))
+  fail.push(`결정된 상한 ${상한}이 모든 기기를 통과하지 못한다`);
 
 await browser.close();
 if (fail.length) {
