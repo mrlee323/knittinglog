@@ -14,7 +14,14 @@
  *     node scripts/shot-cards.mjs
  */
 const { chromium } = await import(process.env.PW + "/index.mjs");
-const b = await chromium.launch();
+const ENV_FAIL = 2, GATE_FAIL = 1;
+const b = await chromium
+  .launch({ executablePath: process.env.CHROMIUM_PATH || undefined })
+  .catch((e) => {
+    console.error("환경 문제: 브라우저를 띄우지 못했습니다.\n  " + e.message);
+    console.error("  CHROMIUM_PATH=/경로/chromium 으로 지정하세요.");
+    process.exit(ENV_FAIL);
+  });
 const ctx = await b.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2 });
 const p = await ctx.newPage();
 p.on("pageerror", (e) => console.log("[page error]", e.message));
@@ -52,7 +59,7 @@ await p.evaluate(async () => {
   };
   await mk("p1", "회색 래글런 스웨터", "sweater", "active", { photo: "#6b7f6e", yarn: "#6b7f6e" });
   await mk("p2", "겨울 양말", "socks", "hibernating", { yarn: "#b5643c" });
-  await mk("p3", "이름만 있는 목도리", "scarf", "planning", {});
+  await mk("p3", "이름만 있는 목도리", "accessory", "planning", {});
   await mk("p4", "체크 블랭킷", "blanket", "active", { photo: "#7a6a58", yarn: "#c9b79c" });
 });
 await p.goto("http://localhost:5173/knittinglog/projects", { waitUntil: "networkidle" });
@@ -77,9 +84,43 @@ const m = await p.evaluate(() => {
   });
   const visible = cards.filter((c) => c.상단 < nav.top).length;
   const fully = cards.filter((c) => c.하단 <= nav.top).length;
-  return { 탭바상단: Math.round(nav.top), cards, 첫화면에걸친카드: visible, 첫화면에온전한카드: fully };
+
+  // 둘째 카드의 윗면이 첫 화면에서 몇 %나 보이는가 — 005의 관문.
+  const second = items[1];
+  const cov2 = second?.querySelector("img, [aria-hidden].bg-sunken");
+  let 둘째윗면 = null;
+  if (cov2) {
+    const r = cov2.getBoundingClientRect();
+    const seen = Math.max(0, Math.min(r.bottom, nav.top) - r.top);
+    둘째윗면 = { 전체: Math.round(r.height), 보임: Math.round(seen), 비율: r.height ? seen / r.height : 0 };
+  }
+  return { 탭바상단: Math.round(nav.top), cards, 첫화면에걸친카드: visible, 첫화면에온전한카드: fully, 둘째윗면 };
 });
 console.log(JSON.stringify(m, null, 2));
+
+/**
+ * **둘째 카드의 윗면이 첫 화면에서 절반 이상 보인다** (discuss/005, 기획이 정함).
+ *
+ * 50%는 잰 값이 아니라 눈으로 고른 선이다 — 절반 밑으로 내려가면 윗면이 "또
+ * 하나의 작품"이 아니라 잘린 띠로 읽힌다고 봤다. 이 관문은 사진 비율을 키우면
+ * 깨진다. 지금 4:3에서 78%, 1:1이면 34%로 탈락한다.
+ *
+ * 003의 "둘째 카드 100px"을 대체하지 않는다. 저건 홈이고 이건 목록이다.
+ */
+const 최소 = 0.5;
+if (!m.둘째윗면) {
+  console.error("\n환경 문제: 둘째 카드의 윗면을 찾지 못했습니다. 화면 구조가 바뀌었습니까?");
+  await b.close();
+  process.exit(ENV_FAIL);
+}
+const pct = (m.둘째윗면.비율 * 100).toFixed(0);
+console.log(`\n둘째 카드 윗면 관문 — ${m.둘째윗면.보임}/${m.둘째윗면.전체}px = ${pct}% (최소 ${최소 * 100}%)`);
+if (m.둘째윗면.비율 < 최소) {
+  console.error(`관문 실패: 둘째 카드의 윗면이 ${pct}%만 보입니다. 윗면 비율을 줄이세요.`);
+  await b.close();
+  process.exit(GATE_FAIL);
+}
+console.log("통과");
 await p.screenshot({ path: ".shots/cards-phone.png", fullPage: false });
 await p.screenshot({ path: ".shots/cards-phone-full.png", fullPage: true });
 await b.close();
