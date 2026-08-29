@@ -56,8 +56,13 @@ function RootLayout() {
     <div className="flex min-h-dvh flex-col">
       <Sidebar items={items} />
 
-      {/* 사이드바는 fixed라 흐름에서 빠진다. 본문을 그만큼 밀어준다. */}
-      <main className="pt-safe flex-1 pb-20 md:pt-0 md:pb-0 md:pl-56">
+      {/* 사이드바는 fixed라 흐름에서 빠진다. 본문을 그만큼 밀어준다.
+
+          하단 padding은 **탭바 높이 + 안전영역**이어야 한다. 탭바가 `pb-safe`라
+          기기의 홈 인디케이터만큼 두꺼워지는데(58px → 아이폰에서 92px), 여기가
+          `pb-20`(80px)이면 본문 마지막 12px이 탭바 아래에 깔린다. 헤드리스는
+          안전영역이 0이라 이 결함이 보이지 않았다 — discuss/004. */}
+      <main className="pt-safe pb-nav flex-1 md:pt-0 md:pb-0 md:pl-56">
         <Outlet />
       </main>
 
