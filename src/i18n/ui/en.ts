@@ -841,6 +841,10 @@ export const en: UIStrings = {
     resumeEmpty: "Nothing on the needles right now",
     resumeEmptyHint: "Take something off hold, or start something new",
     counterOf: "{label} row {value}",
+    /** 마지막으로 손댄 때. 복귀 카드는 "언제 멈췄나"를 먼저 말한다 */
+    lastWorkedToday: "Worked on today",
+    lastWorkedDays: "Last worked {n} days ago",
+    notStarted: "Not started yet",
     summary: "Where things stand",
     finishedThisYear: "Finished this year",
     waiting: "Waiting for you",

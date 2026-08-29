@@ -924,6 +924,10 @@ export const ko = {
     resumeEmpty: "지금 뜨고 있는 게 없어요",
     resumeEmptyHint: "멈춰둔 걸 다시 꺼내거나 새로 시작해봐요",
     counterOf: "{label} {value}단",
+    /** 마지막으로 손댄 때. 복귀 카드는 "언제 멈췄나"를 먼저 말한다 */
+    lastWorkedToday: "오늘 떴어요",
+    lastWorkedDays: "{n}일 전에 떴어요",
+    notStarted: "아직 시작 전",
     /** 상태 요약 — 누르면 그 상태로 필터된 목록으로 간다 */
     summary: "지금 상태",
     finishedThisYear: "올해 완성",

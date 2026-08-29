@@ -142,11 +142,19 @@ export function countByStatus(projects: ProjectLike[]): StatusCounts {
 export function resumeCandidate<T extends ProjectLike>(
   projects: T[]
 ): T | null {
-  const active = projects.filter((p) => p.status === "active");
-  if (active.length === 0) return null;
-  return active.reduce((latest, p) =>
-    p.updatedAt.getTime() > latest.updatedAt.getTime() ? p : latest
-  );
+  // 진행중이 먼저다. 없으면 계획중을 본다 — **계획중만 가진 사용자의 홈이
+  // 빈 점선 카드 하나였다**(discuss/006). 잠시멈춤은 여기서 안 본다.
+  // 그건 아래 "기다리는 중" 목록의 자리이고, 죄책감을 주지 않으려고 첫
+  // 카드와 떼어놓은 것이다.
+  const pick = (status: ProjectLike["status"]) => {
+    const of = projects.filter((p) => p.status === status);
+    return of.length === 0
+      ? null
+      : of.reduce((latest, p) =>
+          p.updatedAt.getTime() > latest.updatedAt.getTime() ? p : latest
+        );
+  };
+  return pick("active") ?? pick("planning");
 }
 
 /**
