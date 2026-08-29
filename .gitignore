@@ -26,3 +26,6 @@ dist-ssr
 # vite-plugin-pwa dev output
 dev-dist
 public/pdfjs/
+
+# scripts/shot.mjs 결과 — 그때의 확인이지 이력이 아니고, 바이너리는 diff가 안 된다
+.shots
