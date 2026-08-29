@@ -310,4 +310,4 @@ push도 기다리지 않는다)와 `origin/<브랜치>`(다른 머신·클라우
 | [002](002-personas.md)            | 세 자리 — 무엇을 기준으로 나누나                | decided | —    |
 | [003](003-safe-area-card-cap.md)  | safe-area에서 홈 첫 카드 1:1 상한이 버티나      | decided | —    |
 | [004](004-next-work.md)           | 다음 작업 — 무엇을 어떤 순서로                  | decided | —    |
-| [005](005-project-image-cards.md) | 프로젝트 목록 — 관리 리스트인가 작품 갤러리인가 | decided | 검증 |
+| [005](005-project-image-cards.md) | 프로젝트 목록 — 관리 리스트인가 작품 갤러리인가 | decided | —    |
