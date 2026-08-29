@@ -331,3 +331,4 @@ push도 기다리지 않는다)와 `origin/<브랜치>`(다른 머신·클라우
 | [005](005-project-image-cards.md) | 프로젝트 목록 — 관리 리스트인가 작품 갤러리인가 | decided | —    |
 | [015](015-accent-token-drift.md)  | 강조색 — 문서의 쑥빛을 코드에 반영할 것인가     | decided | —    |
 | [016](016-token-parity.md)        | 토큰 대조 — 문이 11개 중 4개만 본다             | decided | —    |
+| [006](006-home-resume-card.md)    | 홈 첫 카드 — 목록 카드를 옮겨오면 되나          | open    | 구현 |

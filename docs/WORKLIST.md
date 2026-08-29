@@ -27,7 +27,7 @@
 | 005  | 완료 | 프로젝트 목록 카드 이미지형 전환               | `feat/project-image-cards`, `docs/discuss/005-project-image-cards.md` |
 | 015  | 완료 | 강조색을 코드에 반영 (**006보다 먼저**)        | `fix/accent-token-drift`, `docs/discuss/015-accent-token-drift.md`    |
 | 016  | 완료 | 토큰 대조를 표 전체로 넓힌다                   | `fix/token-parity`, `docs/discuss/016-token-parity.md`                |
-| 006  | 대기 | 홈 첫 카드 시각 개선                           | 예정                                                                  |
+| 006  | 진행 | 홈 첫 카드 시각 개선                           | `feat/home-resume-card`, `docs/discuss/006-home-resume-card.md`       |
 | 007  | 대기 | 빈 상태/온보딩 개선                            | 예정                                                                  |
 | 008  | 대기 | 프로젝트 상세 상단 복귀 브리핑                 | 예정                                                                  |
 | 009  | 대기 | 프로젝트 상세 빈 섹션 접기                     | 예정                                                                  |
