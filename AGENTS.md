@@ -69,12 +69,25 @@ Monitor(command: "DISCUSS_ME=<자리> ./scripts/watch-discuss.sh", persistent: t
 상대의 글을 보려고 merge를 거쳐야 하고, 왕복마다 merge가 끼면 규약이 무거워져서
 안 지켜진다.
 
+**누가 무엇을 하는지 정해져 있다.** 안 정해두면 작업이 끝난 자리에서 아무도
+움직이지 않거나 둘이 동시에 움직인다.
+
+| 단계                        | 누가     | 왜                                                       |
+| --------------------------- | -------- | -------------------------------------------------------- |
+| 결정을 문서에 반영 (규칙 7) | **구현** | 커밋을 만드는 쪽이 커밋 번호를 안다                      |
+| 반영 확인                   | **검증** | 재는 자리가 확인한다                                     |
+| **main 머지**               | **검증** | 확인과 머지 사이에 자리를 넘기면 그 틈에서 확인이 빠진다 |
+| **새 브랜치**               | **기획** | 다음을 정하는 자리가 그 작업의 이름을 짓는다             |
+
 ```bash
-./scripts/new-work.sh feat/chart-export   # 새 작업 — main에서 따고 origin에 올림
+./scripts/new-work.sh feat/chart-export   # 기획 — main에서 따고 origin에 올림
 # … 셋이 이 브랜치에서 일한다 …
-./scripts/finish-work.sh                  # 무엇을 머지할지 보여주기만 한다
-./scripts/finish-work.sh --yes            # 실제로 main에 --no-ff 머지
+./scripts/finish-work.sh                  # 검증 — 무엇을 머지할지 보여주기만 한다
+./scripts/finish-work.sh --yes            # 검증 — 실제로 main에 --no-ff 머지
 ```
+
+`finish-work.sh`는 **열린 논의**와 **닫혔지만 확인이 안 끝난 논의**를 둘 다
+경고한다. 확인한 자리가 `turn`을 비우면 경고가 사라진다.
 
 `new-work.sh`가 브랜치를 origin에 올리므로 다른 머신·클라우드 세션도 들어올 수
 있다. 감시자는 브랜치를 고정하지 않고 매번 HEAD를 다시 읽으므로 **작업이 바뀌어도
