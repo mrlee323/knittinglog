@@ -36,6 +36,13 @@ seen=""      # 이미 알린 내용의 해시. 같은 글을 두 번 알리지 �
 fails=0
 last_branch=""
 
+# **떠 있는 감시자는 도구를 고쳐도 고쳐지지 않는다.** "이름 없으면 거부"는 새로
+# 뜨는 감시자만 막는다. 이미 돌던 감시자는 옛 코드로 계속 돌면서 아무것도 못 잡고,
+# 조용한 실패는 화면에서 정상과 구분되지 않는다(002 · 검증이 찾은 고장).
+# 그래서 자기 소스를 들고 있다가 바뀌면 스스로 말한다 — 규칙에 기대지 않는다.
+self_hash=$(shasum "$0" | cut -d' ' -f1)
+told_stale=0
+
 # 머리말을 읽고 내 차례면 한 줄 알린다. $1=출처 라벨 $2=파일경로 $3=머리말
 consider() {
   local where="$1" file="$2" head="$3" hash title rounds
@@ -53,6 +60,15 @@ consider() {
 }
 
 while true; do
+  # 내 소스가 바뀌었나. 한 번만 알린다 — 매 바퀴 반복하면 그것도 잡음이 된다.
+  if [ "$told_stale" -eq 0 ]; then
+    now_hash=$(shasum "$0" 2>/dev/null | cut -d' ' -f1)
+    if [ -n "$now_hash" ] && [ "$now_hash" != "$self_hash" ]; then
+      echo "감시자 코드가 바뀌었습니다. 지금 돌고 있는 것은 옛 코드입니다 — TaskStop 하고 다시 띄우세요."
+      told_stale=1
+    fi
+  fi
+
   BRANCH="${PIN_BRANCH:-$(git rev-parse --abbrev-ref HEAD 2>/dev/null)}"
   if [ -n "$BRANCH" ] && [ "$BRANCH" != "$last_branch" ]; then
     [ -n "$last_branch" ] && echo "감시 브랜치가 바뀌었습니다: $last_branch → $BRANCH"
