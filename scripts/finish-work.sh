@@ -51,7 +51,9 @@ for f in docs/discuss/[0-9]*.md; do
   st=$(sed -n 's/^status: *//p' "$f" | sed 's/[[:space:]]*#.*$//' | tr -d '[:space:]')
   tn=$(sed -n 's/^turn: *//p' "$f" | sed 's/[[:space:]]*#.*$//' | tr -d '[:space:]')
   [ "$st" = "decided" ] || continue
-  case "$tn" in ""|"—"|"-") continue ;; esac
+  # 확인은 자리가 하는 일이다. `사람`이나 옛 이름(001의 `human` 등)이 남아 있는
+  # 것은 확인 대기가 아니라 그때의 기록이다 — 001은 규칙 2대로 고치지 않는다.
+  case "$tn" in 기획|구현|검증) ;; *) continue ;; esac
   unverified="$unverified  $f (확인할 자리: $tn)\n"
 done
 if [ -n "$unverified" ]; then
