@@ -1,73 +1,106 @@
 /**
- * 홈 첫 카드의 `뜨기` CTA가 safe-area에서도 첫 화면에 남는지 잰다 (discuss/003).
+ * 홈 첫 카드의 사진을 키웠을 때 첫 화면이 버티는지 잰다 (discuss/003).
  *
- * 판정 대상은 카드가 아니라 **CTA**다. 사진을 키우면 CTA가 탭바 아래로 밀리는데,
- * 그 순간 이 앱은 "그 자리에서 이어 뜨는 기록장"이기를 그만둔다.
+ * 관문 둘을 코드로 둔다 — 눈으로 읽는 관문은 지켜지지 않는다.
+ *   CTA   — `뜨기` 전체가 탭바 위에 보이고, 탭바까지 24px 이상 남는다
+ *   둘째   — 둘째 카드가 100px 이상 보인다 (001이 상한을 정한 근거)
  *
- * 관문 셋을 코드로 둔다 — 하나라도 깨지면 non-zero로 끝난다. 출력만 하면 다음
- * 사람이 눈으로 읽어야 하고, 눈으로 읽는 관문은 지켜지지 않는다.
+ * **종료코드를 가른다.** 환경 문제와 관문 실패가 같은 코드면 "관문이 있다"는
+ * 증거로 쓸 수 없다(003 · 검증).
+ *   0 통과 · 1 관문 실패 · 2 환경 문제(모듈·브라우저·서버)
  *
- *   1. 재현   — safe-area 0에서 001의 값(탭바 상단 786 · 높이 58)이 다시 나온다
- *   2. CTA    — CTA 전체가 탭바 위에 보인다
- *   3. 여유   — CTA 하단과 탭바 상단 사이 24px 이상
+ * **뷰포트와 safe-area는 같은 기기에서 가져온다.** 59/34를 390×844에 붙이면
+ * 없는 기기를 재게 된다 — 003에서 실제로 그 오류가 났다.
  *
- * 큰 사진 카드는 아직 없다(005·006 예정). 그래서 카드 안에 **스페이서**를 넣어
- * 사진 높이를 흉내낸다. 스페이서는 사진이 아니므로 이것은 시뮬레이션이다.
+ * **사진 높이는 비율로 낸다.** 카드 내부 폭이 기기마다 다르므로(390→326,
+ * 375→311) 고정 px로 재면 기기 간 비교가 성립하지 않는다.
+ *
+ * playwright는 이 저장소의 의존성이 아니다(shot.mjs와 같은 이유).
  *
  *   npm run dev
- *   npx --yes playwright@latest install chromium        # 처음 한 번
+ *   npx --yes playwright@latest install chromium          # 처음 한 번
  *   PW=$(find ~/.npm/_npx -maxdepth 4 -type d -name playwright | head -1) \
  *     node scripts/measure-safe-area.mjs
+ *
+ *   # 브라우저가 표준 위치에 없으면
+ *   CHROMIUM_PATH=/opt/pw-browsers/chromium node scripts/measure-safe-area.mjs
  */
+
+const ENV_FAIL = 2;
+const GATE_FAIL = 1;
+
 const PW = process.env.PW || "playwright";
-const { chromium } = await import(PW.startsWith("/") ? PW + "/index.mjs" : PW);
+let chromium;
+try {
+  ({ chromium } = await import(PW.startsWith("/") ? PW + "/index.mjs" : PW));
+} catch (e) {
+  console.error("환경 문제: playwright를 불러오지 못했습니다.");
+  console.error("  " + e.message);
+  console.error("  PW=<playwright 경로> 로 지정하거나 npx --yes -p playwright@latest 로 받으세요.");
+  process.exit(ENV_FAIL);
+}
 
 const BASE = process.env.SHOT_BASE ?? "http://localhost:5173/knittinglog";
-const VIEW = { width: 390, height: 844 };
-const 여유_최소 = 24;    // 터치 목표 44px의 절반. "보이긴 함"과 "안심하고 누름"의 경계(003 기획)
-const 둘째_최소 = 100;   // 001이 상한을 정할 때 쓴 조건 — 둘째 카드가 100px이라도 보인다
+const 여유_최소 = 24;    // 터치 목표 44px의 절반 (003 · 기획)
+const 둘째_최소 = 100;   // 001이 상한을 정할 때 쓴 조건. 아직 사람이 재확인하지 않았다
 
-/** 안전영역 조건. 47/34는 아이폰14, 59/34는 15 Pro. 둘 다 가정값이다. */
-const INSETS = [
-  ["safe 0 (헤드리스)", 0, 0],
-  ["아이폰14 47/34", 47, 34],
-  ["15 Pro 59/34", 59, 34],
+/**
+ * 기기. **뷰포트와 safe-area를 같은 줄에 둔다.**
+ * 13 mini는 화면이 가장 낮아 가장 불리하다 — 큰 기기만 재면 통과가 낙관 쪽으로
+ * 치우친다(003 · 검증).
+ */
+const DEVICES = [
+  { name: "헤드리스 390×844 safe0", w: 390, h: 844, top: 0, bottom: 0, baseline: true },
+  { name: "아이폰14 390×844", w: 390, h: 844, top: 47, bottom: 34 },
+  { name: "15 Pro 393×852", w: 393, h: 852, top: 59, bottom: 34 },
+  { name: "13 mini 375×812", w: 375, h: 812, top: 50, bottom: 34 },
 ];
 
-/** 사진 높이. 폭 326 기준 환산값(001). 0은 지금 화면(큰 사진 없음). */
-const PHOTOS = [
-  ["없음 (지금)", 0],
-  ["4:3", 245],
-  ["9:8 (290)", 290],
-  ["8:7 (300)", 300],
-  ["1:1", 326],
-  ["4:5", 408],
+/** 사진 비율. 높이는 카드 내부 폭에서 낸다. */
+const RATIOS = [
+  ["없음", 0],
+  ["4:3", 3 / 4],
+  ["9:8", 8 / 9],
+  ["8:7", 7 / 8],
+  ["1:1", 1],
 ];
 
-const browser = await chromium.launch();
-const ctx = await browser.newContext({ viewport: VIEW, deviceScaleFactor: 2 });
+const browser = await chromium
+  .launch({ executablePath: process.env.CHROMIUM_PATH || undefined })
+  .catch((e) => {
+    console.error("환경 문제: 브라우저를 띄우지 못했습니다.");
+    console.error("  " + e.message);
+    console.error("  CHROMIUM_PATH=/경로/chromium 으로 지정하세요.");
+    process.exit(ENV_FAIL);
+  });
+
+const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2 });
 const page = await ctx.newPage();
-page.on("pageerror", (e) => console.log("  [page error]", e.message));
+page.on("pageerror", (e) => console.error("  [page error]", e.message));
 
-await page.goto(BASE + "/", { waitUntil: "networkidle" });
+try {
+  await page.goto(BASE + "/", { waitUntil: "networkidle", timeout: 15000 });
+} catch (e) {
+  console.error(`환경 문제: ${BASE} 를 열지 못했습니다. npm run dev 가 떠 있습니까?`);
+  console.error("  " + e.message);
+  await browser.close();
+  process.exit(ENV_FAIL);
+}
 
-// **DB를 비우고 하나만 넣는다.** 남아 있는 데이터가 있으면 첫 카드가 측정 대상이
-// 아닐 수 있고, 그러면 재현 관문이 무의미해진다.
+// DB를 비우고 고정으로 둘을 넣는다. 남은 데이터가 있으면 재현 관문이 무의미하다.
 await page.evaluate(async () => {
   const { db } = await import("/knittinglog/src/lib/db.ts");
   await db.delete();
   await db.open();
   const now = new Date();
-  const pid = "measure-project";
   await db.projects.add({
-    id: pid, name: "측정용 스웨터", craft: "knit", category: "sweater",
+    id: "measure-project", name: "측정용 스웨터", craft: "knit", category: "sweater",
     status: "active", startedAt: now, createdAt: now, updatedAt: now,
   });
   await db.counters.add({
-    id: "measure-counter", projectId: pid, label: "단수", kind: "row",
+    id: "measure-counter", projectId: "measure-project", label: "단수", kind: "row",
     value: 42, step: 1, sortOrder: 0, createdAt: now, updatedAt: now,
   });
-  // 둘째 카드(기다리는 것)가 있어야 001의 구속 조건을 잴 수 있다.
   const paused = new Date(now.getTime() - 30 * 864e5);
   await db.projects.add({
     id: "measure-project-2", name: "측정용 양말", craft: "knit", category: "socks",
@@ -78,7 +111,15 @@ await page.evaluate(async () => {
 await page.reload({ waitUntil: "networkidle" });
 await page.waitForTimeout(700);
 
-async function apply(top, bottom, photo) {
+async function apply(dev, ratio) {
+  await page.setViewportSize({ width: dev.w, height: dev.h });
+  const cardW = await page.evaluate(() => {
+    const c = document.querySelector("main a[href*='/projects/']");
+    if (!c) return null;
+    const cs = getComputedStyle(c);
+    return Math.round(c.getBoundingClientRect().width - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight));
+  });
+  const photoH = ratio > 0 && cardW ? Math.round(cardW * ratio) : 0;
   await page.evaluate(
     ([t, b, h]) => {
       document.getElementById("m-safe")?.remove();
@@ -91,24 +132,22 @@ async function apply(top, bottom, photo) {
       }
       if (h > 0) {
         const card = document.querySelector("main a[href*='/projects/']");
-        if (card) {
-          const sp = document.createElement("div");
-          sp.id = "m-photo";
-          sp.style.cssText = `height:${h}px;flex:0 0 ${h}px;background:#ddd`;
-          card.parentElement.insertBefore(sp, card);
-        }
+        const sp = document.createElement("div");
+        sp.id = "m-photo";
+        sp.style.cssText = `height:${h}px;flex:0 0 ${h}px;background:#ddd`;
+        card.parentElement.insertBefore(sp, card);
       }
     },
-    [top, bottom, photo],
+    [dev.top, dev.bottom, photoH],
   );
   await page.waitForTimeout(200);
+  return { cardW, photoH };
 }
 
 async function read() {
   return page.evaluate(() => {
     const nav = document.querySelector("nav.fixed.inset-x-0");
     const cta = document.querySelector("main a[href*='/knit'] button, main a[href*='/knit']");
-    // 둘째 카드 = "기다리는 것"의 첫 줄. 001이 100px 보임을 상한 근거로 썼다.
     const second = document.querySelector("main section ul li a, main section ul li > *");
     const n = nav?.getBoundingClientRect();
     const c = cta?.getBoundingClientRect();
@@ -118,58 +157,64 @@ async function read() {
       navHeight: n ? Math.round(n.height) : null,
       ctaBottom: c ? Math.round(c.bottom) : null,
       secondTop: s2 ? Math.round(s2.top) : null,
-      found: !!c,
-      foundSecond: !!s2,
+      found: !!c && !!s2,
     };
   });
 }
 
-let fail = [];
+const fail = [];
 
-// ── 관문 1: 재현 ──
-await apply(0, 0, 0);
+// ── 재현 관문: 001의 값이 다시 나오는가 ──
+const bl = DEVICES.find((d) => d.baseline);
+await apply(bl, 0);
 const base = await read();
 console.log(`재현 관문 — 탭바 상단 ${base.navTop} (001: 786) · 높이 ${base.navHeight} (001: 58)`);
+if (!base.found) {
+  console.error("환경 문제: CTA 또는 둘째 카드를 찾지 못했습니다. 화면 구조가 바뀌었습니까?");
+  await browser.close();
+  process.exit(ENV_FAIL);
+}
 if (base.navTop !== 786 || base.navHeight !== 58) fail.push("재현 관문: 001의 값이 다시 나오지 않았다");
-if (!base.found) fail.push("CTA를 찾지 못했다");
 
-// ── 표 ──
-console.log("\n| 사진 | 안전영역 | CTA 여유 | 둘째 카드 보이는 높이 | 판정 |");
-console.log("| ---- | -------- | -------- | --------------------- | ---- |");
+console.log("\n| 사진 | 기기 | 카드 폭 | 사진 높이 | CTA 여유 | 둘째 카드 | 판정 |");
+console.log("| ---- | ---- | ------- | --------- | -------- | --------- | ---- |");
 const rows = [];
-for (const [pname, ph] of PHOTOS) {
-  for (const [iname, it, ib] of INSETS) {
-    await apply(it, ib, ph);
+for (const [rname, ratio] of RATIOS) {
+  for (const dev of DEVICES) {
+    const { cardW, photoH } = await apply(dev, ratio);
     const r = await read();
     const gap = r.navTop - r.ctaBottom;
-    const seen2 = r.foundSecond ? r.navTop - r.secondTop : null;
+    const seen2 = r.navTop - r.secondTop;
     const ctaOk = r.ctaBottom <= r.navTop && gap >= 여유_최소;
-    const secondOk = seen2 !== null && seen2 >= 둘째_최소;
+    const secondOk = seen2 >= 둘째_최소;
     const ok = ctaOk && secondOk;
-    rows.push({ pname, iname, gap, seen2, ctaOk, secondOk, ok });
-    const why = ok ? "통과" : !ctaOk ? "CTA 탈락" : "둘째 카드 탈락";
+    rows.push({ rname, dev: dev.name, gap, seen2, ctaOk, secondOk, ok });
     console.log(
-      `| ${pname} | ${iname} | ${gap}px | ${seen2 === null ? "없음" : (seen2 > 0 ? seen2 + "px" : "안 보임")} | ${why} |`,
+      `| ${rname} | ${dev.name} | ${cardW}px | ${photoH}px | ${gap}px | ${seen2 > 0 ? seen2 + "px" : "안 보임"} | ${ok ? "통과" : !ctaOk ? "CTA 탈락" : "둘째 탈락"} |`,
     );
   }
 }
 
-// ── 관문 2·3: 1:1이 모든 안전영역 조건에서 통과해야 한다 ──
-const oneToOne = rows.filter((r) => r.pname === "1:1");
-const bad = oneToOne.filter((r) => !r.ok);
-console.log();
-if (bad.length) {
-  for (const b of bad)
-    console.log(`1:1 실패 — ${b.iname}: CTA 여유 ${b.gap}px${b.ctaOk ? "(OK)" : "(부족)"}, 둘째 카드 ${b.seen2}px${b.secondOk ? "(OK)" : "(부족)"}`);
-  fail.push(`1:1이 관문을 통과하지 못한다`);
-} else {
-  console.log(`1:1 통과 — 모든 안전영역 조건에서 CTA 여유 ${여유_최소}px·둘째 카드 ${둘째_최소}px 이상`);
+console.log("\n비율별 최악 조건:");
+for (const [rname] of RATIOS) {
+  if (rname === "없음") continue;
+  const rs = rows.filter((r) => r.rname === rname && !r.dev.includes("safe0"));
+  const worst = rs.reduce((a, b) => (a.seen2 <= b.seen2 ? a : b));
+  console.log(
+    `  ${rname}: ${worst.dev}에서 둘째 카드 ${worst.seen2}px — ${worst.ok ? `통과 (여유 ${worst.seen2 - 둘째_최소}px)` : "탈락"}`,
+  );
 }
+
+const survivors = RATIOS.filter(([n]) => n !== "없음").filter(([n]) =>
+  rows.filter((r) => r.rname === n).every((r) => r.ok),
+);
+console.log(`\n모든 기기를 통과하는 비율: ${survivors.length ? survivors.map(([n]) => n).join(", ") : "없음"}`);
+if (!survivors.some(([n]) => n === "1:1")) fail.push("1:1이 모든 기기를 통과하지 못한다");
 
 await browser.close();
 if (fail.length) {
-  console.log("\n실패:");
+  console.log("\n관문 실패:");
   for (const f of fail) console.log(`  - ${f}`);
-  process.exit(1);
+  process.exit(GATE_FAIL);
 }
 console.log("\n모든 관문 통과");
