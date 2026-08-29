@@ -50,9 +50,7 @@ git push -q -u origin "$BRANCH" || { echo "중단: push 실패."; exit 1; }
 echo
 echo "열었습니다: $BRANCH (origin에 올림)"
 echo
-echo "세 자리 모두 이 브랜치에서 일합니다. 각 세션에서 할 것:"
-echo "  기획(Codex)          — 이 폴더에서 그대로 이어서 작업"
-echo "  구현(Claude Code CLI) — 이 폴더에서 그대로 이어서 작업"
-echo "  검증(Claude Code 데스크탑) — 이 폴더에서 그대로 이어서 작업"
+echo "세 자리(기획·구현·검증) 모두 이 브랜치에서 일합니다."
+echo "각 세션은 DISCUSS_ME에 자기 자리 이름을 들고 있어야 합니다."
 echo
 echo "감시자는 브랜치를 고정하지 않으므로 다시 띄울 필요가 없습니다."
