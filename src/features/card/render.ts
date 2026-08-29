@@ -11,7 +11,7 @@ import { cardFileName, coverRect, wrapText } from "@/domain/card";
  */
 const PAPER = {
   canvas: "#fbfaf9",
-  surface: "#ffffff",
+  surface: "#fdfcfa",
   sunken: "#f5f4f2",
   line: "#e9e7e4",
   text: "#1b1a18",
