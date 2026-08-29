@@ -24,8 +24,8 @@
 | 002  | 완료 | 사용자 기준/persona 정리                       | `docs/discuss/002-personas.md`                                        |
 | 003  | 완료 | 홈 첫 카드 사진 상한: 폰에서는 `aspect-[4/3]`  | `fix/safe-area-cap`, `docs/discuss/003-safe-area-card-cap.md`         |
 | 004  | 완료 | 모바일 하단 내비 safe-area 겹침 수정           | `fix/mobile-bottom-nav-safe-area`, `docs/discuss/004-next-work.md`    |
-| 005  | 진행 | 프로젝트 목록 카드 이미지형 전환               | `feat/project-image-cards`, `docs/discuss/005-project-image-cards.md` |
-| 015  | 다음 | 강조색을 코드에 반영 (**006보다 먼저**)        | 예정                                                                  |
+| 005  | 완료 | 프로젝트 목록 카드 이미지형 전환               | `feat/project-image-cards`, `docs/discuss/005-project-image-cards.md` |
+| 015  | 진행 | 강조색을 코드에 반영 (**006보다 먼저**)        | `fix/accent-token-drift`, `docs/discuss/015-accent-token-drift.md`    |
 | 006  | 대기 | 홈 첫 카드 시각 개선                           | 예정                                                                  |
 | 007  | 대기 | 빈 상태/온보딩 개선                            | 예정                                                                  |
 | 008  | 대기 | 프로젝트 상세 상단 복귀 브리핑                 | 예정                                                                  |
