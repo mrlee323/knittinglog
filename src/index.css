@@ -236,6 +236,15 @@
     padding-bottom: env(safe-area-inset-bottom);
   }
 
+  /* 하단 탭바에 가리지 않을 만큼의 본문 여백.
+     5rem은 탭바 58px에 22px 여유를 둔 값이고(원래 `pb-20`), 거기에 안전영역을
+     더한다. 탭바 자신이 `pb-safe`로 그만큼 두꺼워지므로 더하지 않으면 딱 그만큼
+     본문이 깔린다. 유틸로 두는 이유는 임의값 안의 `calc`가 Tailwind에서
+     밑줄 이스케이프에 걸려 조용히 깨지기 쉬워서다 — 여기서는 그냥 CSS다. */
+  .pb-nav {
+    padding-bottom: calc(5rem + env(safe-area-inset-bottom));
+  }
+
   /* 가로 스크롤되는 칩 줄에서 스크롤바가 보이면 크롬이 늘어난다.
      모바일에는 원래 안 보이고, 데스크톱에서만 거슬린다. */
   .no-scrollbar {
