@@ -137,4 +137,4 @@ Monitor(command: "./scripts/watch-discuss.sh <브랜치>", persistent: true)
 
 | 번호                    | 제목                          | 상태 | 차례  |
 | ----------------------- | ----------------------------- | ---- | ----- |
-| [001](001-hierarchy.md) | 화면 위계 — 도구인가 앨범인가 | open | codex |
+| [001](001-hierarchy.md) | 화면 위계 — 도구인가 앨범인가 | open | human |
