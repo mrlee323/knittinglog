@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Columns, Page } from "@/components/ui/page";
 import { StatusBadge } from "@/features/project/components/status-badge";
 import { pausedLabel } from "@/features/project/format";
-import { YarnStripe } from "@/features/yarn/components/yarn-swatch";
+import { YarnDot, YarnStripe } from "@/features/yarn/components/yarn-swatch";
 import { projectColors } from "@/features/yarn/repository";
 import { coverPhotos } from "@/features/photo/repository";
 import { CoverThumb } from "@/features/photo/components/cover-thumb";
@@ -204,29 +204,60 @@ function ResumeCard({
   const main = projectCounters[0];
   const view = main ? counterView(main) : null;
 
+  const days = daysSince(project.updatedAt);
+  const when =
+    project.status === "planning"
+      ? t.dashboard.notStarted
+      : days === 0
+        ? t.dashboard.lastWorkedToday
+        : t.dashboard.lastWorkedDays.replace("{n}", String(days));
+
   return (
     <section className="mb-6">
       <h2 className="text-micro text-text-3 mb-2">{t.dashboard.resume}</h2>
-      <Link
-        to="/projects/$projectId"
-        params={{ projectId: project.id }}
-        className="border-line bg-surface hover:border-line-strong flex gap-3 rounded-md border p-4 transition"
-      >
-        <YarnStripe color={color} />
-        <div className="min-w-0 flex-1">
-          <p className="text-subhead truncate font-semibold">{project.name}</p>
-          {view && main ? (
-            <p className="text-text-2 text-small mt-0.5">
-              {t.dashboard.counterOf
-                .replace("{label}", main.label)
-                .replace("{value}", String(view.value))}
-              {view.target ? ` / ${view.target}` : ""}
+      {/* **상세 규칙이다**(001 결정 1). 목록 카드를 옮겨오지 않는다 — 여기는
+          고르는 일이 이미 끝난 자리라 사진이 다시 설득할 필요가 없다. 가장 큰
+          것은 단수, 가장 강한 것은 `뜨기`다.
+
+          카드 전체를 Link로 감싸지 않는다. 안에 `뜨기` 링크가 따로 있어서
+          중첩되면 안 되고, 무엇보다 **눌러야 할 것이 하나로 선명해야** 한다. */}
+      <div className="border-line bg-surface rounded-md border p-4">
+        <Link
+          to="/projects/$projectId"
+          params={{ projectId: project.id }}
+          className="flex items-center gap-3"
+        >
+          {/* 사진은 **조연**이다. 4:3은 003이 잰 상한이지 목표가 아니고,
+              사진과 정보 줄이 같은 예산을 쓴다 — 13 mini에서 흡수 한도가
+              36px인데 본문 한 줄이 23~26px다(006). 줄이는 만큼 아래 정보가
+              산다. */}
+          <CoverThumb blob={cover} />
+          <div className="min-w-0 flex-1">
+            <p className="text-subhead truncate font-semibold">
+              {project.name}
             </p>
-          ) : (
-            <p className="text-text-2 text-small mt-0.5">
-              {t.craft[project.craft]} · {t.category[project.category]}
-            </p>
-          )}
+            <div className="mt-0.5 flex items-center gap-1.5">
+              {/* 3px 세로선이 아니라 색점이다 — 001 결정 4, 005에서 옮겼다. */}
+              <YarnDot color={color} />
+              <p className="text-text-3 text-caption truncate">{when}</p>
+            </div>
+          </div>
+          <StatusBadge status={project.status} />
+        </Link>
+
+        {/* 화면에서 가장 큰 숫자. 복귀할 때 묻는 것은 "몇 단까지 떴나"다. */}
+        <div className="mt-3">
+          <p className="text-display font-semibold tabular-nums">
+            {view ? view.value : 0}
+            {view?.target ? (
+              <span className="text-text-3 text-body font-normal">
+                {` / ${view.target}`}
+              </span>
+            ) : null}
+          </p>
+          <p className="text-text-2 text-caption">
+            {main ? main.label : t.counter.defaultLabel}
+          </p>
           {view?.progress !== undefined && (
             <div className="bg-sunken mt-2 h-1 overflow-hidden rounded-full">
               <div
@@ -236,21 +267,29 @@ function ResumeCard({
             </div>
           )}
         </div>
-        {/* 마지막으로 뜬 모습. 이름보다 사진이 먼저 읽힌다. */}
-        <CoverThumb blob={cover} />
-      </Link>
 
-      {projectCounters.length > 0 && (
+        {/* **언제나 있다.** 전에는 카운터가 있을 때만 그렸는데, 그러면 "눌러야
+            할 것이 하나로 선명하다"는 그 하나가 없는 화면이 생긴다. 카운터가
+            없을 때 무엇을 할지는 뜨기 모드가 이미 안다 —
+            `projects.$projectId.knit.tsx`의 `EmptyKnit`가 이름을 묻지 않고
+            첫 카운터를 만들어준다. 누르는 것만으로 데이터가 생기지도 않는다.
+            생성은 그 화면 안의 두 번째 탭이다. */}
         <Link
           to="/projects/$projectId/knit"
           params={{ projectId: project.id }}
-          className="mt-2 block"
+          className="mt-3 block"
         >
           <Button block>{t.counter.knit}</Button>
         </Link>
-      )}
+      </div>
     </section>
   );
+}
+
+/** 오늘로부터 며칠 지났나. 음수는 0으로 본다(시계가 어긋난 기기). */
+function daysSince(date: Date): number {
+  const ms = Date.now() - date.getTime();
+  return Math.max(0, Math.floor(ms / 86_400_000));
 }
 
 /* --- 조각들 --------------------------------------------------------------- */
@@ -273,7 +312,8 @@ function StatTile({
         value === 0 && "opacity-60"
       )}
     >
-      <p className="text-title font-semibold">{value}</p>
+      {/* 첫 카드의 단수보다 작아야 한다. 통계는 복귀 다음이다(006). */}
+      <p className="text-heading font-semibold">{value}</p>
       <p className="text-text-2 text-caption mt-0.5 truncate">{label}</p>
     </Link>
   );
