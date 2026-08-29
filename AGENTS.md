@@ -112,8 +112,11 @@ Monitor(command: "DISCUSS_ME=<자리> ./scripts/watch-discuss.sh", persistent: t
 - `git checkout` · `reset` · `stash` 전에 **반드시 `git status`를 본다**
 - 브랜치 전환은 `new-work.sh`·`finish-work.sh`로만 한다. 둘 다 미커밋 변경이
   있으면 시작하지 않는다
-- 커밋은 자기 `turn`일 때만. 남의 글을 대신 커밋할 때는 **커밋 메시지에 글쓴이를
-  밝힌다**(`[기획] …`)
+- 커밋은 자기 `turn`일 때만. **남의 글을 대신 커밋하지 않는다** — 그 자리가 직접
+  push할 때까지 기다린다. 접두사로 글쓴이를 밝혀도 **"누가 쓴 커밋"과 "누가 쓴
+  글"이 구분되지 않는다**
+- **커밋 전에 지워진 줄을 본다** — `git diff <파일> | grep '^-'`. 삭제된 줄이 내가
+  의도한 것뿐인지 확인한다
 
 ## 다른 에이전트와 일하는 법
 

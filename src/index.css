@@ -6,8 +6,9 @@
 /* ---------------------------------------------------------------------------
  * 디자인 토큰 — docs/DESIGN.md 참고
  *
- * 방향: 스와치(Swatch). UI에서 색을 빼고 사진과 실이 화면의 유일한 색이 된다.
- * 그래서 강조색을 별도 색상으로 두지 않고 먹색(ink) 자체를 쓴다.
+ * 방향: 스와치(Swatch). UI에서 색을 빼고 사진과 실이 화면의 주인공이 된다.
+ * 강조는 쑥 하나뿐이고, 그것도 뜨개의 재료에서 온 색이라 실 색과 덜 부딪힌다
+ * (discuss/015에서 먹색에서 옮겨왔다).
  *
  * 시맨틱 토큰을 CSS 변수로 두고 @theme inline으로 매핑한다.
  * 컴포넌트에서 색 값을 직접 쓰지 말고 항상 시맨틱 이름을 쓸 것.
@@ -26,9 +27,13 @@
   --text-2: #6a6761;
   --text-3: #9b978f;
 
-  /* 강조 = 먹색. 브랜드 색이 따로 없다. */
-  --accent: #1b1a18;
+  /* 강조 = 쑥. 뜨개의 재료에서 온 색이고, 실 색과 가장 덜 부딪힌다.
+     테크 브랜드가 쓰는 파랑·주황·보라를 일부러 피했다 — docs/DESIGN.md §2. */
+  --accent: #3f5d48;
   --on-accent: #fbfaf9;
+  /* 라이프라인 칩처럼 강조를 흐리게 깔아야 하는 자리. */
+  --accent-soft: #edf1ee;
+  --on-accent-soft: #3f5d48;
 
   /* 접근성상 보여야 하므로 유일하게 채도를 허용한다.
      브랜드가 아니라 시스템 신호로 읽히도록 채도를 낮췄다. */
@@ -53,8 +58,10 @@
   --text-2: #a5a09a;
   --text-3: #78736d;
 
-  --accent: #eeebe7;
+  --accent: #86b394;
   --on-accent: #171615;
+  --accent-soft: #22302a;
+  --on-accent-soft: #86b394;
 
   --focus: #7ba3d9;
 
@@ -77,6 +84,8 @@
 
   --color-accent: var(--accent);
   --color-on-accent: var(--on-accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-on-accent-soft: var(--on-accent-soft);
   --color-focus: var(--focus);
 
   --color-planning: var(--status-planning);
