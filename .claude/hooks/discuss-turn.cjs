@@ -17,7 +17,20 @@ const path = require("node:path");
 const root = process.env.CLAUDE_PROJECT_DIR || process.cwd();
 const dir = path.join(root, "docs", "discuss");
 
-/** 아주 얕은 머리말 파서. 이 폴더의 머리말은 한 줄에 `키: 값`뿐이다. */
+/**
+ * 이 세션의 이름. `기획` | `구현` | `검증` 중 하나를 DISCUSS_ME로 받는다.
+ * 없으면 아무것도 하지 않는다 — 기본값을 두면 두 세션이 같은 스레드에 답한다.
+ */
+const me = process.env.DISCUSS_ME;
+if (!me) process.exit(0);
+
+/**
+ * 아주 얕은 머리말 파서. 이 폴더의 머리말은 한 줄에 `키: 값`뿐이다.
+ *
+ * 값 뒤의 `# 주석`은 떼어낸다 — README의 표준 예시가 주석을 달고 있어서
+ * 그대로 따라 쓰면 `turn`이 "기획 # 기획 | 구현 | …" 통째가 되어 이름 비교가
+ * 조용히 실패한다. YAML대로 **앞에 공백이 있는 `#`**만 주석으로 본다.
+ */
 function frontMatter(text) {
   if (!text.startsWith("---")) return null;
   const end = text.indexOf("\n---", 3);
@@ -25,7 +38,10 @@ function frontMatter(text) {
   const out = {};
   for (const line of text.slice(3, end).split("\n")) {
     const m = /^\s*([a-z_]+)\s*:\s*(.*?)\s*$/i.exec(line);
-    if (m) out[m[1]] = m[2].replace(/^["']|["']$/g, "");
+    if (m) {
+      const value = m[2].replace(/\s+#.*$/, "").trim();
+      out[m[1]] = value.replace(/^["']|["']$/g, "");
+    }
   }
   return out;
 }
@@ -47,7 +63,7 @@ try {
     const text = fs.readFileSync(file, "utf8");
     const fm = frontMatter(text);
     if (!fm) continue;
-    if (fm.turn !== "claude") continue;
+    if (fm.turn !== me) continue;
     if (fm.status && fm.status !== "open") continue;
     mine.push({
       file: `docs/discuss/${name}`,
@@ -70,9 +86,10 @@ for (const t of mine) {
 }
 lines.push(
   "",
-  "규약은 docs/discuss/README.md에 있습니다. 요점: 남의 글은 고치지 않고 덧붙이기만,",
-  "근거에는 파일·줄 번호나 잰 숫자를 붙이고, 동의할 때도 이유를 적고,",
-  "쓰고 나면 turn을 상대로 넘기고 rounds를 올립니다. rounds가 3이면 turn: human."
+  `규약은 docs/discuss/README.md에 있습니다. 나는 ${me}입니다. 요점: 남의 글은 고치지 않고`,
+  "덧붙이기만, 근거에는 파일·줄 번호나 잰 숫자를 붙이고, 동의할 때도 이유를 적고,",
+  "쓰고 나면 turn을 다음 차례에게 넘깁니다. 한 바퀴(기획→구현→검증)가 끝나면 rounds를",
+  "올리고, rounds가 3이면 turn: 사람."
 );
 
 process.stdout.write(

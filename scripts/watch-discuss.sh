@@ -16,6 +16,14 @@ set -uo pipefail
 BRANCH="${1:-$(git rev-parse --abbrev-ref HEAD)}"
 INTERVAL="${WATCH_INTERVAL:-60}"
 
+# 이 세션의 이름. 기본값을 두지 않는다 — 틀린 이름으로 감시하면 조용한 것과
+# 구분되지 않는다. 없으면 감시를 시작하지 않고 왜인지 말한다.
+ME="${DISCUSS_ME:-}"
+if [ -z "$ME" ]; then
+  echo "감시를 시작할 수 없습니다: DISCUSS_ME가 비어 있습니다. 기획|구현|검증 중 하나를 주세요."
+  exit 1
+fi
+
 seen=""      # 이미 본 blob 해시. 같은 내용을 두 번 알리지 않는다.
 fails=0
 
@@ -34,11 +42,11 @@ while true; do
 
       head=$(git show "origin/$BRANCH:$f" 2>/dev/null | head -20) || continue
       printf '%s' "$head" | grep -q '^status: *open' || continue
-      printf '%s' "$head" | grep -q '^turn: *claude' || continue
+      printf '%s' "$head" | grep -q "^turn: *$ME" || continue
 
       title=$(printf '%s' "$head" | sed -n 's/^title: *//p')
       rounds=$(printf '%s' "$head" | sed -n 's/^rounds: *//p')
-      echo "내 차례입니다 — $f · \"$title\" · ${rounds:-?}왕복. docs/discuss/README.md 규약대로 답하세요."
+      echo "$ME 차례입니다 — $f · \"$title\" · ${rounds:-?}왕복. docs/discuss/README.md 규약대로 답하세요."
     done
   else
     fails=$((fails + 1))
