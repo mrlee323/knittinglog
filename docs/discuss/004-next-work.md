@@ -2,7 +2,7 @@
 id: 004
 title: 다음 작업 — 무엇을 어떤 순서로
 status: decided # open | decided | parked
-turn: 기획 # 기획 | 구현 | 검증 | 사람 — 다음에 쓸 자리
+turn: — # 기획 | 구현 | 검증 | 사람 — 다음에 쓸 자리
 rounds: 1 # 끝난 바퀴 수
 opened: 2026-08-29
 ---

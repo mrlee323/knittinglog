@@ -20,6 +20,28 @@ export function YarnStripe({ color }: { color?: string }) {
   );
 }
 
+/**
+ * 정보 줄에 놓는 실 색 점.
+ *
+ * 이미지형 카드에서는 `YarnStripe`의 3px 세로선을 쓸 수 없다 — 카드 왼쪽을
+ * 세로로 지나가면서 **사진 모서리를 자른다**(docs/DESIGN.md). 그래서 사진
+ * 아래 정보 줄로 옮긴 형태다.
+ *
+ * 색이 없으면 그리지 않는 규칙은 같다.
+ */
+export function YarnDot({ color }: { color?: string }) {
+  if (!color) return null;
+  return (
+    <span
+      aria-hidden
+      // 흰색·아주 밝은 실이 흰 배경에서 사라지지 않도록 링을 깐다. YarnTile과
+      // 같은 이유이고, 색 자체를 어둡게 만들면 실제 실 색을 왜곡하게 된다.
+      className="ring-line size-2.5 shrink-0 rounded-full ring-1 ring-inset"
+      style={{ background: color }}
+    />
+  );
+}
+
 export function YarnTile({
   color,
   size = "md",

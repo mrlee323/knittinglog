@@ -10,8 +10,8 @@ import { listProjects } from "@/features/project/repository";
 import { pausedLabel } from "@/features/project/format";
 import { projectColors } from "@/features/yarn/repository";
 import { coverPhotos } from "@/features/photo/repository";
-import { CoverThumb } from "@/features/photo/components/cover-thumb";
-import { YarnStripe } from "@/features/yarn/components/yarn-swatch";
+import { CardCover } from "@/features/photo/components/card-cover";
+import { YarnDot } from "@/features/yarn/components/yarn-swatch";
 import { daysSincePaused } from "@/domain/projectStatus";
 import { useStrings } from "@/i18n";
 import { cn } from "@/lib/utils";
@@ -75,11 +75,15 @@ function Projects() {
               navigate({ to: "/projects", search: { status: value } })
             }
             aria-pressed={status === value}
+            // 카드가 사진을 갖게 되면서 이 줄이 화면에서 가장 센 색이 됐다.
+            // 강조색은 `StatusBadge`의 "진행중" 하나에만 남긴다 — 지금 손대는
+            // 것 하나만 두드러지면 된다(docs/DESIGN.md). 여기서는 무채색으로
+            // 고르고, 고른 것만 바탕과 테두리를 갖는다.
             className={cn(
               "text-caption shrink-0 rounded-sm px-2 py-1.5 transition",
               status === value
-                ? "bg-accent text-on-accent font-semibold"
-                : "bg-sunken text-text-2"
+                ? "bg-sunken text-text ring-line-strong font-semibold ring-1 ring-inset"
+                : "text-text-3 hover:text-text-2"
             )}
           >
             {value ? t.status[value] : t.project.all}
@@ -128,18 +132,25 @@ function ProjectCard({
     <Link
       to="/projects/$projectId"
       params={{ projectId: project.id }}
-      className="border-line bg-surface hover:border-line-strong flex gap-3 rounded-md border p-4 transition"
+      // 세로형. 목록은 아직 **고르는 화면**이라 사진이 먼저 읽혀야 한다(001).
+      // overflow-hidden이 있어야 사진 위 모서리가 카드 반경에 맞춰 잘린다.
+      className="border-line bg-surface hover:border-line-strong block overflow-hidden rounded-md border transition"
     >
-      {/* 이 카드에서 채도를 가진 유일한 요소. 실이 없으면 그리지 않는다. */}
-      <YarnStripe color={color} />
-      <div className="min-w-0 flex-1">
+      <CardCover blob={cover} color={color} />
+      <div className="p-4">
         <div className="flex items-start justify-between gap-3">
-          <h2 className="text-subhead font-semibold">{project.name}</h2>
+          {/* 이름은 자르지 않는다. 세로형이라 두 줄까지 감길 자리가 있고,
+              작품 이름은 고를 때 보는 것이라 뒤가 잘리면 고를 수 없다. */}
+          <h2 className="text-subhead min-w-0 font-semibold">{project.name}</h2>
           <StatusBadge status={project.status} />
         </div>
-        <p className="text-text-2 text-small mt-0.5">
-          {t.craft[project.craft]} · {t.category[project.category]}
-        </p>
+        <div className="mt-0.5 flex items-center gap-1.5">
+          {/* 실 색은 세로선에서 여기로 왔다 — 세로선은 사진 모서리를 자른다. */}
+          <YarnDot color={color} />
+          <p className="text-text-2 text-small">
+            {t.craft[project.craft]} · {t.category[project.category]}
+          </p>
+        </div>
         {pausedDays !== null && (
           // 방치 기간을 목록에서 바로 보여준다. 가시성 없음이 중단의 원인이었다.
           <p className="text-hibernating text-caption mt-1.5">
@@ -147,7 +158,6 @@ function ProjectCard({
           </p>
         )}
       </div>
-      <CoverThumb blob={cover} size="lg" />
     </Link>
   );
 }
