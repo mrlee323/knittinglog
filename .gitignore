@@ -26,3 +26,10 @@ dist-ssr
 # vite-plugin-pwa dev output
 dev-dist
 public/pdfjs/
+
+# scripts/shot.mjs 결과 — 그때의 확인이지 이력이 아니고, 바이너리는 diff가 안 된다
+.shots
+
+# oh-my-design 레퍼런스 카탈로그 — codex 채널 사본(.claude/data와 내용이 겹친다)
+# 필요하면 `npx oh-my-design-cli install-skills --agent codex --all`로 다시 받는다
+.codex/data

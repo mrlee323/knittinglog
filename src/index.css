@@ -115,8 +115,57 @@
   --text-display--line-height: 1.2;
   --text-display--letter-spacing: -0.02em;
 
+  --shadow-raised:
+    0 1px 2px rgb(0 0 0 / 0.06), 0 4px 10px -6px rgb(0 0 0 / 0.18);
   --shadow-overlay:
     0 1px 3px rgb(0 0 0 / 0.08), 0 12px 32px -12px rgb(0 0 0 / 0.25);
+
+  /*
+   * 모션은 셋뿐이다.
+   *
+   * 여기 없는 값을 화면에서 새로 만들지 않는다 — 시간과 이징이 화면마다 다르면
+   * 같은 앱으로 느껴지지 않는다. 셋으로 자른 기준은 "무엇이 움직이나"다:
+   * 손가락 아래에서 즉시 답해야 하는 것(tap), 어디서 왔는지 보여줘야 하는
+   * 것(move), 자리가 바뀌는 것(soft).
+   */
+  --ease-tap: 90ms cubic-bezier(0.2, 0, 0.4, 1);
+  --ease-move: 220ms cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-soft: 320ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes kl-shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
+@keyframes kl-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes kl-rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes kl-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 @layer base {
@@ -132,6 +181,14 @@
     /* 단수·코수가 핵심 정보다. 정렬되는 자리에서 자릿수가 흔들리면 안 된다. */
     font-variant-numeric: tabular-nums;
     overscroll-behavior-y: none;
+    /*
+     * 한글은 어절 사이에만 끊어야 한다. 기본값(normal)은 글자 단위로 끊어서
+     * "회색 래글런 스웨터"가 "회색 래글 / 런 스웨터"가 된다 — 실제로 프로젝트
+     * 제목에서 그랬다. 공유 카드 렌더러는 이 처리를 갖고 있었는데 화면에는
+     * 없었다.
+     */
+    word-break: keep-all;
+    overflow-wrap: break-word;
   }
 
   /* 뜨기 모드의 큰 버튼은 길게 눌러도 선택되면 안 된다 */
@@ -151,6 +208,22 @@
   h2,
   h3 {
     text-wrap: balance;
+  }
+
+  /*
+   * 움직임을 줄여달라고 한 사람에게는 전부 멈춘다. 예외를 두지 않는 이유는,
+   * 이 설정을 켜는 사람 중에는 전정기관 문제로 실제로 어지러워지는 사람이
+   * 있기 때문이다. "이 정도는 괜찮겠지"를 우리가 정하지 않는다.
+   */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
   }
 }
 

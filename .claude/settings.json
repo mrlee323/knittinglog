@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "_doc": "OmD project hooks (omd install-skills) + discuss-turn.cjs — docs/discuss/ 에서 내 차례인 스레드를 알린다. OmD 훅은 --force 재설치로 갱신되므로 discuss 훅이 지워지면 다시 넣는다.",
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ${CLAUDE_PROJECT_DIR}/.claude/hooks/skill-activation.cjs",
+            "timeout": 3000
+          }
+        ]
+      },
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "CLAUDE_HOOK_EVENT=UserPromptSubmit node \"${CLAUDE_PROJECT_DIR}/.claude/hooks/discuss-turn.cjs\" 2>/dev/null || true",
+            "timeout": 3000,
+            "statusMessage": "논의 스레드 확인"
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ${CLAUDE_PROJECT_DIR}/.claude/hooks/session-state-loader.cjs",
+            "timeout": 3000
+          }
+        ]
+      },
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "CLAUDE_HOOK_EVENT=SessionStart node \"${CLAUDE_PROJECT_DIR}/.claude/hooks/discuss-turn.cjs\" 2>/dev/null || true",
+            "timeout": 3000,
+            "statusMessage": "논의 스레드 확인"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ${CLAUDE_PROJECT_DIR}/.claude/hooks/post-edit-watch.cjs",
+            "timeout": 2000
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ${CLAUDE_PROJECT_DIR}/.claude/hooks/session-end-foldin.cjs",
+            "timeout": 5000
+          }
+        ]
+      }
+    ]
+  }
+}
