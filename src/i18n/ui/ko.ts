@@ -62,6 +62,11 @@ export const ko = {
     notesPlaceholder: "도안 출처, 변형한 부분, 기억해둘 것",
     empty: "아직 프로젝트가 없어요",
     emptyHint: "하다 만 것부터 등록해도 괜찮아요",
+    /** 필터가 걸려서 비었을 때. 데이터가 없는 것과 **다른 말**이어야 한다 —
+        프로젝트를 넷 가진 사람에게 "없어요"라고 하면 화면이 거짓말을 한다 */
+    filterEmpty: "이 상태인 작품이 아직 없어요",
+    filterEmptyHint: "다른 상태를 보거나 전체를 펼쳐볼 수 있어요",
+    showAll: "전체 보기",
     all: "전체",
     deleteConfirm: "이 프로젝트와 관련 기록을 모두 지울까요? 되돌릴 수 없어요.",
     pauseTitle: "왜 멈추나요?",
@@ -942,6 +947,8 @@ export const ko = {
     days: "{n}일",
     streak: "{n}일째 연속",
     noActivity: "아직 뜬 기록이 없어요",
+    /** 빈 홈의 샘플 카드에 붙는 표시. 샘플은 **명백히 샘플로 보여야 한다** */
+    sampleTag: "예시",
     emptyTitle: "첫 프로젝트를 등록해볼까요",
     emptyHint: "하다 만 것부터 넣어도 괜찮아요. 그게 이 앱의 목적이에요.",
   },

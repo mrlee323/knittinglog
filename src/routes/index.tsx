@@ -54,21 +54,31 @@ function Dashboard() {
   if (projects.length === 0) {
     return (
       <Page title={t.nav.dashboard}>
-        <div className="border-line rounded-md border border-dashed px-6 py-12 text-center">
-          <p className="font-medium">{t.dashboard.emptyTitle}</p>
-          <p className="text-text-2 text-small mx-auto mt-1 max-w-xs text-balance">
-            {t.dashboard.emptyHint}
-          </p>
-          <Link to="/projects/new">
-            <Button className="mt-4">
-              <Plus size={16} />
-              {t.project.new}
-            </Button>
-          </Link>
-        </div>
+        {/* 문구는 최종 모습을 **설명**하고 샘플 카드는 **보여준다**(007).
+            화면에 샘플은 하나, CTA도 하나다(001 결정 8). */}
+        <SampleResumeCard />
+        <p className="font-medium">{t.dashboard.emptyTitle}</p>
+        <p className="text-text-2 text-small mt-1 max-w-xs text-balance">
+          {t.dashboard.emptyHint}
+        </p>
+        <Link to="/projects/new" className="mt-4 block">
+          <Button block>
+            <Plus size={16} />
+            {t.project.new}
+          </Button>
+        </Link>
       </Page>
     );
   }
+
+  // 첫날(프로젝트는 있는데 세션도 카운터도 없는 상태)에 "없다"고 말하는 블록이
+  // 다섯이었다(007). 접는 규칙은 SKILL.md의 `partial`이다.
+  //
+  // 상태 타일 셋이 전부 0이면 그 줄은 아직 아무것도 가리키지 않는다 — 눌러도
+  // 빈 목록이다. 하나라도 차면 셋을 함께 보여준다(격자가 갈라지지 않게).
+  const anyStatus = counts.active + counts.hibernating + counts.finished > 0;
+  // 누적이 0이면 이번 주도 0이다. 같은 말을 카드 두 장이 하지 않게 한 장으로 접는다.
+  const noRecord = total.rows === 0 && total.durationMs === 0;
 
   return (
     <Page wide title={t.nav.dashboard}>
@@ -109,56 +119,74 @@ function Dashboard() {
         }
         side={
           <>
-            {/* 상태 요약 — 누르면 그 상태로 필터된 목록으로 간다 */}
-            <section className="mb-6">
-              <h2 className="text-micro text-text-3 mb-2">
-                {t.dashboard.summary}
-              </h2>
-              <div className="grid grid-cols-3 gap-2">
-                <StatTile
-                  to="active"
-                  label={t.status.active}
-                  value={counts.active}
-                />
-                <StatTile
-                  to="hibernating"
-                  label={t.status.hibernating}
-                  value={counts.hibernating}
-                />
-                {/* 타일은 누르면 그 상태로 필터된 목록으로 간다. 그래서 숫자도
-                    목록과 같은 기준이어야 한다 — "올해 완성"을 보여주면서 전체
-                    완성 목록으로 보내면 숫자와 목적지가 어긋난다.
-                    연도별 집계는 연간 결산(기획 §3.9 P2)의 몫으로 남긴다. */}
-                <StatTile
-                  to="finished"
-                  label={t.status.finished}
-                  value={counts.finished}
-                />
-              </div>
-            </section>
+            {/* 상태 요약 — 누르면 그 상태로 필터된 목록으로 간다.
+                셋이 전부 0이면 접는다(007 관문 B2). */}
+            {anyStatus && (
+              <section className="mb-6">
+                <h2 className="text-micro text-text-3 mb-2">
+                  {t.dashboard.summary}
+                </h2>
+                <div className="grid grid-cols-3 gap-2">
+                  <StatTile
+                    to="active"
+                    label={t.status.active}
+                    value={counts.active}
+                  />
+                  <StatTile
+                    to="hibernating"
+                    label={t.status.hibernating}
+                    value={counts.hibernating}
+                  />
+                  {/* 타일은 누르면 그 상태로 필터된 목록으로 간다. 그래서 숫자도
+                      목록과 같은 기준이어야 한다 — "올해 완성"을 보여주면서 전체
+                      완성 목록으로 보내면 숫자와 목적지가 어긋난다.
+                      연도별 집계는 연간 결산(기획 §3.9 P2)의 몫으로 남긴다. */}
+                  <StatTile
+                    to="finished"
+                    label={t.status.finished}
+                    value={counts.finished}
+                  />
+                </div>
+              </section>
+            )}
 
-            <section className="mb-6 grid grid-cols-2 gap-2">
-              <ActivityCard
-                label={t.dashboard.thisWeek}
-                rows={week.rows}
-                durationMs={week.durationMs}
-                note={
-                  streak > 0
-                    ? t.dashboard.streak.replace("{n}", String(streak))
-                    : undefined
-                }
-              />
-              <ActivityCard
-                label={t.dashboard.allTime}
-                rows={total.rows}
-                durationMs={total.durationMs}
-                note={
-                  total.days > 0
-                    ? t.dashboard.days.replace("{n}", String(total.days))
-                    : undefined
-                }
-              />
-            </section>
+            {noRecord ? (
+              // 한 장으로 접는다. 문구는 그대로 두고 **개수만** 줄인다 —
+              // `없어요`를 다른 말로 바꾸면 관문을 통과한 게 아니라 숨은 것이다(007).
+              <section className="mb-6">
+                <Card>
+                  <p className="text-micro text-text-3">
+                    {t.dashboard.allTime}
+                  </p>
+                  <p className="text-text-3 text-small mt-1">
+                    {t.dashboard.noActivity}
+                  </p>
+                </Card>
+              </section>
+            ) : (
+              <section className="mb-6 grid grid-cols-2 gap-2">
+                <ActivityCard
+                  label={t.dashboard.thisWeek}
+                  rows={week.rows}
+                  durationMs={week.durationMs}
+                  note={
+                    streak > 0
+                      ? t.dashboard.streak.replace("{n}", String(streak))
+                      : undefined
+                  }
+                />
+                <ActivityCard
+                  label={t.dashboard.allTime}
+                  rows={total.rows}
+                  durationMs={total.durationMs}
+                  note={
+                    total.days > 0
+                      ? t.dashboard.days.replace("{n}", String(total.days))
+                      : undefined
+                  }
+                />
+              </section>
+            )}
           </>
         }
       />
@@ -282,6 +310,79 @@ function ResumeCard({
           <Button block>{t.counter.knit}</Button>
         </Link>
       </div>
+    </section>
+  );
+}
+
+/**
+ * 프로젝트가 하나도 없을 때 홈에 놓는 **샘플 복귀 카드**(discuss/007).
+ *
+ * 목록 카드가 아니라 복귀 카드를 샘플로 쓰는 이유는, 홈의 빈 화면이 약속해야
+ * 하는 것이 홈의 미래이기 때문이다. 001 결정 1이 홈 첫 카드를 상세 규칙으로
+ * 정했으므로 샘플도 그 모양이어야 한다.
+ *
+ * **`ResumeCard`를 재사용하지 않는다.** 그쪽은 `Project`를 받아 `/knit`으로
+ * 가는 진짜 링크를 그리므로, 재사용하려면 가짜 `Project`를 만들어 타입 안으로
+ * 밀어 넣고 링크를 다시 막아야 한다. 그리고 DOM이 같아지면
+ * `scripts/measure-safe-area.mjs:134-139`가 샘플을 "이어서 뜨기 절의 카드"로
+ * 잡는다. 치르는 값은 **복귀 카드의 모양이 두 곳에 생긴다**는 것이고, 그건
+ * 관문 B1이 잡는다.
+ *
+ * `docs/DESIGN.md:52-55`가 건 조건 셋을 지킨다 — 명백히 샘플로 보이고(점선 +
+ * `예시` + 흐린 글자), 누르면 저장이 아니라 만들기 화면으로 가고, **틀리면
+ * 손해가 나는 값(게이지·코수)을 쓰지 않는다.** 단수는 계산의 입력이 아니다.
+ */
+const SAMPLE_ROWS = 42;
+const SAMPLE_DAYS = 3;
+
+function SampleResumeCard() {
+  const t = useStrings();
+
+  return (
+    <section className="mb-6">
+      <h2 className="text-micro text-text-3 mb-2">{t.dashboard.resume}</h2>
+      {/* 카드 전체가 하나의 링크다. 안에 죽은 버튼을 두지 않으려는 것이고,
+          그래서 `뜨기`처럼 생긴 것도 눌리면 이 링크를 따라간다. */}
+      <Link
+        to="/projects/new"
+        data-sample="resume"
+        className="border-line-strong bg-surface focus-visible:outline-focus block rounded-md border border-dashed p-4 transition-transform duration-[90ms] ease-[cubic-bezier(0.2,0,0.4,1)] focus-visible:outline-2 focus-visible:outline-offset-2 active:scale-[0.99] motion-reduce:transition-none"
+      >
+        <div className="flex items-center gap-3">
+          {/* 사진 자리는 **구조로** 둔다. 편물을 흉내 내면 이 카드가 사용자의
+              작품인 척한다(001 결정 6 · 007 선택지 I). */}
+          <span
+            aria-hidden
+            className="border-line-strong size-16 shrink-0 rounded-md border border-dashed"
+            style={{
+              backgroundImage:
+                "repeating-linear-gradient(to right, var(--color-line-strong) 0 1px, transparent 1px 8px), repeating-linear-gradient(to bottom, var(--color-line-strong) 0 1px, transparent 1px 8px)",
+            }}
+          />
+          <div className="min-w-0 flex-1">
+            <p className="text-subhead text-text-2 truncate font-semibold">
+              {t.project.namePlaceholder}
+            </p>
+            <p className="text-text-3 text-caption mt-0.5 truncate">
+              {t.dashboard.lastWorkedDays.replace("{n}", String(SAMPLE_DAYS))}
+            </p>
+          </div>
+          <span className="text-micro bg-sunken text-text-3 inline-flex shrink-0 items-center rounded-sm px-1.5 py-1 font-semibold">
+            {t.dashboard.sampleTag}
+          </span>
+        </div>
+
+        <div className="mt-3">
+          <p className="text-display text-text-2 font-semibold tabular-nums">
+            {SAMPLE_ROWS}
+          </p>
+          <p className="text-text-3 text-caption">{t.counter.defaultLabel}</p>
+        </div>
+
+        <span className="text-small bg-sunken text-text-3 mt-3 flex min-h-11 w-full items-center justify-center rounded-md font-medium whitespace-nowrap">
+          {t.counter.knit}
+        </span>
+      </Link>
     </section>
   );
 }
