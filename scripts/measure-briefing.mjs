@@ -6,7 +6,7 @@
  *
  *   A. `뜨기` 버튼까지 스크롤이 없다 — **세 기기의 진짜 safe-area에서**
  *   B. 브리핑이 008이 요구한 사실을 다 담는다
- *   C. 수정·삭제·복제가 `뜨기`보다 약하다
+ *   C. 수정·삭제·복제가 `뜨기`보다 약하다 — 009부터 **본문에 없고 `⋯` 메뉴 안**이다
  *   D. 없는 건 말하지 않는다 (재료 줄이 통째로 사라진다)
  *
  * **A는 기기를 셋 다 잰다.** 예산이 가장 빡빡한 기기가 판정을 정한다 —
@@ -235,21 +235,22 @@ function probe() {
     const 뜨기 = [...card.querySelectorAll("a[href*='/knit'] button")].find(
       (b) => (b.textContent ?? "").trim() === "뜨기"
     );
-    const 버튼찾기 = (label) =>
-      [...document.querySelectorAll("main button")].find(
-        (b) => (b.textContent ?? "").trim() === label
-      );
+    /*
+      관리 동작은 009부터 본문에 없다 — `⋯` 메뉴 안이다.
 
-    const 관리 = {};
-    for (const label of ["수정", "삭제", "이대로 다시 뜨기"]) {
-      const b = 버튼찾기(label);
-      관리[label] = b
-        ? {
-            bottom: Math.round(b.getBoundingClientRect().bottom + scrollY),
-            accent: b.className.includes("bg-accent"),
-          }
-        : null;
-    }
+      그래서 여기서는 "`뜨기`보다 아래인가"가 아니라 **"본문에 아예 없는가"**를
+      본다. 008의 기준(주동선보다 약하게)은 그쪽이 더 강하게 지켜지는 형태다.
+      다시 본문으로 내려오면 이 관문이 문다.
+    */
+    // `<Link><Button>`은 같은 글자가 둘로 잡힌다. 세는 게 아니라 있는지를
+    // 보는 자리라 이름으로 접는다.
+    const 본문관리 = [
+      ...new Set(
+        [...document.querySelectorAll("main button, main a")]
+          .map((b) => (b.textContent ?? "").trim())
+          .filter((x) => ["수정", "삭제", "이대로 다시 뜨기"].includes(x))
+      ),
+    ];
 
     const 재료줄 = card.querySelector("[data-brief-line]");
     return {
@@ -265,7 +266,8 @@ function probe() {
       글: (card.textContent ?? "").replace(/\s+/g, " ").trim(),
       사진: card.querySelectorAll("img").length,
       재료줄: 재료줄 ? (재료줄.textContent ?? "").trim() : null,
-      관리,
+      본문관리,
+      메뉴버튼: !!document.querySelector("[data-project-menu-button]"),
       스크롤높이: Math.round(document.documentElement.scrollHeight),
     };
   });
@@ -342,18 +344,42 @@ if (b.사진 < 1) fail.push("B: 브리핑에 대표 사진이 없다");
 console.log("\n관문 C — 수정·삭제·복제가 `뜨기`보다 약한가 (13 mini)");
 console.log(`  \`뜨기\` 아랫변(문서 기준) ${b.뜨기문서bottom}px · bg-accent ${b.뜨기accent}`);
 if (!b.뜨기accent) fail.push("C: `뜨기`가 주 버튼(bg-accent)이 아니다");
-for (const [label, m] of Object.entries(b.관리)) {
-  if (!m) {
-    console.error(`\n환경 문제: 상세 화면에서 \`${label}\` 버튼을 찾지 못했습니다.`);
-    await browser.close();
-    process.exit(ENV_FAIL);
+
+// 메뉴 자체가 없으면 셋은 어디에도 없는 것이다 — 통과가 아니라 환경 문제다.
+if (!b.메뉴버튼) {
+  console.error("\n환경 문제: `[data-project-menu-button]`을 찾지 못했습니다. 관리 동작이 어디로 갔습니까?");
+  await browser.close();
+  process.exit(ENV_FAIL);
+}
+
+console.log(`  본문에 있는 관리 동작 ${JSON.stringify(b.본문관리)} (0개여야 한다 — 009부터 \`⋯\` 메뉴 안이다)`);
+if (b.본문관리.length)
+  fail.push(`C: 관리 동작이 본문에 있다 — ${b.본문관리.join(", ")}`);
+
+// 메뉴를 열어 셋이 실제로 거기 있는지, 그중 주 버튼이 없는지 본다.
+await page.click("[data-project-menu-button]");
+await page.waitForTimeout(400);
+const 메뉴 = await page.evaluate(() => {
+  const sheet = document.querySelector("[data-project-menu]");
+  if (!sheet) return null;
+  return [...sheet.querySelectorAll("button, a")].map((x) => ({
+    글: (x.textContent ?? "").trim().split("\n")[0],
+    accent: x.className.includes("bg-accent"),
+  }));
+});
+if (메뉴 === null) {
+  console.error("\n환경 문제: `⋯`를 눌렀는데 `[data-project-menu]`가 열리지 않았습니다.");
+  await browser.close();
+  process.exit(ENV_FAIL);
+}
+console.log(`  메뉴 안 ${JSON.stringify(메뉴.map((x) => x.글))}`);
+for (const label of ["수정", "삭제", "이대로 다시 뜨기"]) {
+  const 찾음 = 메뉴.find((x) => x.글.startsWith(label));
+  if (!찾음) {
+    fail.push(`C: 메뉴에 \`${label}\`이(가) 없다 — 길이 사라졌다`);
+    continue;
   }
-  const 아래 = m.bottom > b.뜨기문서bottom;
-  console.log(
-    `  ${label} — 아랫변 ${m.bottom}px · bg-accent ${m.accent} · \`뜨기\`보다 ${아래 ? "아래" : "위"}`
-  );
-  if (m.accent) fail.push(`C: \`${label}\`이(가) \`뜨기\`와 같은 주 버튼이다`);
-  if (!아래) fail.push(`C: \`${label}\`이(가) \`뜨기\`보다 위에 있다`);
+  if (찾음.accent) fail.push(`C: 메뉴의 \`${label}\`이(가) \`뜨기\`와 같은 주 버튼이다`);
 }
 
 /* ── 관문 D — 없는 건 말하지 않는다 ─────────────────────────────────── */

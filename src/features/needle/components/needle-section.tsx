@@ -31,7 +31,14 @@ import type { Id, Needle } from "@/types/entities";
  * **충돌을 드러내는 것**이다 — 새 작품을 시작할 때 그 굵기가 이미 다른 작품에
  * 물려 있다는 사실이 "바늘 뺏김" 중단의 실체다(기획 §3.5).
  */
-export function NeedleSection({ projectId }: { projectId: Id }) {
+export function NeedleSection({
+  projectId,
+  open,
+}: {
+  projectId: Id;
+  /** `FillRow`에서 펼쳤나. 비어 있어도 이때는 그린다(009). */
+  open?: boolean;
+}) {
   const t = useStrings();
   const needles = useLiveQuery(() => listNeedles(), []);
   const projects = useLiveQuery(() => db.projects.toArray(), []);
@@ -47,9 +54,22 @@ export function NeedleSection({ projectId }: { projectId: Id }) {
   if (!needles || !projects) return null;
 
   const mine = needles.filter((n) => n.occupiedByProjectId === projectId);
+
+  /*
+    비어 있으면 그리지 않는다(009).
+
+    이 섹션이 자기 빈 상태를 스스로 말하면 빈 프로젝트에서 "없어요"가 다섯 번
+    반복되고, 상세가 두 화면 반이 된다. 채우는 길은 사라지지 않고 `FillRow`
+    한 자리로 모인다 — 거기서 `open`이 켜지면 이 자리에서 그대로 펼쳐진다.
+  */
   // 게이지에 적힌 바늘 굵기가 이 프로젝트가 요구하는 굵기다. 스와치를 뜰 때
   // 쓴 바늘이므로 그 굵기로 떠야 게이지가 맞는다.
   const wantedMm = gauges?.find((g) => g.needleMm)?.needleMm;
+
+  /* **할 말이 있으면 접지 않는다.** 물린 바늘이 없어도 스와치가 굵기를
+     가리키고 있으면 이 섹션에는 사실이 하나 있다 — "4mm로 떠야 하는데 그
+     바늘이 안 물려 있다". 그건 빈 상태가 아니라 내용이다. */
+  if (mine.length === 0 && wantedMm === undefined && !open) return null;
 
   /**
    * 서랍에 없는 바늘을 여기서 등록하고 바로 물린다.
@@ -78,7 +98,12 @@ export function NeedleSection({ projectId }: { projectId: Id }) {
   }
 
   return (
-    <section className="border-line mb-6 border-t pt-5">
+    <section
+      // 009의 관문이 잡는 손잡이. 없어지면 관문이 조용히 통과하는 게 아니라
+      // 환경 문제(2)로 멈춘다.
+      data-section="needle"
+      className="border-line mb-6 border-t pt-5"
+    >
       <div className="mb-3 flex items-center justify-between">
         <h2 className="font-medium">{t.needle.projectTitle}</h2>
         <Button
