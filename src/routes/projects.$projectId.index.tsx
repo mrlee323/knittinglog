@@ -46,7 +46,16 @@ export const Route = createFileRoute("/projects/$projectId/")({
   component: ProjectOverview,
 });
 
-/** 상태를 앞으로 미는 행동은 주요 버튼, 되돌리는 행동은 보조 버튼 */
+/**
+ * 상태를 앞으로 미는 행동.
+ *
+ * **꽉 찬 강조는 화면에 하나다**(017). 이 셋이 primary였는데, 진행 중인
+ * 프로젝트에서는 `뜨기`도 primary라 **꽉 찬 강조 단추가 둘**이었다 — 넓은
+ * 화면에서는 나란히 섰다. 어느 쪽이 "지금 누를 것"인지 화면이 말하지 못한다.
+ *
+ * `뜨기`가 있으면 그쪽이 주동선이다(001 결정 1). 없을 때 — 계획중이라 아직
+ * 셀 것이 없을 때 — 만 이 셋이 그 자리를 받는다.
+ */
 const PRIMARY_EVENTS: ProjectEventType[] = ["START", "RESUME", "FINISH"];
 
 /**
@@ -63,6 +72,9 @@ function ProjectOverview() {
   const { projectId } = Route.useParams();
 
   const project = useLiveQuery(() => getProject(projectId), [projectId]);
+  /* `뜨기` 단추가 그려지는 조건과 **같은 조건**이어야 한다(`ProgressCard`).
+     어긋나면 꽉 찬 강조가 둘이 되거나 하나도 없게 된다. */
+  const counters = useLiveQuery(() => listCounters(projectId), [projectId]);
   const photos = useLiveQuery(() => listPhotos(projectId), [projectId]);
   const references = useLiveQuery(
     () => listReferencePhotos(projectId),
@@ -95,6 +107,8 @@ function ProjectOverview() {
   if (!project) return null;
 
   const events = allowedEvents(project.status);
+  /** 진행도 카드가 `뜨기`를 그리는 조건 — 셀 것이 하나라도 있나. */
+  const hasKnitButton = (counters?.length ?? 0) > 0;
   const pausedDays = daysSincePaused(project);
   const formatDate = (date: Date) =>
     new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(date);
@@ -330,7 +344,9 @@ function ProjectOverview() {
                 <Button
                   key={type}
                   variant={
-                    PRIMARY_EVENTS.includes(type) ? "primary" : "secondary"
+                    PRIMARY_EVENTS.includes(type) && !hasKnitButton
+                      ? "primary"
+                      : "secondary"
                   }
                   onClick={() => handleEvent(type)}
                 >
