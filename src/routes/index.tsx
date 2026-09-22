@@ -102,7 +102,10 @@ function Dashboard() {
                 <p className="text-text-3 text-caption mb-2">
                   {t.dashboard.waitingHint}
                 </p>
-                <ul className="space-y-2">
+                {/* 넓은 화면에서는 두 열이다(011). 한 줄에 이름·사유·배지만
+                    있는 행이라 576px을 혼자 쓰면 가운데가 비고, 세로로만
+                    쌓이면 왼쪽 단이 길어져 오른쪽이 비어 보인다. */}
+                <ul className="grid gap-2 xl:grid-cols-2">
                   {waiting.map((project) => (
                     <li key={project.id}>
                       <WaitingRow
@@ -269,44 +272,53 @@ function ResumeCard({
           <StatusBadge status={project.status} />
         </Link>
 
-        {/* 화면에서 가장 큰 숫자. 복귀할 때 묻는 것은 "몇 단까지 떴나"다. */}
-        <div className="mt-3">
-          <p className="text-display font-semibold tabular-nums">
-            {view ? view.value : 0}
-            {view?.target ? (
-              /* 상세의 진행도 카드와 **같은 크기**다(010). 같은 34px 숫자
-                 옆에서 목표만 화면마다 다른 크기면 위계가 화면마다 다르다. */
-              <span className="text-text-3 text-heading font-normal">
-                {` / ${view.target}`}
-              </span>
-            ) : null}
-          </p>
-          <p className="text-text-2 text-caption">
-            {main ? main.label : t.counter.defaultLabel}
-          </p>
-          {view?.progress !== undefined && (
-            <div className="bg-sunken mt-2 h-1 overflow-hidden rounded-full">
-              <div
-                className="bg-accent h-full rounded-full"
-                style={{ width: `${view.progress * 100}%` }}
-              />
-            </div>
-          )}
-        </div>
+        {/* 화면에서 가장 큰 숫자. 복귀할 때 묻는 것은 "몇 단까지 떴나"다.
 
-        {/* **언제나 있다.** 전에는 카운터가 있을 때만 그렸는데, 그러면 "눌러야
+            **넓은 화면에서는 `뜨기`가 숫자 옆에 선다**(011). 폰에서 버튼이
+            폭을 꽉 채우는 건 엄지가 닿는 자리를 만드는 일인데, 1280px에서
+            576px짜리 버튼은 그 이유가 사라지고 카드만 길어진다 — 왼쪽 단이
+            545px로 늘어 오른쪽이 절반도 안 차 보였다. */}
+        <div className="mt-3 lg:flex lg:items-end lg:gap-4">
+          <div className="min-w-0 lg:flex-1">
+            <p className="text-display font-semibold tabular-nums">
+              {view ? view.value : 0}
+              {view?.target ? (
+                /* 상세의 진행도 카드와 **같은 크기**다(010). 같은 34px 숫자
+                 옆에서 목표만 화면마다 다른 크기면 위계가 화면마다 다르다. */
+                <span className="text-text-3 text-heading font-normal">
+                  {` / ${view.target}`}
+                </span>
+              ) : null}
+            </p>
+            <p className="text-text-2 text-caption">
+              {main ? main.label : t.counter.defaultLabel}
+            </p>
+            {view?.progress !== undefined && (
+              <div className="bg-sunken mt-2 h-1 overflow-hidden rounded-full">
+                <div
+                  className="bg-accent h-full rounded-full"
+                  style={{ width: `${view.progress * 100}%` }}
+                />
+              </div>
+            )}
+          </div>
+
+          {/* **언제나 있다.** 전에는 카운터가 있을 때만 그렸는데, 그러면 "눌러야
             할 것이 하나로 선명하다"는 그 하나가 없는 화면이 생긴다. 카운터가
             없을 때 무엇을 할지는 뜨기 모드가 이미 안다 —
             `projects.$projectId.knit.tsx`의 `EmptyKnit`가 이름을 묻지 않고
             첫 카운터를 만들어준다. 누르는 것만으로 데이터가 생기지도 않는다.
             생성은 그 화면 안의 두 번째 탭이다. */}
-        <Link
-          to="/projects/$projectId/knit"
-          params={{ projectId: project.id }}
-          className="mt-3 block"
-        >
-          <Button block>{t.counter.knit}</Button>
-        </Link>
+          <Link
+            to="/projects/$projectId/knit"
+            params={{ projectId: project.id }}
+            className="mt-3 block lg:mt-0 lg:shrink-0"
+          >
+            <Button block className="lg:px-12">
+              {t.counter.knit}
+            </Button>
+          </Link>
+        </div>
       </div>
     </section>
   );

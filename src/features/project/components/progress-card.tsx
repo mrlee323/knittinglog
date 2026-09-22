@@ -193,16 +193,29 @@ export function ProgressCard({
       )}
 
       {/* 완성 예상은 진행도의 일부다 — "어디까지 왔나" 다음 질문이 "언제
-          끝나나"이고, 마감이 있는 사람에게는 그게 계획의 근거가 된다. */}
-      <FinishEstimate projectId={projectId} remainingRows={view.remaining} />
+          끝나나"이고, 마감이 있는 사람에게는 그게 계획의 근거가 된다.
 
-      <Link
-        to="/projects/$projectId/knit"
-        params={{ projectId }}
-        className="mt-4 block"
-      >
-        <Button block>{t.counter.knit}</Button>
-      </Link>
+          **넓은 화면에서는 `뜨기`가 그 옆에 선다**(011). 폰에서 버튼이 폭을
+          꽉 채우는 건 엄지가 닿는 자리를 만드는 일인데, 1920px에서 920px짜리
+          버튼은 그 이유가 사라지고 카드만 길어진다. 홈의 복귀 카드와 같다. */}
+      <div className="lg:flex lg:items-end lg:justify-between lg:gap-6">
+        <div className="min-w-0 lg:flex-1">
+          <FinishEstimate
+            projectId={projectId}
+            remainingRows={view.remaining}
+          />
+        </div>
+
+        <Link
+          to="/projects/$projectId/knit"
+          params={{ projectId }}
+          className="mt-4 block lg:mt-0 lg:shrink-0"
+        >
+          <Button block className="lg:px-12">
+            {t.counter.knit}
+          </Button>
+        </Link>
+      </div>
     </section>
   );
 }

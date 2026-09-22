@@ -33,7 +33,7 @@
 | 008  | 완료 | 프로젝트 상세 상단 복귀 브리핑                 | `feat/project-detail-briefing`, `docs/discuss/008-project-detail-briefing.md` |
 | 009  | 완료 | 프로젝트 상세 빈 섹션 접기                     | `feat/detail-collapse`, `docs/discuss/009-detail-collapse.md`                 |
 | 010  | 완료 | 타이포·숫자 위계 정리                          | `feat/type-hierarchy`, `docs/discuss/010-type-hierarchy.md`                   |
-| 011  | 대기 | 넓은 화면 레이아웃 개선                        | 예정                                                                          |
+| 011  | 완료 | 넓은 화면 레이아웃 개선                        | `feat/wide-layout`, `docs/discuss/011-wide-layout.md`                         |
 | 012  | 대기 | 뜨기 모드 폴리싱                               | 예정                                                                          |
 | 017  | 대기 | 강조색이 한 화면에 셋이다 (013 앞)             | 예정                                                                          |
 | 013  | 대기 | 새 시각 언어 정리                              | 예정                                                                          |
@@ -339,6 +339,10 @@
 - 홈은 데이터와 작업 카드의 비율을 다시 잡는다.
 - 프로젝트 상세는 보는 것과 조작하는 것을 2단으로 나눈다.
 - 죽은 가로 여백을 줄이되, 작품 사진이 답답해지지 않게 한다.
+- **완료 기준 1의 "오른쪽이 비어 보인다"는 1280px에서 가로가 아니라 세로였다.**
+  본문은 이미 쓸 수 있는 가로의 91%를 덮고 있었고, 빈 것은 홈 오른쪽 단 아래의
+  280px짜리 띠였다. 가로 여백이 문제가 되는 건 1920px부터다
+  (`docs/discuss/011-wide-layout.md`).
 
 ### 완료 기준
 
