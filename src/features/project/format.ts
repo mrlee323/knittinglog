@@ -1,4 +1,5 @@
 import type { UIStrings } from "@/i18n/ui/ko";
+import type { ProjectStatus } from "@/types/entities";
 
 /**
  * 방치 기간 문구.
@@ -24,4 +25,32 @@ export function formatHours(t: UIStrings, hours: number): string {
   return h === 0
     ? t.finish.minutes.replace("{m}", String(m))
     : t.finish.hours.replace("{h}", String(h)).replace("{m}", String(m));
+}
+
+/** 오늘로부터 며칠 지났나. 음수는 0으로 본다(시계가 어긋난 기기). */
+export function daysSince(date: Date, now: Date = new Date()): number {
+  const ms = now.getTime() - date.getTime();
+  return Math.max(0, Math.floor(ms / 86_400_000));
+}
+
+/**
+ * 마지막으로 뜬 때.
+ *
+ * 프로젝트를 다시 열었을 때 첫 질문은 "어디까지 떴지"이고, 그 바로 옆이
+ * **"언제 떴지"**다. 008에서 상세 상단에 넣으면서 홈과 같은 자리에서 가져온다 —
+ * 두 화면이 같은 사실을 다른 말로 하면 어느 쪽이 맞는지 알 수 없게 된다.
+ *
+ * 계획중은 아직 뜬 적이 없으므로 "3일 전에 떴어요"라고 할 수 없다. 006이 홈에서
+ * 그렇게 갈랐고 같은 문구를 쓴다.
+ */
+export function lastWorkedLabel(
+  t: UIStrings,
+  project: { status: ProjectStatus; updatedAt: Date },
+  now: Date = new Date()
+): string {
+  if (project.status === "planning") return t.dashboard.notStarted;
+  const days = daysSince(project.updatedAt, now);
+  return days === 0
+    ? t.dashboard.lastWorkedToday
+    : t.dashboard.lastWorkedDays.replace("{n}", String(days));
 }

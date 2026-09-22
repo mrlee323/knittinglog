@@ -4,7 +4,7 @@ import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Columns, Page } from "@/components/ui/page";
 import { StatusBadge } from "@/features/project/components/status-badge";
-import { pausedLabel } from "@/features/project/format";
+import { lastWorkedLabel, pausedLabel } from "@/features/project/format";
 import { YarnDot, YarnStripe } from "@/features/yarn/components/yarn-swatch";
 import { projectColors } from "@/features/yarn/repository";
 import { coverPhotos } from "@/features/photo/repository";
@@ -232,13 +232,9 @@ function ResumeCard({
   const main = projectCounters[0];
   const view = main ? counterView(main) : null;
 
-  const days = daysSince(project.updatedAt);
-  const when =
-    project.status === "planning"
-      ? t.dashboard.notStarted
-      : days === 0
-        ? t.dashboard.lastWorkedToday
-        : t.dashboard.lastWorkedDays.replace("{n}", String(days));
+  // 상세 상단의 복귀 브리핑도 같은 문구를 쓴다(008). 두 화면이 같은 사실을 다른
+  // 말로 하면 어느 쪽이 맞는지 알 수 없게 되므로 한 자리에서 가져온다.
+  const when = lastWorkedLabel(t, project);
 
   return (
     <section className="mb-6">
@@ -385,12 +381,6 @@ function SampleResumeCard() {
       </Link>
     </section>
   );
-}
-
-/** 오늘로부터 며칠 지났나. 음수는 0으로 본다(시계가 어긋난 기기). */
-function daysSince(date: Date): number {
-  const ms = Date.now() - date.getTime();
-  return Math.max(0, Math.floor(ms / 86_400_000));
 }
 
 /* --- 조각들 --------------------------------------------------------------- */

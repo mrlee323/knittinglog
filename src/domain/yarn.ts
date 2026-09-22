@@ -137,6 +137,42 @@ export function forecastYarn(
   };
 }
 
+/* --- 남은 실 합계 --------------------------------------------------------- */
+
+export interface DatedWeighIn {
+  allocationId: string;
+  date: Date;
+  remainingGrams: number;
+}
+
+/**
+ * 복귀 브리핑의 "실 잔량"(008).
+ *
+ * 배정마다 **가장 최근에 잰 값**만 살리고 더한다. 재기 기록은 쌓이는 것이라
+ * 전부 더하면 같은 실을 여러 번 세게 된다.
+ *
+ * 한 번도 안 잰 배정은 0으로 치지 않고 계산에서 뺀다 — **안 잰 것과 다 쓴 것은
+ * 다른 말이고**, 0g으로 치면 화면이 "실이 없다"고 거짓말한다. 잰 배정이 하나도
+ * 없으면 null이고, 그때 화면은 그 줄을 아예 그리지 않는다(007의 규칙과 같다).
+ *
+ * `forecastYarn`과 달리 한 번만 재도 답이 나온다. 이건 예측이 아니라 사실이라
+ * 소모량을 역산할 필요가 없다.
+ */
+export function totalRemainingGrams(weighIns: DatedWeighIn[]): number | null {
+  const latest = new Map<string, DatedWeighIn>();
+  for (const w of weighIns) {
+    const seen = latest.get(w.allocationId);
+    if (!seen || w.date.getTime() > seen.date.getTime()) {
+      latest.set(w.allocationId, w);
+    }
+  }
+  if (latest.size === 0) return null;
+
+  let sum = 0;
+  for (const w of latest.values()) sum += w.remainingGrams;
+  return sum;
+}
+
 /* --- 환산 재수출 ---------------------------------------------------------- */
 
 export { gramsToMeters, metersToGrams };
