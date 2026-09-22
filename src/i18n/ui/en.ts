@@ -59,6 +59,9 @@ export const en: UIStrings = {
     notesPlaceholder: "Pattern source, modifications, things to remember",
     empty: "No projects yet",
     emptyHint: "Start with the ones you never finished",
+    filterEmpty: "Nothing in this state yet",
+    filterEmptyHint: "Try another state, or open up the full list",
+    showAll: "Show all",
     all: "All",
     deleteConfirm:
       "Delete this project and all its records? This can't be undone.",
@@ -857,6 +860,7 @@ export const en: UIStrings = {
     days: "{n} days",
     streak: "{n} day streak",
     noActivity: "No knitting recorded yet",
+    sampleTag: "Sample",
     emptyTitle: "Add your first project",
     emptyHint:
       "Start with something you never finished. That's the whole point.",

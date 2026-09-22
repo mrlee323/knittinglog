@@ -92,9 +92,37 @@ function Projects() {
       </div>
 
       {projects === undefined ? null : projects.length === 0 ? (
+        // **필터 결과 0과 데이터 0을 가른다**(007). 전에는 같은 분기라,
+        // 프로젝트 넷을 가진 사람이 `완성`을 눌렀을 때 "아직 프로젝트가
+        // 없어요"를 봤다. 화면이 거짓말을 한 것이다.
         <div className="border-line rounded-md border border-dashed px-6 py-12 text-center">
-          <p className="text-text-2">{t.project.empty}</p>
-          <p className="text-text-3 text-small mt-1">{t.project.emptyHint}</p>
+          <p className="text-text-2">
+            {status ? t.project.filterEmpty : t.project.empty}
+          </p>
+          <p className="text-text-3 text-small mt-1">
+            {status ? t.project.filterEmptyHint : t.project.emptyHint}
+          </p>
+          {/* 빈 상태에는 다음 행동으로 가는 버튼이 **글자와 함께** 하나 있다
+              (SKILL.md 체크리스트). 헤더의 아이콘 버튼은 글자가 없어서
+              005 검증이 실제로 한 번 못 찾았다. */}
+          {status ? (
+            <Button
+              variant="secondary"
+              className="mt-4"
+              onClick={() =>
+                navigate({ to: "/projects", search: { status: undefined } })
+              }
+            >
+              {t.project.showAll}
+            </Button>
+          ) : (
+            <Link to="/projects/new" className="mt-4 inline-block">
+              <Button>
+                <Plus size={16} />
+                {t.project.new}
+              </Button>
+            </Link>
+          )}
         </div>
       ) : (
         <CardGrid columns={3}>
