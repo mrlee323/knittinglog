@@ -6,6 +6,11 @@
  *   A2. 잉크가 닿은 세로줄 ≤ 60%  — 어디까지 퍼졌나 (005의 줄공책을 막는다)
  *   A3. 잉크 픽셀의 평균 채널차 ≥ 24/255 — 보이기는 하나
  *
+ * **A는 라이트와 다크를 둘 다 잰다.** A1·A2는 기하라 테마를 안 타지만 A3는 탄다 —
+ * 검증이 재보니 라이트 32.9, 다크 25.1이다(007). 바닥이 24이므로 **판정을 정하는
+ * 쪽은 다크**이고, 라이트만 보면 다크가 바닥 밑으로 내려가도 관문이 초록이다.
+ * 그건 A3를 만든 이유(관문은 통과하는데 화면은 비어 보인다) 그 자체다.
+ *
  * **A3는 구현이 붙였다.** A1은 `채널차 > 6`인 픽셀을 **1로 세는 이진 판정**이라
  * 채널차 7짜리 픽셀과 160짜리 픽셀을 똑같이 센다. 기준점이 된 실 색 스와치는
  * 잰 값이 6.98%인데 그 잉크의 평균 채널차가 160.5다. 무채 구조로 3%를 채우면
@@ -128,6 +133,31 @@ await seed([
 await page.goto(BASE + "/projects", { waitUntil: "networkidle" });
 await page.waitForTimeout(700);
 
+console.log("관문 A — 사진도 실도 없는 카드의 윗면 (라이트·다크)");
+
+/** 테마를 실제로 건다. 클래스가 안 걸리면 두 번 같은 값을 재고 통과한다. */
+async function 테마(t) {
+  await page.evaluate((t) => {
+    document.documentElement.classList.toggle("dark", t === "dark");
+  }, t);
+  await page.waitForTimeout(250);
+  const 걸렸나 = await page.evaluate(() =>
+    document.documentElement.classList.contains("dark"),
+  );
+  if (걸렸나 !== (t === "dark")) {
+    console.error(`\n환경 문제: 테마를 ${t}로 걸지 못했습니다.`);
+    await browser.close();
+    process.exit(ENV_FAIL);
+  }
+}
+
+for (const theme of ["light", "dark"]) {
+  await 테마(theme);
+  await measureA(theme);
+}
+await 테마("light");
+
+async function measureA(theme) {
 const 윗면 = await page.evaluate(() => {
   const fb = document.querySelector("main ul li [aria-hidden].bg-sunken");
   if (!fb) return null;
@@ -141,7 +171,6 @@ const 윗면 = await page.evaluate(() => {
   };
 });
 
-console.log("관문 A — 사진도 실도 없는 카드의 윗면");
 if (!윗면 || 윗면.w < 8 || 윗면.h < 8) {
   console.error("\n환경 문제: 목록에서 대체 윗면을 찾지 못했습니다. 화면 구조가 바뀌었습니까?");
   await browser.close();
@@ -201,16 +230,17 @@ const ink = await page.evaluate(
   { shot, bg: 윗면.bg, 문턱: 잉크_문턱 },
 );
 
-console.log(`  바탕색(계산 스타일) ${윗면.bg} · 래스터 ${ink.w}×${ink.h}`);
-console.log(`  A1 잉크 비율     ${(ink.비율 * 100).toFixed(2)}%  (최소 ${A1_최소 * 100}%)`);
-console.log(`  A2 잉크 세로줄   ${(ink.열 * 100).toFixed(1)}%  (최대 ${A2_최대 * 100}%)`);
-console.log(`  A3 평균 채널차   ${ink.평균차.toFixed(1)}/255  (최소 ${A3_최소})`);
+console.log(`  [${theme}] 바탕색(계산 스타일) ${윗면.bg} · 래스터 ${ink.w}×${ink.h}`);
+console.log(`  [${theme}] A1 잉크 비율     ${(ink.비율 * 100).toFixed(2)}%  (최소 ${A1_최소 * 100}%)`);
+console.log(`  [${theme}] A2 잉크 세로줄   ${(ink.열 * 100).toFixed(1)}%  (최대 ${A2_최대 * 100}%)`);
+console.log(`  [${theme}] A3 평균 채널차   ${ink.평균차.toFixed(1)}/255  (최소 ${A3_최소}, 여유 ${(ink.평균차 - A3_최소).toFixed(1)})`);
 if (ink.비율 < A1_최소)
-  fail.push(`A1: 잉크가 ${(ink.비율 * 100).toFixed(2)}%뿐이다 (최소 ${A1_최소 * 100}%)`);
+  fail.push(`A1(${theme}): 잉크가 ${(ink.비율 * 100).toFixed(2)}%뿐이다 (최소 ${A1_최소 * 100}%)`);
 if (ink.열 > A2_최대)
-  fail.push(`A2: 잉크가 세로줄 ${(ink.열 * 100).toFixed(1)}%에 퍼졌다 (최대 ${A2_최대 * 100}%) — 괘선이 됐는지 본다`);
+  fail.push(`A2(${theme}): 잉크가 세로줄 ${(ink.열 * 100).toFixed(1)}%에 퍼졌다 (최대 ${A2_최대 * 100}%) — 괘선이 됐는지 본다`);
 if (ink.평균차 < A3_최소)
-  fail.push(`A3: 잉크 평균 채널차가 ${ink.평균차.toFixed(1)}이다 (최소 ${A3_최소}) — 있지만 안 보이는 잉크다`);
+  fail.push(`A3(${theme}): 잉크 평균 채널차가 ${ink.평균차.toFixed(1)}이다 (최소 ${A3_최소}) — 있지만 안 보이는 잉크다`);
+}
 
 /* ── 관문 B1 — 프로젝트 0개 ────────────────────────────────────────────── */
 
