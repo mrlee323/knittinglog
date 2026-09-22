@@ -96,6 +96,9 @@ export const ko = {
        말하지 않는다(007). */
     briefRefs: "자료 {n}장",
     briefYarnLeft: "실 {n}g 남음",
+    /* 009 — 빈 섹션을 접고 들어가는 문만 한 자리에 모은다 */
+    fillTitle: "더 담기",
+    menu: "프로젝트 관리",
     /* 중단 사유별 결말 — 옛 기록 탭에서 옮겨왔다 */
     reasonTitle: "왜 멈췄나",
     reasonNote: "지금까지 멈춘 이력을 모아 본 거예요",

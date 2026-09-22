@@ -21,14 +21,31 @@ import type { Id } from "@/types/entities";
 /**
  * 다음 걸음 안내.
  *
- * 새 프로젝트의 상세는 빈 상자 여덟 개다. 각자 빈 상태 문구를 갖고 있지만
- * 무엇을 먼저 하는지는 아무도 말하지 않아서, 순서를 모르는 사람은 여기서
- * 멈춘다(디자인 원칙 5).
+ * 새 프로젝트의 상세는 한때 빈 상자 여덟 개였다. 각자 빈 상태 문구를 갖고
+ * 있었지만 무엇을 먼저 하는지는 아무도 말하지 않아서, 순서를 모르는 사람은
+ * 여기서 멈췄다(디자인 원칙 5).
  *
  * 하나만 말하고, 그 자리로 데려간다. 카운터가 생기면 접는다 — 세기 시작한
  * 뒤의 다음 할 일은 뜨는 것이고 그건 이미 큰 버튼으로 있다.
+ *
+ * **009부터 이 카드가 상세의 유일한 안내다.** 빈 섹션은 사라지고 들어가는
+ * 문만 `FillRow`에 칩으로 남는다 — 칩은 이름과 `+`뿐이라 "무엇을 왜 먼저
+ * 하는지"를 말하는 자리는 여전히 여기 하나다.
  */
-export function StartGuide({ projectId }: { projectId: Id }) {
+export function StartGuide({
+  projectId,
+  onOpen,
+}: {
+  projectId: Id;
+  /**
+   * 접힌 섹션을 펼쳐 달라고 화면에 말한다(009).
+   *
+   * 실·카운터 단계는 이 화면 안의 섹션으로 데려가는데, 009부터 그 섹션은
+   * 비어 있으면 아예 없다. 펼치지 않고 스크롤만 하면 **버튼이 아무 일도
+   * 하지 않는 것처럼 보인다.**
+   */
+  onOpen?: (key: "yarn" | "counter") => void;
+}) {
   const t = useStrings();
 
   const allocations = useLiveQuery(
@@ -101,7 +118,12 @@ export function StartGuide({ projectId }: { projectId: Id }) {
       <p className="text-subhead mb-1 font-semibold">{copy.what}</p>
       <p className="text-text-2 text-small mb-3">{copy.why}</p>
 
-      <StepAction step={step} projectId={projectId} yarnId={firstYarnId}>
+      <StepAction
+        step={step}
+        projectId={projectId}
+        yarnId={firstYarnId}
+        onOpen={onOpen}
+      >
         {copy.action}
       </StepAction>
 
@@ -121,11 +143,13 @@ function StepAction({
   step,
   projectId,
   yarnId,
+  onOpen,
   children,
 }: {
   step: ActionableStep;
   projectId: Id;
   yarnId?: Id;
+  onOpen?: (key: "yarn" | "counter") => void;
   children: React.ReactNode;
 }) {
   if (step === "swatch") {
@@ -162,12 +186,31 @@ function StepAction({
   return (
     <Button
       variant="secondary"
-      onClick={() =>
-        document.getElementById(target)?.scrollIntoView({ block: "center" })
-      }
+      onClick={() => {
+        // 009부터 빈 섹션은 화면에 없다. 먼저 펼치고, 그다음에 데려간다.
+        onOpen?.(step === "yarn" ? "yarn" : "counter");
+        scrollWhenReady(target);
+      }}
     >
       {children}
       <ArrowRight size={16} />
     </Button>
   );
+}
+
+/**
+ * 방금 펼친 섹션은 아직 DOM에 없다. 몇 프레임만 기다렸다가 데려간다.
+ *
+ * 상태를 바꾼 직후에 `getElementById`를 부르면 항상 null이다. 한 프레임만
+ * 기다리는 것으로 충분한 경우가 많지만, 섹션이 제 데이터를 다시 읽는 동안
+ * 늦어질 수 있어서 몇 번 더 본다. 끝내 못 찾으면 **조용히 포기한다** —
+ * 여기서 화면을 흔드는 것보다 아무 일도 안 하는 편이 낫다.
+ */
+function scrollWhenReady(id: string, tries = 12) {
+  const el = document.getElementById(id);
+  if (el) {
+    el.scrollIntoView({ block: "center" });
+    return;
+  }
+  if (tries > 0) requestAnimationFrame(() => scrollWhenReady(id, tries - 1));
 }

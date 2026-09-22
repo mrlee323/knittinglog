@@ -29,7 +29,14 @@ import type { Id, Yarn, YarnAllocation } from "@/types/entities";
  * 이 배정이 있어야 프로젝트 카드의 실 색 세로선이 생기고,
  * 복귀 브리핑의 "실 잔량"이 말이 된다.
  */
-export function AllocationSection({ projectId }: { projectId: Id }) {
+export function AllocationSection({
+  projectId,
+  open,
+}: {
+  projectId: Id;
+  /** `FillRow`에서 펼쳤나. 비어 있어도 이때는 그린다(009). */
+  open?: boolean;
+}) {
   const t = useStrings();
   const [adding, setAdding] = useState(false);
 
@@ -51,8 +58,23 @@ export function AllocationSection({ projectId }: { projectId: Id }) {
     .map((a) => ({ allocation: a, yarn: yarns.find((y) => y.id === a.yarnId) }))
     .filter((row) => row.yarn);
 
+  /*
+    비어 있으면 그리지 않는다(009).
+  
+    이 섹션이 자기 빈 상태를 스스로 말하면 빈 프로젝트에서 "없어요"가 다섯 번
+    반복되고, 상세가 두 화면 반이 된다. 채우는 길은 사라지지 않고 `FillRow`
+    한 자리로 모인다 — 거기서 `open`이 켜지면 이 자리에서 그대로 펼쳐진다.
+  */
+  if (assigned.length === 0 && !open) return null;
+
   return (
-    <section id="allocation-section" className="border-line mb-6 border-t pt-5">
+    <section
+      id="allocation-section"
+      // 009의 관문이 잡는 손잡이. 없어지면 관문이 조용히 통과하는 게 아니라
+      // 환경 문제(2)로 멈춘다.
+      data-section="yarn"
+      className="border-line mb-6 border-t pt-5"
+    >
       <div className="mb-3 flex items-center justify-between">
         <h2 className="font-medium">{t.allocation.title}</h2>
         <Button

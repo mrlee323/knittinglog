@@ -89,6 +89,9 @@ export const en: UIStrings = {
        말하지 않는다(007). */
     briefRefs: "{n} refs",
     briefYarnLeft: "{n}g yarn left",
+    /* 009 — 빈 섹션을 접고 들어가는 문만 한 자리에 모은다 */
+    fillTitle: "Add more",
+    menu: "Manage project",
     /* 중단 사유별 결말 — 옛 기록 탭에서 옮겨왔다 */
     reasonTitle: "Why they stopped",
     reasonNote: "Every pause you've recorded so far",

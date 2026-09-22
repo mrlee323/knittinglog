@@ -16,7 +16,14 @@ import type { Id } from "@/types/entities";
  * 스와치가 없어도 계산기로 가는 길을 막지 않는다. 도안 게이지만 알아도
  * 리사이징의 절반은 계산되고, 스와치는 그다음에 뜨면 된다.
  */
-export function ProjectGauge({ projectId }: { projectId: Id }) {
+export function ProjectGauge({
+  projectId,
+  open,
+}: {
+  projectId: Id;
+  /** `FillRow`에서 펼쳤나. 비어 있어도 이때는 그린다(009). */
+  open?: boolean;
+}) {
   const t = useStrings();
   const gauges = useLiveQuery(
     async () => await listGaugesForProject(projectId),
@@ -26,8 +33,22 @@ export function ProjectGauge({ projectId }: { projectId: Id }) {
   if (!gauges) return null;
   const gauge = gauges[0];
 
+  /*
+    비어 있으면 그리지 않는다(009).
+  
+    이 섹션이 자기 빈 상태를 스스로 말하면 빈 프로젝트에서 "없어요"가 다섯 번
+    반복되고, 상세가 두 화면 반이 된다. 채우는 길은 사라지지 않고 `FillRow`
+    한 자리로 모인다 — 거기서 `open`이 켜지면 이 자리에서 그대로 펼쳐진다.
+  */
+  if (!gauge && !open) return null;
+
   return (
-    <section className="border-line mb-6 border-t pt-5">
+    <section
+      // 009의 관문이 잡는 손잡이. 없어지면 관문이 조용히 통과하는 게 아니라
+      // 환경 문제(2)로 멈춘다.
+      data-section="gauge"
+      className="border-line mb-6 border-t pt-5"
+    >
       <h2 className="mb-2 font-medium">{t.gauge.title}</h2>
 
       {gauge ? (

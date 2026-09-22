@@ -36,7 +36,14 @@ import type { GaugeRecord, Id, ProjectPiece } from "@/types/entities";
  * 뜨는 일은 실제로 자주 있고, 그때 계획한 코수가 조용히 틀린 값이 되는 게
  * 이 화면이 막으려는 것이다.
  */
-export function PieceSection({ projectId }: { projectId: Id }) {
+export function PieceSection({
+  projectId,
+  open,
+}: {
+  projectId: Id;
+  /** `FillRow`에서 펼쳤나. 비어 있어도 이때는 그린다(009). */
+  open?: boolean;
+}) {
   const t = useStrings();
   const [adding, setAdding] = useState(false);
   const [editing, setEditing] = useState<ProjectPiece>();
@@ -50,6 +57,15 @@ export function PieceSection({ projectId }: { projectId: Id }) {
   );
 
   if (!pieces || !project) return null;
+
+  /*
+    비어 있으면 그리지 않는다(009).
+  
+    이 섹션이 자기 빈 상태를 스스로 말하면 빈 프로젝트에서 "없어요"가 다섯 번
+    반복되고, 상세가 두 화면 반이 된다. 채우는 길은 사라지지 않고 `FillRow`
+    한 자리로 모인다 — 거기서 `open`이 켜지면 이 자리에서 그대로 펼쳐진다.
+  */
+  if (pieces.length === 0 && !open) return null;
 
   const swatch = gauges?.[0];
   /* 시트에서 치수를 넣는 동안 코수를 미리 보여주는 데 쓴다. 고치는 중이면
@@ -71,7 +87,12 @@ export function PieceSection({ projectId }: { projectId: Id }) {
   );
 
   return (
-    <section className="border-line mb-6 border-t pt-5">
+    <section
+      // 009의 관문이 잡는 손잡이. 없어지면 관문이 조용히 통과하는 게 아니라
+      // 환경 문제(2)로 멈춘다.
+      data-section="piece"
+      className="border-line mb-6 border-t pt-5"
+    >
       <div className="mb-1 flex items-center justify-between">
         <h2 className="font-medium">{t.piece.title}</h2>
         <Button
