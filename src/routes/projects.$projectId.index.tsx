@@ -208,7 +208,15 @@ function ProjectOverview() {
             {/* 순서를 모르는 사람에게 다음 걸음 하나를 말한다. 카운터가
                 생기면 스스로 접힌다. */}
             <StartGuide projectId={projectId} />
-            <ProgressCard projectId={projectId} />
+            {/* 복귀 브리핑(008). 사진·마지막 작업일·재료를 개요 상단의
+                한 카드로 모은다 — 목록 카드와 같은 장을 넘겨서 두 화면이
+                서로 다른 사진을 보여주는 일이 없게 한다. */}
+            <ProgressCard
+              projectId={projectId}
+              project={project}
+              cover={cover?.blob}
+              materialCount={material.length}
+            />
 
             <SectionLink
               title={t.project.recentLog}

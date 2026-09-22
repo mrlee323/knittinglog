@@ -92,6 +92,10 @@ export const ko = {
     references: "참고 자료",
     viewWorkbench: "작업대에서 보기",
     resources: "구성",
+    /* 복귀 브리핑의 재료 줄(008) — "무엇으로 뜨고 있었나". 없는 항목은
+       말하지 않는다(007). */
+    briefRefs: "자료 {n}장",
+    briefYarnLeft: "실 {n}g 남음",
     /* 중단 사유별 결말 — 옛 기록 탭에서 옮겨왔다 */
     reasonTitle: "왜 멈췄나",
     reasonNote: "지금까지 멈춘 이력을 모아 본 거예요",

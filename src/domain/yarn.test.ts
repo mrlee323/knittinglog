@@ -6,6 +6,7 @@ import {
   isOverAllocated,
   skeinsForMeters,
   stashTotal,
+  totalRemainingGrams,
   substituteSkeins,
 } from "./yarn";
 
@@ -135,5 +136,50 @@ describe("잔량 예측", () => {
       60
     );
     expect(f?.gramsPerRow).toBeCloseTo(1);
+  });
+});
+
+describe("totalRemainingGrams", () => {
+  const d = (day: number) => new Date(2026, 0, day);
+
+  it("잰 적이 없으면 null이다 — 0g이 아니다", () => {
+    expect(totalRemainingGrams([])).toBeNull();
+  });
+
+  it("배정마다 마지막으로 잰 값만 더한다", () => {
+    expect(
+      totalRemainingGrams([
+        { allocationId: "a", date: d(1), remainingGrams: 100 },
+        { allocationId: "a", date: d(5), remainingGrams: 60 },
+        { allocationId: "b", date: d(3), remainingGrams: 40 },
+      ])
+    ).toBe(100);
+  });
+
+  it("들어온 순서가 뒤바뀌어도 날짜로 고른다", () => {
+    expect(
+      totalRemainingGrams([
+        { allocationId: "a", date: d(5), remainingGrams: 60 },
+        { allocationId: "a", date: d(1), remainingGrams: 100 },
+      ])
+    ).toBe(60);
+  });
+
+  it("안 잰 배정은 0으로 치지 않는다 — 잰 것만 더한다", () => {
+    // 실 둘을 물렸는데 하나만 쟀다. 안 잰 쪽을 0g으로 치면 합계가 같아도
+    // "두 실을 다 합쳐 40g"이라는 거짓이 된다.
+    expect(
+      totalRemainingGrams([
+        { allocationId: "a", date: d(2), remainingGrams: 40 },
+      ])
+    ).toBe(40);
+  });
+
+  it("다 써서 0g이면 0을 말한다 — null과 구분된다", () => {
+    expect(
+      totalRemainingGrams([
+        { allocationId: "a", date: d(2), remainingGrams: 0 },
+      ])
+    ).toBe(0);
   });
 });

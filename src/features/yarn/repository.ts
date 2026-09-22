@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { db, stamp, touch } from "@/lib/db";
+import { totalRemainingGrams } from "@/domain/yarn";
 import type { WeighIn } from "@/domain/yarn";
 import type { Id, Yarn, YarnAllocation, YarnWeighIn } from "@/types/entities";
 
@@ -193,6 +194,26 @@ export async function addWeighIn(
 }
 
 export const deleteWeighIn = (id: Id) => db.yarnWeighIns.delete(id);
+
+/**
+ * 이 프로젝트에 남은 실 무게(008의 복귀 브리핑).
+ *
+ * 합치는 규칙은 `totalRemainingGrams`에 있다 — 화면도 저장소도 계산하지 않는다.
+ * 한 번도 재지 않았으면 null이고, 그때 브리핑은 그 줄을 그리지 않는다.
+ */
+export async function remainingGramsForProject(
+  projectId: Id
+): Promise<number | null> {
+  const allocations = await listAllocationsForProject(projectId);
+  if (allocations.length === 0) return null;
+
+  const weighIns = await db.yarnWeighIns
+    .where("allocationId")
+    .anyOf(allocations.map((a) => a.id))
+    .toArray();
+
+  return totalRemainingGrams(weighIns);
+}
 
 /**
  * 소모량 역산에 쓸 수 있는 기록만 도메인 타입으로 옮긴다.

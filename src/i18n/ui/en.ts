@@ -85,6 +85,10 @@ export const en: UIStrings = {
     references: "References",
     viewWorkbench: "Open the workbench",
     resources: "Materials",
+    /* 복귀 브리핑의 재료 줄(008) — "무엇으로 뜨고 있었나". 없는 항목은
+       말하지 않는다(007). */
+    briefRefs: "{n} refs",
+    briefYarnLeft: "{n}g yarn left",
     /* 중단 사유별 결말 — 옛 기록 탭에서 옮겨왔다 */
     reasonTitle: "Why they stopped",
     reasonNote: "Every pause you've recorded so far",
