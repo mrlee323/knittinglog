@@ -84,6 +84,28 @@ if [ "$SKIP_CHECKS" -ne 1 ]; then
 fi
 
 git push -q origin "$BRANCH" || { echo "중단: 브랜치 push 실패."; exit 1; }
+
+# **push와 머지 사이의 창을 막는다**(006 검증).
+#
+# `:86`의 push가 성공한 시점에는 로컬과 origin이 같았다. 그런데 아래 checkout·
+# pull을 지나 merge에 닿기까지의 사이에 누가 이 브랜치로 push하면, merge가
+# 합치는 것은 **그 사이 갱신되지 않은 로컬 ref**다. main push도 성공해서
+# **어디에서도 실패가 나지 않는다.** e03d3f7이 그 창으로 빠졌다.
+TIP=$(git rev-parse HEAD)
+git fetch -q origin "$BRANCH" || { echo "중단: 브랜치를 다시 당기지 못했습니다."; exit 1; }
+REMOTE_TIP=$(git rev-parse "origin/$BRANCH")
+if [ "$TIP" != "$REMOTE_TIP" ]; then
+  echo "중단: push한 뒤 origin/$BRANCH가 움직였습니다."
+  echo "  내 것:   $(git rev-parse --short "$TIP")"
+  echo "  origin: $(git rev-parse --short "$REMOTE_TIP")"
+  echo
+  git log --oneline "$TIP..$REMOTE_TIP" | sed 's/^/  /'
+  echo
+  echo "그대로 머지하면 위 커밋이 main에 안 들어갑니다. 당기고 다시 하세요:"
+  echo "  git pull --rebase origin $BRANCH && ./scripts/finish-work.sh --yes"
+  exit 1
+fi
+
 git checkout -q main || exit 1
 git pull --rebase -q origin main || { echo "중단: main을 당기지 못했습니다."; exit 1; }
 # AGENTS.md 규칙: 머지는 --no-ff. 브랜치의 왕복이 이력에 남아야 한다.
@@ -91,6 +113,25 @@ git merge --no-ff -q "$BRANCH" -m "Merge branch '$BRANCH'" || {
   echo "중단: 머지 충돌. 풀고 나서 'git merge --continue' 하세요."; exit 1; }
 git push -q origin main || { echo "중단: main push 실패."; exit 1; }
 
+# **머지 뒤에 실제로 들어갔는지 본다**(O4).
+#
+# push가 성공하면 조용하고, 브랜치가 커밋을 들고 있으면 `git fsck`도 조용하다.
+# 그래서 아무 도구도 이상을 말하지 않는다 — e03d3f7이 그렇게 셋이나 났다.
+git fetch -q origin main "$BRANCH" || { echo "중단: 확인용으로 origin을 당기지 못했습니다."; exit 1; }
+
+# **`origin/$BRANCH`를 본다, 내 로컬 ref가 아니다.** 머지가 합친 것이 로컬이므로
+# 로컬 tip은 당연히 조상이다 — 그걸 확인해봐야 아무것도 안 나온다. 빠지는 것은
+# 언제나 **원격에만 있던 커밋**이다.
+if ! git merge-base --is-ancestor "origin/$BRANCH" origin/main; then
+  echo
+  echo "경고: origin/$BRANCH의 커밋이 origin/main에 안 들어갔습니다 —"
+  git log --oneline "origin/main..origin/$BRANCH" | sed 's/^/  /'
+  echo
+  echo "브랜치는 그대로 두고 확인하세요. 지우면 찾기 어려워집니다."
+  exit 1
+fi
+
 echo
 echo "머지했습니다: $BRANCH → main (origin 반영)"
+echo "브랜치의 커밋이 전부 origin/main의 조상입니다 (확인함)."
 echo "다음 작업 브랜치는 **기획**이 엽니다:  ./scripts/new-work.sh <새-브랜치명>"

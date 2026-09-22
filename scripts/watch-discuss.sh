@@ -21,7 +21,7 @@ set -uo pipefail
 
 cd "$(git rev-parse --show-toplevel)" || exit 1
 
-PIN_BRANCH="${1:-}"          # 주면 그 브랜치에 고정, 안 주면 HEAD를 따라간다
+PIN_BRANCH="${1:-}"          # 주면 그 브랜치만, 안 주면 **모든 원격 브랜치**를 본다 (O2)
 INTERVAL="${WATCH_INTERVAL:-60}"
 
 # 이 세션의 이름. 기본값을 두지 않는다 — 틀린 이름으로 감시하면 조용한 것과
@@ -81,10 +81,10 @@ while true; do
     fi
   fi
 
-  BRANCH="${PIN_BRANCH:-$(git rev-parse --abbrev-ref HEAD 2>/dev/null)}"
-  if [ -n "$BRANCH" ] && [ "$BRANCH" != "$last_branch" ]; then
-    [ -n "$last_branch" ] && echo "감시 브랜치가 바뀌었습니다: $last_branch → $BRANCH"
-    last_branch="$BRANCH"
+  # `PIN_BRANCH`를 주면 그 브랜치만 본다. 안 주면 **모든 원격 브랜치**를 본다.
+  if [ -n "$PIN_BRANCH" ] && [ "$PIN_BRANCH" != "$last_branch" ]; then
+    [ -n "$last_branch" ] && echo "감시 브랜치가 바뀌었습니다: $last_branch → $PIN_BRANCH"
+    last_branch="$PIN_BRANCH"
   fi
 
   # 1) 워킹 트리 — 같은 폴더를 쓰는 자리는 저장 즉시 보인다
@@ -94,20 +94,50 @@ while true; do
     consider "워킹 트리" "$f" "$(head -20 "$f")"
   done
 
-  # 2) origin — 다른 머신·클라우드 세션이 push한 것
-  if git fetch -q origin "$BRANCH" 2>/dev/null; then
+  # 2) origin — **모든 브랜치**를 본다 (O2)
+  #
+  # 전에는 HEAD의 브랜치 하나만 봤다. 그런데 새 작업 브랜치는 다른 자리가 열고,
+  # 내가 그리로 옮겨오기 전까지 그 브랜치의 스레드는 **아무도 못 본다.** 003이
+  # 그렇게 묻혔고 005·007도 같은 자리에서 멈췄다 — 007은 사흘이었다.
+  #
+  # 한 브랜치만 보고 싶으면 `PIN_BRANCH`를 준다.
+  if git fetch -q --prune origin 2>/dev/null; then
     [ "$fails" -ge 3 ] && echo "복구: git fetch가 다시 됩니다."
     fails=0
-    files=$(git ls-tree -r --name-only "origin/$BRANCH" -- docs/discuss 2>/dev/null \
-            | grep -E '\.md$' | grep -v 'README\.md' || true)
-    for f in $files; do
-      head=$(git show "origin/$BRANCH:$f" 2>/dev/null | head -20) || continue
-      consider "origin/$BRANCH" "$f" "$head"
+    if [ -n "$PIN_BRANCH" ]; then
+      refs="origin/$PIN_BRANCH"
+    else
+      refs=$(git for-each-ref --format='%(refname:short)' refs/remotes/origin \
+             | grep -v '^origin/HEAD$' || true)
+    fi
+    for ref in $refs; do
+      # **이미 main에 들어간 브랜치는 건너뛴다.** 머지된 브랜치는 그때의 스레드를
+      # 그대로 들고 있어서, 닫힌 차례를 영원히 다시 부른다 — 실제로 `004`의 옛
+      # `turn: 기획`이 머지된 브랜치 둘에 남아 있었다. 머지됐다면 그 스레드의
+      # 현재 상태는 main에 있고, main도 아래 목록에 있다.
+      if [ "$ref" != "origin/main" ] \
+         && git merge-base --is-ancestor "$ref" origin/main 2>/dev/null; then
+        continue
+      fi
+      files=$(git ls-tree -r --name-only "$ref" -- docs/discuss 2>/dev/null \
+              | grep -E '\.md$' | grep -v 'README\.md' || true)
+      for f in $files; do
+        head=$(git show "$ref:$f" 2>/dev/null | head -20) || continue
+        # **main이 이미 닫은 스레드는 다시 부르지 않는다.** 브랜치는 그때의 사본을
+        # 그대로 들고 있어서, main에서 닫힌 차례가 브랜치에 남아 영원히 울린다.
+        # main이 기록의 자리이므로 거기서 turn이 비었으면 끝난 것이다.
+        main_head=$(git show "origin/main:$f" 2>/dev/null | head -20) || main_head=""
+        if [ -n "$main_head" ]; then
+          main_turn=$(field turn "$main_head")
+          case "$main_turn" in 기획|구현|검증|사람) ;; *) continue ;; esac
+        fi
+        consider "$ref" "$f" "$head"
+      done
     done
   else
     fails=$((fails + 1))
     # 세 번 연속이면 원격 감시는 사실상 멈춘 것이다. 워킹 트리 감시는 살아 있다.
-    [ "$fails" -eq 3 ] && echo "경고: git fetch가 3회 연속 실패했습니다($BRANCH). 원격은 지금 못 보고 있습니다 — 워킹 트리만 봅니다."
+    [ "$fails" -eq 3 ] && echo "경고: git fetch가 3회 연속 실패했습니다. 원격은 지금 못 보고 있습니다 — 워킹 트리만 봅니다."
   fi
 
   sleep "$INTERVAL"
