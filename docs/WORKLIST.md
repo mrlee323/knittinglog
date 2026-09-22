@@ -31,7 +31,7 @@
 | 007  | 완료 | 빈 상태/온보딩 개선                            | `feat/empty-states`, `docs/discuss/007-empty-states.md`                       |
 | O    | 완료 | 정비 배치 (O1~O4를 한 브랜치로)                | `fix/tooling-batch`, `docs/discuss/018-tooling-batch.md`                      |
 | 008  | 완료 | 프로젝트 상세 상단 복귀 브리핑                 | `feat/project-detail-briefing`, `docs/discuss/008-project-detail-briefing.md` |
-| 009  | 대기 | 프로젝트 상세 빈 섹션 접기                     | 예정                                                                          |
+| 009  | 완료 | 프로젝트 상세 빈 섹션 접기                     | `feat/detail-collapse`, `docs/discuss/009-detail-collapse.md`                 |
 | 010  | 대기 | 타이포·숫자 위계 정리                          | 예정                                                                          |
 | 011  | 대기 | 넓은 화면 레이아웃 개선                        | 예정                                                                          |
 | 012  | 대기 | 뜨기 모드 폴리싱                               | 예정                                                                          |
@@ -288,6 +288,9 @@
 - 채우는 길은 섹션마다 흩어진 `+` 버튼 대신 한 자리에서 제안한다.
 - 시작 안내 카드가 빈 프로젝트의 유일한 안내가 되게 한다.
 - `수정`, `삭제`, `이대로 다시 뜨기`는 본문에서 빼고 상단 메뉴로 보낸다.
+- **접는 일의 위험은 길이 사라지는 것이다.** 빈 섹션을 지우면 그 안의 `+`도
+  같이 사라진다 — 화면이 짧아진 것은 눈에 보이지만 들어갈 방법이 없어진 것은
+  안 보인다. 관문 C·E가 그것만 본다(`docs/discuss/009-detail-collapse.md`).
 
 ### 완료 기준
 
