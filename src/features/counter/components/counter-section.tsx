@@ -63,7 +63,7 @@ export function CounterSection({
       className="border-line mb-6 border-t pt-5"
     >
       <div className="mb-3 flex items-center justify-between">
-        <h2 className="font-medium">{t.counter.title}</h2>
+        <h2 className="text-subhead font-medium">{t.counter.title}</h2>
         <Button
           icon
           variant="ghost"
@@ -135,8 +135,10 @@ function CounterRow({
   return (
     <li className="border-line bg-surface flex items-center gap-3 rounded-md border p-3">
       <div className="min-w-0 flex-1">
-        <p className="text-small truncate font-medium">{counter.label}</p>
-        <p className="text-text-2 text-caption">
+        <p className="text-body truncate font-medium">{counter.label}</p>
+        {/* 행의 주인공은 이름이 아니라 단수다(010). 12px이면 이름보다 작아서
+            "몇 단까지 떴나"가 이름의 부연처럼 읽힌다. */}
+        <p className="text-text-2 text-body">
           {view.value}
           {view.target ? ` / ${view.target}` : ` ${t.counter.rows}`}
           {view.repeat &&

@@ -44,7 +44,7 @@ export function LifelineNote({
     )} · ${t.counter.lifelineUnravel.replace("{n}", String(rows))}`;
   })();
 
-  return (
-    <p className={cn("text-hibernating text-caption", className)}>{text}</p>
-  );
+  /* 이 서비스가 가장 앞세우는 문장을 보조 설명 크기(12px)에 두지 않는다(010).
+     뜨기 모드에서는 "여기까지만 풀면 된다"가 지금 내릴 결정의 근거다. */
+  return <p className={cn("text-hibernating text-small", className)}>{text}</p>;
 }

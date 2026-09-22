@@ -105,7 +105,7 @@ export function NeedleSection({
       className="border-line mb-6 border-t pt-5"
     >
       <div className="mb-3 flex items-center justify-between">
-        <h2 className="font-medium">{t.needle.projectTitle}</h2>
+        <h2 className="text-subhead font-medium">{t.needle.projectTitle}</h2>
         <Button
           icon
           variant="ghost"

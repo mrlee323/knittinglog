@@ -274,7 +274,9 @@ function ResumeCard({
           <p className="text-display font-semibold tabular-nums">
             {view ? view.value : 0}
             {view?.target ? (
-              <span className="text-text-3 text-body font-normal">
+              /* 상세의 진행도 카드와 **같은 크기**다(010). 같은 34px 숫자
+                 옆에서 목표만 화면마다 다른 크기면 위계가 화면마다 다르다. */
+              <span className="text-text-3 text-heading font-normal">
                 {` / ${view.target}`}
               </span>
             ) : null}

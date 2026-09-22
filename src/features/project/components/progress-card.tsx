@@ -145,7 +145,10 @@ export function ProgressCard({
             {when && <p className="text-text-3 text-caption">{when}</p>}
           </div>
           {view.remaining !== undefined && (
-            <p className="text-text-2 text-small">
+            /* 남은 단수는 **본문보다 크다**(010). 이 카드에서 큰 숫자 다음으로
+               많이 읽히는 값인데 13px이라 옆의 34px에 눌려 보조 설명처럼
+               읽혔다 — "얼마나 남았나"는 보조가 아니다. */
+            <p className="text-text-2 text-subhead shrink-0">
               {t.counter.remaining.replace("{n}", String(view.remaining))}
             </p>
           )}

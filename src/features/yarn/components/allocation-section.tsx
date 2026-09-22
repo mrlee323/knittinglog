@@ -76,7 +76,7 @@ export function AllocationSection({
       className="border-line mb-6 border-t pt-5"
     >
       <div className="mb-3 flex items-center justify-between">
-        <h2 className="font-medium">{t.allocation.title}</h2>
+        <h2 className="text-subhead font-medium">{t.allocation.title}</h2>
         <Button
           icon
           variant="ghost"
@@ -179,6 +179,9 @@ function AllocationRow({
       ? forecastYarn(measurableWeighIns(weighIns), targetRow, currentRow)
       : null;
 
+  // `listWeighIns`는 날짜순이라 마지막이 가장 최근이다.
+  const last = weighIns?.at(-1);
+
   return (
     <li className="border-line bg-surface rounded-md border p-3">
       <div className="flex items-center gap-3">
@@ -188,16 +191,36 @@ function AllocationRow({
           params={{ yarnId: yarn.id }}
           className="min-w-0 flex-1"
         >
-          <p className="text-small truncate font-medium">{yarn.name}</p>
+          <p className="text-body truncate font-medium">{yarn.name}</p>
           <p className="text-text-2 text-caption truncate">
             {[yarn.colorName, yarn.dyeLot && `Lot ${yarn.dyeLot}`]
               .filter(Boolean)
               .join(" · ")}
           </p>
         </Link>
-        <span className="text-text-2 text-caption shrink-0">
-          {t.yarn.skeins.replace("{n}", String(allocation.skeinsAllocated))}
-        </span>
+        {/*
+          **잔량의 집은 여기다**(010).
+
+          008이 복귀 브리핑 한 줄에 `실 128g 남음`을 넣었지만, 거기는 여러
+          사실을 `·`로 잇는 요약 줄이라 숫자 하나만 키울 수 없다. 요약 줄은
+          조용히 두고, **그 값을 소유한 섹션**이 크게 말한다.
+
+          잰 적이 없으면 아무 말도 하지 않는다 — 0g으로 치면 "실이 없다"는
+          거짓이 된다(domain/yarn의 규칙과 같다).
+        */}
+        <div className="shrink-0 text-right">
+          {last !== undefined && (
+            <p className="text-subhead font-semibold">
+              {t.weighIn.entryNoRow.replace(
+                "{grams}",
+                String(last.remainingGrams)
+              )}
+            </p>
+          )}
+          <span className="text-text-2 text-caption">
+            {t.yarn.skeins.replace("{n}", String(allocation.skeinsAllocated))}
+          </span>
+        </div>
         {/* 아이콘은 작아도 타깃은 44px여야 한다. 음수 마진으로 카드
             패딩 안쪽까지 눌리는 면적을 되찾는다. */}
         <button

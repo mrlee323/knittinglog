@@ -277,7 +277,17 @@ function KnitMode() {
 
         {view?.target && (
           <>
-            <p className="text-text-2 text-small mt-1">/ {view.target}</p>
+            {/* 72px 숫자 옆에서 13px 목표는 각주로 읽힌다(010). 상세의 34/20
+                비율에 맞춰 키운다 — 같은 사실이 화면마다 다른 크기면 같은
+                앱으로 읽히지 않는다. */}
+            <p
+              className={cn(
+                "text-text-2 mt-1",
+                short ? "text-subhead" : "text-heading"
+              )}
+            >
+              / {view.target}
+            </p>
             <div className="bg-sunken mx-auto mt-3 h-1.5 max-w-xs overflow-hidden rounded-full">
               <div
                 className="bg-accent h-full rounded-full transition-[width]"
@@ -287,10 +297,12 @@ function KnitMode() {
           </>
         )}
 
+        {/* 남은 단수는 상세와 **같은 크기**여야 한다(010). 여기서만 13px이면
+            같은 값이 화면을 옮길 때마다 위계가 달라진다. */}
         <div
           className={cn(
-            "text-text-2 text-small space-y-0.5",
-            short ? "mt-1" : "mt-3"
+            "text-text-2 space-y-0.5",
+            short ? "text-small mt-1" : "text-subhead mt-3"
           )}
         >
           {view?.remaining !== undefined && !view.done && (
@@ -428,7 +440,9 @@ function SmallAction({
       className="bg-sunken text-text-2 flex min-h-14 flex-1 flex-col items-center justify-center gap-1 rounded-md disabled:opacity-30"
     >
       {icon}
-      <span className="text-micro">{label}</span>
+      {/* 손에 실을 쥔 채 팔 길이에서 누르는 버튼이다. 타깃을 44px로 잡아둔
+          것과 같은 이유로 라벨도 micro(11px)에 두지 않는다(010). */}
+      <span className="text-caption">{label}</span>
     </button>
   );
 }
