@@ -18,26 +18,26 @@
 
 ## 진행 현황
 
-| 번호 | 상태 | 작업                                           | 브랜치/스레드                                                         |
-| ---- | ---- | ---------------------------------------------- | --------------------------------------------------------------------- |
-| 001  | 완료 | 화면 위계: 밖에서는 고르고, 안에서는 이어 뜬다 | `docs/discuss/001-hierarchy.md`                                       |
-| 002  | 완료 | 사용자 기준/persona 정리                       | `docs/discuss/002-personas.md`                                        |
-| 003  | 완료 | 홈 첫 카드 사진 상한: 폰에서는 `aspect-[4/3]`  | `fix/safe-area-cap`, `docs/discuss/003-safe-area-card-cap.md`         |
-| 004  | 완료 | 모바일 하단 내비 safe-area 겹침 수정           | `fix/mobile-bottom-nav-safe-area`, `docs/discuss/004-next-work.md`    |
-| 005  | 완료 | 프로젝트 목록 카드 이미지형 전환               | `feat/project-image-cards`, `docs/discuss/005-project-image-cards.md` |
-| 015  | 완료 | 강조색을 코드에 반영 (**006보다 먼저**)        | `fix/accent-token-drift`, `docs/discuss/015-accent-token-drift.md`    |
-| 016  | 완료 | 토큰 대조를 표 전체로 넓힌다                   | `fix/token-parity`, `docs/discuss/016-token-parity.md`                |
-| 006  | 완료 | 홈 첫 카드 시각 개선                           | `feat/home-resume-card`, `docs/discuss/006-home-resume-card.md`       |
-| 007  | 진행 | 빈 상태/온보딩 개선                            | `feat/empty-states`, `docs/discuss/007-empty-states.md`               |
-| O    | 대기 | 정비 배치 (O1~O4를 한 브랜치로)                | 예정                                                                  |
-| 008  | 대기 | 프로젝트 상세 상단 복귀 브리핑                 | 예정                                                                  |
-| 009  | 대기 | 프로젝트 상세 빈 섹션 접기                     | 예정                                                                  |
-| 010  | 대기 | 타이포·숫자 위계 정리                          | 예정                                                                  |
-| 011  | 대기 | 넓은 화면 레이아웃 개선                        | 예정                                                                  |
-| 012  | 대기 | 뜨기 모드 폴리싱                               | 예정                                                                  |
-| 017  | 대기 | 강조색이 한 화면에 셋이다 (013 앞)             | 예정                                                                  |
-| 013  | 대기 | 새 시각 언어 정리                              | 예정                                                                  |
-| 014  | 대기 | 실기기/전체 회귀 검증                          | 예정                                                                  |
+| 번호 | 상태 | 작업                                           | 브랜치/스레드                                                                 |
+| ---- | ---- | ---------------------------------------------- | ----------------------------------------------------------------------------- |
+| 001  | 완료 | 화면 위계: 밖에서는 고르고, 안에서는 이어 뜬다 | `docs/discuss/001-hierarchy.md`                                               |
+| 002  | 완료 | 사용자 기준/persona 정리                       | `docs/discuss/002-personas.md`                                                |
+| 003  | 완료 | 홈 첫 카드 사진 상한: 폰에서는 `aspect-[4/3]`  | `fix/safe-area-cap`, `docs/discuss/003-safe-area-card-cap.md`                 |
+| 004  | 완료 | 모바일 하단 내비 safe-area 겹침 수정           | `fix/mobile-bottom-nav-safe-area`, `docs/discuss/004-next-work.md`            |
+| 005  | 완료 | 프로젝트 목록 카드 이미지형 전환               | `feat/project-image-cards`, `docs/discuss/005-project-image-cards.md`         |
+| 015  | 완료 | 강조색을 코드에 반영 (**006보다 먼저**)        | `fix/accent-token-drift`, `docs/discuss/015-accent-token-drift.md`            |
+| 016  | 완료 | 토큰 대조를 표 전체로 넓힌다                   | `fix/token-parity`, `docs/discuss/016-token-parity.md`                        |
+| 006  | 완료 | 홈 첫 카드 시각 개선                           | `feat/home-resume-card`, `docs/discuss/006-home-resume-card.md`               |
+| 007  | 완료 | 빈 상태/온보딩 개선                            | `feat/empty-states`, `docs/discuss/007-empty-states.md`                       |
+| O    | 완료 | 정비 배치 (O1~O4를 한 브랜치로)                | `fix/tooling-batch`, `docs/discuss/018-tooling-batch.md`                      |
+| 008  | 완료 | 프로젝트 상세 상단 복귀 브리핑                 | `feat/project-detail-briefing`, `docs/discuss/008-project-detail-briefing.md` |
+| 009  | 대기 | 프로젝트 상세 빈 섹션 접기                     | 예정                                                                          |
+| 010  | 대기 | 타이포·숫자 위계 정리                          | 예정                                                                          |
+| 011  | 대기 | 넓은 화면 레이아웃 개선                        | 예정                                                                          |
+| 012  | 대기 | 뜨기 모드 폴리싱                               | 예정                                                                          |
+| 017  | 대기 | 강조색이 한 화면에 셋이다 (013 앞)             | 예정                                                                          |
+| 013  | 대기 | 새 시각 언어 정리                              | 예정                                                                          |
+| 014  | 대기 | 실기기/전체 회귀 검증                          | 예정                                                                          |
 
 ---
 
@@ -259,7 +259,11 @@
 - 상세 상단에 복귀 브리핑 영역을 만든다.
 - 포함 정보: 마지막 작업일, 현재 단수, 남은 단수, 마지막 lifeline, 연결된 도안/자료,
   실 잔량, 바늘.
-- 대표 사진 또는 최근 사진을 상단에서 크게 보여준다.
+- ~~대표 사진 또는 최근 사진을 상단에서 크게 보여준다.~~ **재보고 버렸다** —
+  카드 폭 4:3 사진이 13 mini에서 233px인데 `뜨기`까지 남는 예산이 235px이라
+  완료 기준 첫 줄과 정면으로 부딪힌다. 실제로 넣어보면 세 기기 모두 `뜨기`가
+  탭바 아래로 내려간다(-27 / -33 / -51px). 006의 복귀 카드와 같은 64px 썸네일로
+  간다 — 숫자와 근거는 `docs/discuss/008-project-detail-briefing.md`.
 - `뜨기 모드로 가기`는 항상 눈에 잘 보여야 한다.
 - 문구는 "오래 멈췄어요"보다 "여기서 이어갈 수 있어요" 쪽으로 쓴다.
 
