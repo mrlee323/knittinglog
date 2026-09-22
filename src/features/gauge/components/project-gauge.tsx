@@ -49,10 +49,12 @@ export function ProjectGauge({
       data-section="gauge"
       className="border-line mb-6 border-t pt-5"
     >
-      <h2 className="mb-2 font-medium">{t.gauge.title}</h2>
+      <h2 className="text-subhead mb-2 font-medium">{t.gauge.title}</h2>
 
       {gauge ? (
-        <p className="text-small">
+        /* 게이지 숫자는 이 섹션의 전부다. 본문보다 작게 두면 "내 게이지가
+           뭐였지"의 답이 설명문처럼 읽힌다(010). */
+        <p className="text-subhead">
           {t.gauge.summary
             .replace(
               "{sts}",

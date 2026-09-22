@@ -25,6 +25,11 @@ dist-ssr
 
 # vite-plugin-pwa dev output
 dev-dist
+
+# TanStack Router 플러그인의 임시 작업 폴더. 라우트가 바뀔 때마다 새로 써지고
+# 내용은 빌드 산출물이다 — 생성된 라우트 트리(src/routeTree.gen.ts)와 달리
+# 커밋할 이유가 없다.
+.tanstack/
 public/pdfjs/
 
 # scripts/shot.mjs 결과 — 그때의 확인이지 이력이 아니고, 바이너리는 diff가 안 된다

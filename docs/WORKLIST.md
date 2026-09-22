@@ -32,7 +32,7 @@
 | O    | 완료 | 정비 배치 (O1~O4를 한 브랜치로)                | `fix/tooling-batch`, `docs/discuss/018-tooling-batch.md`                      |
 | 008  | 완료 | 프로젝트 상세 상단 복귀 브리핑                 | `feat/project-detail-briefing`, `docs/discuss/008-project-detail-briefing.md` |
 | 009  | 완료 | 프로젝트 상세 빈 섹션 접기                     | `feat/detail-collapse`, `docs/discuss/009-detail-collapse.md`                 |
-| 010  | 대기 | 타이포·숫자 위계 정리                          | 예정                                                                          |
+| 010  | 완료 | 타이포·숫자 위계 정리                          | `feat/type-hierarchy`, `docs/discuss/010-type-hierarchy.md`                   |
 | 011  | 대기 | 넓은 화면 레이아웃 개선                        | 예정                                                                          |
 | 012  | 대기 | 뜨기 모드 폴리싱                               | 예정                                                                          |
 | 017  | 대기 | 강조색이 한 화면에 셋이다 (013 앞)             | 예정                                                                          |
@@ -310,8 +310,14 @@
 
 - 단수, 남은 단, 실 잔량, 게이지 같은 숫자는 본문보다 한 단계 이상 크게 둔다.
 - 섹션 제목, 카드 제목, 보조 설명의 스케일을 분명히 나눈다.
-- 한글 제목에는 `word-break: keep-all`을 적용한다.
-- 숫자는 탭уляр/고정폭 느낌을 검토해 흔들림을 줄인다.
+- ~~한글 제목에는 `word-break: keep-all`을 적용한다.~~ **이미 `body`에 걸려
+  있었다** — 네 화면 전부 위반 0개. 010의 일은 다는 것이 아니라 자손이 덮지
+  못하게 잠그는 것이었다(관문 E).
+- ~~숫자는 탭ular/고정폭 느낌을 검토해 흔들림을 줄인다.~~ 위와 같다.
+  `font-variant-numeric: tabular-nums`가 `body`에 이미 있다.
+- **같은 사실은 화면이 바뀌어도 같은 크기여야 한다.** `/ 목표`가 홈 15px ·
+  상세 20px · 뜨기 13px이었다 — 한 화면만 보면 어디도 이상하지 않아서 화면을
+  가로질러 재야만 보인다(`docs/discuss/010-type-hierarchy.md`).
 
 ### 완료 기준
 
