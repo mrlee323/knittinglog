@@ -7,7 +7,8 @@ import { cn } from "@/lib/utils";
  * 기준 화면이 태블릿·PC이므로(src/routes/__root.tsx) 폭을 두 가지로 나눈다.
  * 기본은 읽기 폭(`2xl`, 672px) — 폼과 설정은 넓혀도 읽기 어려워질 뿐이다.
  * `wide`는 목록·상세·갤러리용(`5xl`, 1024px)으로, 사진과 카드가 여러 열로
- * 놓일 자리다.
+ * 놓일 자리다. **2xl(1536px+)에서는 88rem까지 간다**(011) — 거기서는 열이
+ * 한 줄 더 늘어 폭이 카드 크기가 아니라 정보 밀도가 된다.
  */
 export function Page({
   title,
@@ -31,7 +32,13 @@ export function Page({
     <div
       className={cn(
         "mx-auto w-full px-4 py-5 md:px-8 md:py-8",
-        wide ? "max-w-lg md:max-w-5xl" : "max-w-lg md:max-w-2xl"
+        /* 2xl(1536px+)에서 한 단계 더 넓힌다(011). 1920px에서 본문이 쓸 수
+           있는 가로의 57%만 덮고 있었다 — 폰 레이아웃을 가운데 둔 모양이다.
+           읽기 폭(wide 아님)은 그대로다. 거기서 넓히면 줄이 길어져 읽기만
+           나빠진다. */
+        wide
+          ? "max-w-lg md:max-w-5xl 2xl:max-w-[88rem]"
+          : "max-w-lg md:max-w-2xl"
       )}
     >
       <header className="mb-5">
@@ -59,7 +66,10 @@ export function Page({
  */
 export function Columns({ main, side }: { main: ReactNode; side: ReactNode }) {
   return (
-    <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_22rem] lg:gap-8">
+    /* 2xl에서 옆 단이 넓어진다(011). 본문 폭이 늘어난 만큼 옆 단이 그대로면
+       늘어난 자리를 본문 한 단이 혼자 먹어 카드가 커지기만 한다 — 카드가
+       커지는 것은 정보 밀도가 아니다. */
+    <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_22rem] lg:gap-8 2xl:grid-cols-[minmax(0,1fr)_28rem]">
       <div className="min-w-0">{main}</div>
       <div className="min-w-0 lg:sticky lg:top-8">{side}</div>
     </div>
@@ -93,14 +103,19 @@ export function CardGrid({
   columns = 2,
 }: {
   children: ReactNode;
-  /** 큰 화면에서의 최대 열 수 */
+  /**
+   * `xl`에서의 열 수. `2xl`에서 한 열 더 는다(011).
+   *
+   * 폭이 늘었는데 열이 그대로면 카드만 커진다 — 카드 하나가 커지는 것은 정보
+   * 밀도가 아니다. 1920px에서 프로젝트가 3열로 멈춰 있었다.
+   */
   columns?: 2 | 3;
 }) {
   return (
     <ul
       className={cn(
         "grid gap-3 sm:grid-cols-2",
-        columns === 3 && "xl:grid-cols-3"
+        columns === 3 ? "xl:grid-cols-3 2xl:grid-cols-4" : "2xl:grid-cols-3"
       )}
     >
       {children}
