@@ -34,7 +34,7 @@
 | 009  | 완료 | 프로젝트 상세 빈 섹션 접기                     | `feat/detail-collapse`, `docs/discuss/009-detail-collapse.md`                 |
 | 010  | 완료 | 타이포·숫자 위계 정리                          | `feat/type-hierarchy`, `docs/discuss/010-type-hierarchy.md`                   |
 | 011  | 완료 | 넓은 화면 레이아웃 개선                        | `feat/wide-layout`, `docs/discuss/011-wide-layout.md`                         |
-| 012  | 대기 | 뜨기 모드 폴리싱                               | 예정                                                                          |
+| 012  | 완료 | 뜨기 모드 폴리싱                               | `feat/knit-polish`, `docs/discuss/012-knit-polish.md`                         |
 | 017  | 대기 | 강조색이 한 화면에 셋이다 (013 앞)             | 예정                                                                          |
 | 013  | 대기 | 새 시각 언어 정리                              | 예정                                                                          |
 | 014  | 대기 | 실기기/전체 회귀 검증                          | 예정                                                                          |
@@ -366,6 +366,9 @@
 - 도안이 없으면 안내문이 화면 절반을 차지하지 않게 한다.
 - 되돌리기, lifeline, 화면 꺼짐 방지는 접근하기 쉬워야 한다.
 - 폰은 카운터 우선, 태블릿 이상은 도안+카운터 병렬을 검토한다.
+- **크기 기준은 창 높이가 아니라 "이 칸이 화면을 다 쓰는가"다.** 단수를 키우면
+  도안을 켠 순간 `+1`과 보조 조작이 화면 밖으로 밀린다 — 도안을 끈 화면만 보면
+  멀쩡해서 안 보인다(`docs/discuss/012-knit-polish.md`).
 
 ### 완료 기준
 
