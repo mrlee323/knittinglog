@@ -39,6 +39,38 @@
      브랜드가 아니라 시스템 신호로 읽히도록 채도를 낮췄다. */
   --focus: #4a6fa5;
 
+  /*
+   * 메리야스 조직 — 013 (니트 방향).
+   *
+   * 코 머리의 아치를 한 줄 그리고, 다음 줄을 **반 코 어긋나게** 쌓는다.
+   * 진짜 메리야스가 그렇게 생겼고, 어긋남이 없으면 격자로 읽힌다.
+   *
+   * 13×16은 "코가 코로 읽히는" 가장 작은 칸이었다 — 더 줄이면 노이즈가 되고,
+   * 키우면 배경이 아니라 무늬가 된다.
+   *
+   * 이미지가 아니라 그라디언트다 — 에셋이 없으니 다크 대응이 토큰 하나로
+   * 끝나고, 확대해도 안 깨진다.
+   *
+   * **그라디언트를 커스텀 속성에 담아 재사용할 수는 없다.** `--knit-image`에
+   * 넣어두고 쓰는 자리에서 `--knit-tone`만 바꿔 끼우려 했는데, 커스텀 속성의
+   * 치환은 **선언된 요소에서** 일어난다 — `:root`에 `--knit-tone`이 없으니
+   * `--knit-image`가 거기서 이미 무효가 되고, 쓰는 쪽에서 무엇을 넣든
+   * `none`이다. 그래서 클래스로 둔다(아래 `@layer utilities`).
+   *
+   * `@apply`로도 쓰지 않는다. Tailwind v4에서 `@layer utilities`의 클래스는
+   * `@apply`가 못 찾아 **CSS 전체가 컴파일에 실패한다** — 실제로 그렇게 깨졌고,
+   * 화면이 통째로 스타일 없이 떴다.
+   */
+  --knit-cell-w: 13px;
+  --knit-cell-h: 16px;
+  /* 스와치·`+1` 면처럼 **천이 주인공인 자리**. */
+  --knit-ink: rgb(27 26 24 / 0.11);
+  /* 작업대 바탕처럼 **천이 배경인 자리**.
+     0.055로 잡았다가 내렸다 — 바탕 대비 채널차가 12였고, 그건 007이 "잉크"로
+     세는 문턱(6)의 두 배다. 화면 전체를 덮으면 그 세기가 **무늬 배경**이 되고,
+     `docs/DESIGN.md`가 "무늬 배경이 되는 순간 뺀다"고 못 박았다. */
+  --knit-ink-faint: rgb(27 26 24 / 0.022);
+
   /* 상태 — 작품 사진·실 색과 경쟁하지 않도록 전부 저채도.
      잠시멈춤에 경고색을 쓰지 않는 것은 이 서비스의 전제다. */
   --status-planning: #9b978f;
@@ -64,6 +96,13 @@
   --on-accent-soft: #86b394;
 
   --focus: #7ba3d9;
+
+  /* 다크에서는 조직이 **빛으로** 온다. 어두운 천에 생기는 하이라이트다.
+     같은 불투명도를 쓰면 라이트보다 세게 읽혀 조금 낮춘다. */
+  --knit-cell-w: 13px;
+  --knit-cell-h: 16px;
+  --knit-ink: rgb(251 250 249 / 0.1);
+  --knit-ink-faint: rgb(251 250 249 / 0.022);
 
   --status-planning: #78736d;
   --status-hibernating: #8fabc4;
@@ -252,6 +291,49 @@
      밑줄 이스케이프에 걸려 조용히 깨지기 쉬워서다 — 여기서는 그냥 CSS다. */
   .pb-nav {
     padding-bottom: calc(5rem + env(safe-area-inset-bottom));
+  }
+
+  /*
+   * 메리야스 조직 (013 — 니트 방향).
+   *
+   * **한 자리에서만 그린다.** 조직을 쓰는 곳이 셋(작업대 바탕 · 실 스와치 ·
+   * `+1` 면)인데 각자 그리면 칸 크기가 어긋나고, 어긋나면 같은 천으로 안
+   * 읽힌다. 세기만 `--knit-tone`으로 가른다 — 톤이 **쓰는 요소에서** 선언돼야
+   * 치환이 되므로 클래스가 그 자리다.
+   *
+   * `knit-faint`는 작업대 바탕이다. 013의 완료 기준이 "사진이 없어도 화면이
+   * 밋밋하지 않다"인데, 앞선 스레드들은 덜어내기만 했다(009가 빈 섹션을,
+   * 007이 결핍 블록을). 덜어낸 자리를 **색이 아니라 질감**으로 채운다 —
+   * "UI 색은 사진과 실 색을 이기지 않는다"가 그대로 살아 있어야 하므로
+   * 채도 0의 조직 한 겹이고, 채널차는 한 자리 수다.
+   */
+  .knit-face,
+  .knit-faint {
+    background-image:
+      radial-gradient(
+        ellipse 7px 9px at 50% 118%,
+        transparent 60%,
+        var(--knit-tone) 60%,
+        var(--knit-tone) 70%,
+        transparent 70%
+      ),
+      radial-gradient(
+        ellipse 7px 9px at 50% 118%,
+        transparent 60%,
+        var(--knit-tone) 60%,
+        var(--knit-tone) 70%,
+        transparent 70%
+      );
+    background-size: var(--knit-cell-w) var(--knit-cell-h);
+    background-position:
+      0 0,
+      calc(var(--knit-cell-w) / 2) calc(var(--knit-cell-h) / 2);
+  }
+  .knit-face {
+    --knit-tone: var(--knit-ink);
+  }
+  .knit-faint {
+    --knit-tone: var(--knit-ink-faint);
   }
 
   /* 가로 스크롤되는 칩 줄에서 스크롤바가 보이면 크롬이 늘어난다.

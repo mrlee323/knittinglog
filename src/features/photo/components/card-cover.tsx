@@ -65,9 +65,13 @@ export function CardCover({ blob, color }: { blob?: Blob; color?: string }) {
       {color ? (
         <span
           aria-hidden
-          // 흰색·아주 밝은 실이 바탕에서 사라지지 않도록 링을 깐다.
-          className="ring-line relative h-16 w-24 rounded-sm ring-1 ring-inset"
-          style={{ background: color }}
+          /* 흰색·아주 밝은 실이 바탕에서 사라지지 않도록 링을 깐다.
+
+             **조직을 얹는다**(013 — 니트 방향). 실 색만 칠하면 페인트 견본이고,
+             이 앱에서 실은 **뜰 것**이다. 조직은 채도가 없어서 실 색을 바꾸지
+             않는다 — 같은 색에 음영만 생긴다. */
+          className="ring-line knit-face relative h-16 w-24 rounded-sm ring-1 ring-inset"
+          style={{ backgroundColor: color }}
         />
       ) : (
         /* 실도 사진도 없을 때 — 001 결정 5의 **마지막 단**이다.
