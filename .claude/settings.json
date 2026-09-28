@@ -1,6 +1,40 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
   "_doc": "OmD project hooks (omd install-skills) + discuss-turn.cjs — docs/discuss/ 에서 내 차례인 스레드를 알린다. OmD 훅은 --force 재설치로 갱신되므로 discuss 훅이 지워지면 다시 넣는다.",
+  "_permissions_doc": "규칙을 도구에 넣는다. allow는 작업 흐름 스크립트와 그것이 부르는 검사·git이다 — 스크립트 하나를 승인하면 그 안의 fetch·checkout·merge·push가 함께 지나간다. deny는 AGENTS.md:110의 `git add -A`·`git commit -a` 금지를 실제로 거는 자리다. `git checkout`·`reset`·`stash`는 일부러 빼뒀다 — AGENTS.md:112가 그 앞에서 `git status`를 보라고 하는데, 승인 창이 그걸 보게 만드는 마지막 자리다.",
+  "permissions": {
+    "allow": [
+      "Bash(./scripts/new-work.sh:*)",
+      "Bash(./scripts/finish-work.sh:*)",
+      "Bash(./scripts/branch-audit.sh:*)",
+      "Bash(npm run test:*)",
+      "Bash(npm run type-check:*)",
+      "Bash(npm run lint:*)",
+      "Bash(git status:*)",
+      "Bash(git log:*)",
+      "Bash(git diff:*)",
+      "Bash(git show:*)",
+      "Bash(git rev-parse:*)",
+      "Bash(git rev-list:*)",
+      "Bash(git merge-base:*)",
+      "Bash(git fetch:*)",
+      "Bash(git branch:*)",
+      "Bash(git pull --rebase:*)",
+      "Bash(git merge --no-ff:*)",
+      "Bash(git push origin:*)",
+      "Bash(git push -q origin:*)",
+      "Bash(git push -u origin:*)"
+    ],
+    "deny": [
+      "Bash(git add -A:*)",
+      "Bash(git add --all:*)",
+      "Bash(git add .:*)",
+      "Bash(git commit -a:*)",
+      "Bash(git commit --all:*)",
+      "Bash(git push --force:*)",
+      "Bash(git push -f:*)"
+    ]
+  },
   "hooks": {
     "UserPromptSubmit": [
       {
