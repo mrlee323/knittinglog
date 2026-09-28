@@ -43,7 +43,15 @@ const DEVICES = [
 
 const browser = await chromium
   .launch({ executablePath: process.env.CHROMIUM_PATH || undefined })
-  .catch((e) => { console.error("환경 문제: 브라우저를 띄우지 못했습니다.\n  " + e.message); process.exit(ENV_FAIL); });
+  .catch((e) => {
+    console.error("환경 문제: 브라우저를 띄우지 못했습니다.");
+    console.error("  " + e.message);
+    // **고치는 법을 여기서 말한다.** 이 한 줄이 없어서 관문 열하나가 한꺼번에
+    // 2로 멈췄을 때, 나머지 열은 `CHROMIUM_PATH`를 알려주는데 이것만 침묵했다.
+    // 같은 환경 문제를 놓고 관문마다 다른 말을 하면 읽는 사람이 원인을 다시 찾는다.
+    console.error("  CHROMIUM_PATH=/경로/chromium 으로 지정하세요.");
+    process.exit(ENV_FAIL);
+  });
 const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2 });
 const page = await ctx.newPage();
 // **클래스를 덮지 않는다.** 브라우저가 `env(safe-area-inset-*)`를 진짜로 그 값으로
