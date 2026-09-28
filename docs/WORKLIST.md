@@ -37,7 +37,7 @@
 | 012  | 완료 | 뜨기 모드 폴리싱                               | `feat/knit-polish`, `docs/discuss/012-knit-polish.md`                         |
 | 017  | 완료 | 강조색이 한 화면에 셋이다 (013 앞)             | `fix/accent-count`, `docs/discuss/017-accent-count.md`                        |
 | 013  | 완료 | 새 시각 언어 정리 — **니트**                   | `feat/knit-visual-language`, `docs/discuss/013-knit-visual-language.md`       |
-| 014  | 대기 | 실기기/전체 회귀 검증                          | 예정                                                                          |
+| 014  | 완료 | 실기기/전체 회귀 검증 (실기기는 남음)          | `chore/regression-sweep`, `docs/discuss/014-regression-sweep.md`              |
 
 ---
 
