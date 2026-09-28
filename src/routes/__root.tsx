@@ -53,7 +53,11 @@ function RootLayout() {
   ];
 
   return (
-    <div className="flex min-h-dvh flex-col">
+    /* 작업대 바탕 — 메리야스 조직 한 겹(013). `body`가 아니라 여기에 두는
+       이유는, Tailwind v4에서 `@apply`가 `@layer utilities`의 클래스를 못 찾아
+       CSS 전체가 컴파일에 실패하기 때문이다. 화면 전체를 덮는 첫 요소가
+       여기이고 `min-h-dvh`라 결과는 같다. */
+    <div className="knit-faint flex min-h-dvh flex-col">
       <Sidebar items={items} />
 
       {/* 사이드바는 fixed라 흐름에서 빠진다. 본문을 그만큼 밀어준다.

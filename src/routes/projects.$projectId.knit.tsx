@@ -420,7 +420,9 @@ function KnitMode() {
           type="button"
           aria-label="+1"
           onClick={() => void doStep(1)}
-          className="bg-surface border-line-strong text-text shadow-raised active:bg-sunken mx-3 flex min-h-24 flex-1 flex-col items-center justify-center gap-1 rounded-lg border transition-[background-color,box-shadow] active:shadow-none"
+          /* 조직을 얹는다(013). 화면에서 가장 큰 면이고, 그 면이 하는 일이
+             "여기를 누르면 한 단이 쌓인다"다 — 천 위를 누르는 자리다. */
+          className="bg-surface border-line-strong text-text shadow-raised knit-face active:bg-sunken mx-3 flex min-h-24 flex-1 flex-col items-center justify-center gap-1 rounded-lg border transition-[background-color,box-shadow] active:shadow-none"
         >
           {/* 낮은 창에서도 누를 자리는 남아야 한다 — min-h가 그 보장이다 */}
           <Plus size={tight ? 36 : 60} strokeWidth={2} />
